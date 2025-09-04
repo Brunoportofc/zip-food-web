@@ -1,29 +1,33 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useTranslation } from 'react-i18next';
 import { FiLock, FiMail } from 'react-icons/fi';
 import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
-import LottieAnimation from '../components/LottieAnimation';
+import LottieAnimation from '../../../components/LottieAnimation';
 
 import { showAlert } from '@/lib/platform';
 import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
+import CustomInput from '@/components/CustomInput';
 import CustomButton from '@/components/CustomButton';
 import I18nClientProvider from '@/components/I18nClientProvider';
 
-const Home = () => {
+const SignIn = () => {
   return (
     <I18nClientProvider>
-      <HomeContent />
+      <SignInContent />
     </I18nClientProvider>
   );
 };
 
-const HomeContent = () => {
+const SignInContent = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const type = searchParams.get('type');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [form, setForm] = useState({ email: '', password: '' });
@@ -33,6 +37,12 @@ const HomeContent = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const { t } = useTranslation();
+
+  useEffect(() => {
+    if (type && (type === 'customer' || type === 'restaurant' || type === 'delivery')) {
+      setUserType(type as UserType);
+    }
+  }, [type]);
 
   // Verificar se o usuário já está autenticado
   useEffect(() => {
@@ -223,4 +233,4 @@ const HomeContent = () => {
   );
 };
 
-export default Home;
+export default SignIn;

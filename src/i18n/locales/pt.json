@@ -1,0 +1,85 @@
+{
+  "common": {
+    "appName": "Zip Food",
+    "continue": "Continuar",
+    "back_to_selection": "Voltar para seleção de perfil",
+    "good_morning": "Bom dia",
+    "good_afternoon": "Boa tarde",
+    "good_evening": "Boa noite",
+    "welcome_to_dashboard": "Bem-vindo ao seu painel de controle",
+    "customer": "Cliente",
+    "recent_orders": "Pedidos Recentes",
+    "no_recent_orders": "Você ainda não tem pedidos recentes",
+    "favorite_restaurants": "Restaurantes Favoritos",
+    "no_favorite_restaurants": "Você ainda não tem restaurantes favoritos",
+    "promotions": "Promoções",
+    "no_promotions": "Não há promoções disponíveis no momento",
+    "logout": "Sair",
+    "offlineMode": "Modo offline - Algumas funcionalidades podem estar limitadas",
+    "goOnline": "Voltar ao modo online",
+    "goOffline": "Ativar modo offline",
+    "syncComplete": "Dados sincronizados com sucesso",
+    "firebaseConnected": "Conexão com o servidor restabelecida",
+    "firebaseDisconnected": "Sem conexão com o servidor",
+    "offlineModeEnabled": "Modo offline ativado com sucesso",
+    "offlineModeError": "Erro ao ativar modo offline",
+    "reconnecting": "Reconectando ao servidor...",
+    "reconnectError": "Erro ao reconectar ao servidor",
+    "cannotReconnectOffline": "Não é possível reconectar sem conexão à internet"
+  },
+  "userType": {
+    "selectTitle": "Selecione seu perfil",
+    "selectSubtitle": "Como você deseja usar o Zip Food?",
+    "customer": "Cliente",
+    "customerDesc": "Peça comida dos melhores restaurantes",
+    "restaurant": "Restaurante",
+    "restaurantDesc": "Gerencie seu restaurante e receba pedidos",
+    "delivery": "Entregador",
+    "deliveryDesc": "Faça entregas e ganhe dinheiro"
+  },
+  "auth": {
+    "common": {
+      "error_title": "Erro"
+    },
+    "fields": {
+      "email_label": "Email",
+      "email_placeholder": "Digite seu email",
+      "password_label": "Senha",
+      "password_placeholder": "Digite sua senha"
+    },
+    "signin": {
+      "title": "",
+      "subtitle": "",
+      "section": {
+        "access_data": "Dados de acesso"
+      },
+      "button": {
+        "sign_in": "Entrar"
+      },
+      "footer": {
+        "no_account": "Não tem uma conta?",
+        "create_account": "Criar conta"
+      },
+      "alerts": {
+        "enter_valid_credentials": "Por favor, insira credenciais válidas",
+        "failed_sign_in": "Falha ao fazer login. Tente novamente."
+      }
+    },
+    "signup": {
+      "title": "Crie sua conta",
+      "subtitle": "Preencha os dados abaixo",
+      "button": {
+        "sign_up": "Cadastrar"
+      },
+      "footer": {
+        "has_account": "Já tem uma conta?",
+        "sign_in": "Fazer login"
+      },
+      "alerts": {
+        "fill_all_fields": "Por favor, preencha todos os campos",
+        "passwords_not_match": "As senhas não coincidem",
+        "failed_sign_up": "Falha ao criar conta. Tente novamente."
+      }
+    }
+  }
+}

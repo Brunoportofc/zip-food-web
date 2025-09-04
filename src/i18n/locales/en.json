@@ -1,0 +1,84 @@
+{
+  "common": {
+    "continue": "Continue",
+    "back_to_selection": "Back to profile selection",
+    "good_morning": "Good morning",
+    "good_afternoon": "Good afternoon",
+    "good_evening": "Good evening",
+    "welcome_to_dashboard": "Welcome to your dashboard",
+    "customer": "Customer",
+    "recent_orders": "Recent Orders",
+    "no_recent_orders": "You don't have any recent orders yet",
+    "favorite_restaurants": "Favorite Restaurants",
+    "no_favorite_restaurants": "You don't have any favorite restaurants yet",
+    "promotions": "Promotions",
+    "no_promotions": "There are no promotions available at the moment",
+    "logout": "Logout",
+    "offlineMode": "Offline mode - Some features may be limited",
+    "goOnline": "Return to online mode",
+    "goOffline": "Enable offline mode",
+    "syncComplete": "Data synchronized successfully",
+    "firebaseConnected": "Server connection restored",
+    "firebaseDisconnected": "No connection to server",
+    "offlineModeEnabled": "Offline mode enabled successfully",
+    "offlineModeError": "Error enabling offline mode",
+    "reconnecting": "Reconnecting to server...",
+    "reconnectError": "Error reconnecting to server",
+    "cannotReconnectOffline": "Cannot reconnect without internet connection"
+  },
+  "userType": {
+    "selectTitle": "Select your profile",
+    "selectSubtitle": "How would you like to use Zip Food?",
+    "customer": "Customer",
+    "customerDesc": "Order food from the best restaurants",
+    "restaurant": "Restaurant",
+    "restaurantDesc": "Manage your restaurant and receive orders",
+    "delivery": "Delivery",
+    "deliveryDesc": "Make deliveries and earn money"
+  },
+  "auth": {
+    "common": {
+      "error_title": "Error"
+    },
+    "fields": {
+      "email_label": "Email",
+      "email_placeholder": "Enter your email",
+      "password_label": "Password",
+      "password_placeholder": "Enter your password"
+    },
+    "signin": {
+      "title": "Welcome back!",
+      "subtitle": "Sign in to continue",
+      "section": {
+        "access_data": "Access Data"
+      },
+      "button": {
+        "sign_in": "Sign In"
+      },
+      "footer": {
+        "no_account": "Don't have an account?",
+        "create_account": "Create account"
+      },
+      "alerts": {
+        "enter_valid_credentials": "Please enter valid credentials",
+        "failed_sign_in": "Failed to sign in. Please try again."
+      }
+    },
+    "signup": {
+      "title": "Create your account",
+      "subtitle": "Fill in the details below",
+      "button": {
+        "sign_up": "Sign Up"
+      },
+      "footer": {
+        "has_account": "Already have an account?",
+        "sign_in": "Sign in"
+      },
+      "alerts": {
+        "fill_all_fields": "Please fill in all fields",
+        "passwords_not_match": "Passwords do not match",
+        "failed_sign_up": "Failed to create account. Please try again."
+      }
+    }
+  }
+}
