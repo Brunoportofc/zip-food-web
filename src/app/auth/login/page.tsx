@@ -91,6 +91,7 @@ export default function LoginPage() {
               className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-gray-800"
               placeholder="********"
               required
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin(e)}
             />
           </div>
           

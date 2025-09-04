@@ -228,6 +228,7 @@ const SignUpContent = () => {
                   value={form.confirmPassword}
                   onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                   type="password"
+                  onKeyDown={(e) => e.key === 'Enter' && submit()}
                 />
               </div>
             </div>

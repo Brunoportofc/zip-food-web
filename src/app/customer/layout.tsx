@@ -78,13 +78,6 @@ export default function CustomerLayout({
                       <MdPerson className="inline mr-2" size={16} />
                       Meu Perfil
                     </a>
-                    <a
-                      href="/customer/addresses"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    >
-                      <MdLocationOn className="inline mr-2" size={16} />
-                      Endereços
-                    </a>
                     <div className="border-t border-gray-100 my-1"></div>
                     <div className="px-4 py-2">
                       <OfflineToggle />

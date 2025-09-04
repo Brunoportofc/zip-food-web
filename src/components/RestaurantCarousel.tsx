@@ -57,31 +57,16 @@ export default function RestaurantCarousel({ restaurants, title }: RestaurantCar
   };
 
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-black">{title}</h2>
-        <div className="flex space-x-2">
-          <button
-            onClick={prevSlide}
-            disabled={currentIndex === 0}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <MdChevronLeft size={20} className="text-gray-600" />
-          </button>
-          <button
-            onClick={nextSlide}
-            disabled={currentIndex >= maxIndex}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <MdChevronRight size={20} className="text-gray-600" />
-          </button>
-        </div>
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-bold text-black">{title}</h2>
+        <button className="text-sm text-red-500 font-medium">Ver mais</button>
       </div>
 
       <div className="relative overflow-hidden">
         <div
           ref={carouselRef}
-          className="flex transition-transform duration-300 ease-in-out"
+          className="flex transition-transform duration-300 ease-in-out -mx-2"
           style={{
             transform: `translateX(-${currentIndex * (100 / itemsPerView)}%)`,
           }}
@@ -92,40 +77,40 @@ export default function RestaurantCarousel({ restaurants, title }: RestaurantCar
               className="flex-shrink-0 px-2"
               style={{ width: `${100 / itemsPerView}%` }}
             >
-              <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer group">
+              <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all cursor-pointer">
                 <div className="relative">
                   <img
                     src={restaurant.image}
                     alt={restaurant.name}
-                    className="w-full h-48 object-cover rounded-t-lg group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-32 object-cover rounded-t-lg"
                   />
                   {restaurant.isPromoted && (
-                    <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+                    <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-0.5 rounded-sm text-xs font-medium">
                       Promoção
                     </div>
                   )}
-                  <div className="absolute top-2 right-2 bg-white bg-opacity-90 rounded-full p-1">
-                    <div className="flex items-center space-x-1">
-                      <MdStar className="text-yellow-400" size={14} />
-                      <span className="text-xs font-semibold text-gray-800">
+                  <div className="absolute top-2 right-2 bg-white rounded-sm px-1 py-0.5 shadow-sm">
+                    <div className="flex items-center">
+                      <MdStar className="text-yellow-400" size={12} />
+                      <span className="text-xs font-medium text-gray-800 ml-0.5">
                         {restaurant.rating.toFixed(1)}
                       </span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg text-black mb-1 truncate">
+                <div className="p-3">
+                  <h3 className="font-medium text-base text-black truncate">
                     {restaurant.name}
                   </h3>
-                  <p className="text-gray-600 text-sm mb-2">{restaurant.category}</p>
+                  <p className="text-gray-500 text-xs mb-1.5">{restaurant.category}</p>
                   
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <div className="flex items-center space-x-1">
-                      <MdAccessTime size={16} />
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center text-gray-500">
+                      <MdAccessTime size={14} className="mr-0.5" />
                       <span>{restaurant.deliveryTime}</span>
                     </div>
-                    <div className="text-red-500 font-semibold">
+                    <div className="text-red-500 font-medium">
                       {restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}
                     </div>
                   </div>
@@ -134,6 +119,25 @@ export default function RestaurantCarousel({ restaurants, title }: RestaurantCar
             </div>
           ))}
         </div>
+        
+        {/* Navigation arrows */}
+        {currentIndex > 0 && (
+          <button 
+            onClick={prevSlide}
+            className="absolute left-0 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md z-10"
+          >
+            <MdChevronLeft size={20} className="text-gray-600" />
+          </button>
+        )}
+        
+        {currentIndex < maxIndex && (
+          <button 
+            onClick={nextSlide}
+            className="absolute right-0 top-1/2 -translate-y-1/2 bg-white rounded-full p-1.5 shadow-md z-10"
+          >
+            <MdChevronRight size={20} className="text-gray-600" />
+          </button>
+        )}
       </div>
 
       {/* Dots indicator */}

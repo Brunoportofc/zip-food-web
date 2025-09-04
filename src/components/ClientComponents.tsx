@@ -33,7 +33,7 @@ const ClientComponents: React.FC<ClientComponentsProps> = ({ className }) => {
   
   return (
     <>
-      <ConnectivityStatus className={`sticky top-0 z-50 ${className}`} />
+      <ConnectivityStatus className={`${className}`} />
       <NotificationSystem />
     </>
   );

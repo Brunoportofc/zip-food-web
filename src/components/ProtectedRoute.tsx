@@ -61,11 +61,21 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
         return;
       }
       
-      // Se não estiver autenticado, redireciona para login
-      if (!isAuthenticated) {
+      // Se não estiver autenticado e não for a página de perfil ou a página inicial do cliente, redireciona para login
+      if (!isAuthenticated && 
+          !window.location.pathname.includes('/customer/profile') && 
+          window.location.pathname !== '/customer') {
         hasRedirected.current = true;
         setCachedValidation(false);
         router.replace('/auth/sign-in');
+        return;
+      }
+      
+      // Para a página de perfil ou a página inicial do cliente, permitimos acesso mesmo sem autenticação (para demonstração)
+      if (window.location.pathname.includes('/customer/profile') || 
+          window.location.pathname === '/customer') {
+        setCachedValidation(true);
+        setIsLoading(false);
         return;
       }
 
@@ -109,7 +119,10 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
   }, [isAuthenticated, router, userType, requiredUserType, cacheKey, getCachedValidation, setCachedValidation]);
 
   // Mostra loading enquanto verifica autenticação ou redireciona
-  if (isLoading || !isAuthenticated) {
+  // Para a página de perfil ou a página inicial do cliente, permitimos acesso mesmo sem autenticação
+  if (isLoading || (!isAuthenticated && 
+      !window.location.pathname.includes('/customer/profile') && 
+      window.location.pathname !== '/customer')) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-black">
         <div className="flex flex-col items-center space-y-4">
