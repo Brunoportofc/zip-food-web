@@ -11,6 +11,7 @@
   "dependencies": {
     "@headlessui/react": "^2.2.7",
     "critters": "^0.0.23",
+    "framer-motion": "^12.23.12",
     "i18next": "^23.7.6",
     "i18next-browser-languagedetector": "^7.2.0",
     "lottie-react": "^2.4.1",
