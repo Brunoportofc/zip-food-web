@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,7 +19,9 @@ import I18nClientProvider from '@/components/I18nClientProvider';
 const SignIn = () => {
   return (
     <I18nClientProvider>
-      <SignInContent />
+      <Suspense fallback={<div>Loading...</div>}>
+        <SignInContent />
+      </Suspense>
     </I18nClientProvider>
   );
 };

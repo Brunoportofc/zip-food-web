@@ -326,13 +326,13 @@ export default function RestaurantMenu() {
               <CustomInput
                 label={t('restaurant.menu.item_name')}
                 placeholder={t('restaurant.menu.placeholders.item_name')}
-                value={newItem.name}
+                value={newItem.name || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, name: text })}
               />
               <CustomInput
                 label={t('restaurant.menu.category')}
                 placeholder={t('restaurant.menu.placeholders.category')}
-                value={newItem.category}
+                value={newItem.category || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, category: text })}
               />
               <CustomInput
@@ -345,17 +345,22 @@ export default function RestaurantMenu() {
               <CustomInput
                 label={t('restaurant.menu.image_url')}
                 placeholder={t('restaurant.menu.placeholders.image_url')}
-                value={newItem.image}
+                value={newItem.image || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, image: text })}
               />
               <div className="md:col-span-2">
-                <CustomInput
-                  label={t('restaurant.menu.description')}
-                  placeholder={t('restaurant.menu.placeholders.description')}
-                  value={newItem.description}
-                  onChangeText={(text) => setNewItem({ ...newItem, description: text })}
-                  multiline
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('restaurant.menu.description')}
+                  </label>
+                  <textarea
+                    placeholder={t('restaurant.menu.placeholders.description')}
+                    value={newItem.description || ''}
+                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none"
+                  />
+                </div>
               </div>
               <div className="md:col-span-2 flex items-center space-x-3">
                 <input
@@ -430,7 +435,10 @@ export default function RestaurantMenu() {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.style.display = 'none';
-                            e.currentTarget.nextElementSibling.style.display = 'flex';
+                            const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                            if (nextElement) {
+                              nextElement.style.display = 'flex';
+                            }
                           }}
                         />
                       ) : null}
@@ -514,7 +522,10 @@ export default function RestaurantMenu() {
                                   className="w-full h-full object-cover rounded-xl"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
-                                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (nextElement) {
+                                      nextElement.style.display = 'flex';
+                                    }
                                   }}
                                 />
                               ) : null}

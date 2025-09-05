@@ -259,10 +259,10 @@ export default function DeliveryProfile() {
               </div>
 
               <div className="pt-4 mt-4 border-t">
-                <CustomButton 
-                  text={t('delivery.profile.change_password')} 
-                  onClick={() => {}} 
-                  variant="outlined"
+                <CustomButton
+                  title={t('delivery.profile.change_password')}
+                  onPress={() => {}}
+                  variant="outline"
                   className="px-4 py-2"
                 />
               </div>
@@ -367,8 +367,9 @@ export default function DeliveryProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.agency')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Agência"
                       value={profile.bankInfo.agency}
-                      onChange={(e) => handleInputChange('bankInfo.agency', e.target.value)}
+                      onChangeText={(text) => handleInputChange('bankInfo.agency', text)}
                       placeholder="Agência"
                     />
                   ) : (
@@ -379,8 +380,9 @@ export default function DeliveryProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.account_number')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Número da Conta"
                       value={profile.bankInfo.accountNumber}
-                      onChange={(e) => handleInputChange('bankInfo.accountNumber', e.target.value)}
+                      onChangeText={(text) => handleInputChange('bankInfo.accountNumber', text)}
                       placeholder="Número da Conta"
                     />
                   ) : (
@@ -393,8 +395,9 @@ export default function DeliveryProfile() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.pix_key')}</label>
                 {isEditing ? (
                   <CustomInput
+                    label="Chave PIX"
                     value={profile.bankInfo.pixKey || ''}
-                    onChange={(e) => handleInputChange('bankInfo.pixKey', e.target.value)}
+                    onChangeText={(text) => handleInputChange('bankInfo.pixKey', text)}
                     placeholder="Chave PIX"
                   />
                 ) : (
@@ -411,8 +414,9 @@ export default function DeliveryProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.street')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Rua"
                       value={profile.address.street}
-                      onChange={(e) => handleInputChange('address.street', e.target.value)}
+                      onChangeText={(text) => handleInputChange('address.street', text)}
                       placeholder="Rua"
                     />
                   ) : (
@@ -423,8 +427,9 @@ export default function DeliveryProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.number')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Número"
                       value={profile.address.number}
-                      onChange={(e) => handleInputChange('address.number', e.target.value)}
+                      onChangeText={(text) => handleInputChange('address.number', text)}
                       placeholder="Número"
                     />
                   ) : (
@@ -437,8 +442,9 @@ export default function DeliveryProfile() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.complement')}</label>
                 {isEditing ? (
                   <CustomInput
+                    label="Complemento"
                     value={profile.address.complement || ''}
-                    onChange={(e) => handleInputChange('address.complement', e.target.value)}
+                    onChangeText={(text) => handleInputChange('address.complement', text)}
                     placeholder="Complemento"
                   />
                 ) : (
@@ -450,8 +456,9 @@ export default function DeliveryProfile() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.neighborhood')}</label>
                 {isEditing ? (
                   <CustomInput
+                    label="Bairro"
                     value={profile.address.neighborhood}
-                    onChange={(e) => handleInputChange('address.neighborhood', e.target.value)}
+                    onChangeText={(text) => handleInputChange('address.neighborhood', text)}
                     placeholder="Bairro"
                   />
                 ) : (
@@ -464,8 +471,9 @@ export default function DeliveryProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.zip_code')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="CEP"
                       value={profile.address.zipCode}
-                      onChange={(e) => handleInputChange('address.zipCode', e.target.value)}
+                      onChangeText={(text) => handleInputChange('address.zipCode', text)}
                       placeholder="CEP"
                     />
                   ) : (
@@ -476,8 +484,9 @@ export default function DeliveryProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.city')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Cidade"
                       value={profile.address.city}
-                      onChange={(e) => handleInputChange('address.city', e.target.value)}
+                      onChangeText={(text) => handleInputChange('address.city', text)}
                       placeholder="Cidade"
                     />
                   ) : (
@@ -488,8 +497,9 @@ export default function DeliveryProfile() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.state')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Estado"
                       value={profile.address.state}
-                      onChange={(e) => handleInputChange('address.state', e.target.value)}
+                      onChangeText={(text) => handleInputChange('address.state', text)}
                       placeholder="Estado"
                     />
                   ) : (
@@ -503,10 +513,10 @@ export default function DeliveryProfile() {
       </div>
 
       <div className="mt-6">
-        <CustomButton 
-          text={t('delivery.profile.logout')} 
-          onClick={logout} 
-          variant="outlined"
+        <CustomButton
+          title={t('delivery.profile.logout')}
+          onPress={logout}
+          variant="outline"
           className="px-4 py-2 text-red-500 border-red-500 hover:bg-red-50"
         />
       </div>

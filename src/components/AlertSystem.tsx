@@ -160,7 +160,7 @@ const AlertSystem: React.FC<AlertSystemProps> = ({ className }) => {
         return (
           <AnimatedContainer 
             key={alert.id} 
-            animationType="slideInRight" 
+            animationType="slideIn" 
             delay={index * 100}
           >
             <div className={`

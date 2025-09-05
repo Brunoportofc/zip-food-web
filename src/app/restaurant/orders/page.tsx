@@ -136,7 +136,8 @@ export default function RestaurantOrders() {
       setSelectedOrder({ ...selectedOrder, status: newStatus });
     }
 
-    const statusMessages = {
+    const statusMessages: Record<string, string> = {
+      pending: t('restaurant.orders.status_messages.pending'),
       preparing: t('restaurant.orders.status_messages.preparing'),
       ready: t('restaurant.orders.status_messages.ready'),
       delivering: t('restaurant.orders.status_messages.delivering'),
@@ -248,7 +249,7 @@ export default function RestaurantOrders() {
 
   return (
     <AnimatedContainer animationType="fadeIn" delay={100}>
-      <AnimatedContainer animationType="slideInDown" delay={200}>
+      <AnimatedContainer animationType="fadeInDown" delay={200}>
         <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl shadow-lg p-6 lg:p-8 text-white mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-4 lg:mb-0">
@@ -326,7 +327,7 @@ export default function RestaurantOrders() {
         </div>
       </AnimatedContainer>
 
-      <AnimatedContainer animationType="slideInUp" delay={250}>
+      <AnimatedContainer animationType="fadeInUp" delay={250}>
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 mb-6">
           <div className="flex flex-col space-y-4">
             <div className="w-full">
@@ -360,7 +361,7 @@ export default function RestaurantOrders() {
         </div>
       </AnimatedContainer>
 
-      <AnimatedContainer animationType="slideInUp" delay={300}>
+      <AnimatedContainer animationType="fadeInUp" delay={300}>
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 mb-6">
           <div className="flex flex-wrap gap-2">
             <button
@@ -545,7 +546,7 @@ export default function RestaurantOrders() {
 
         <div className="lg:w-1/3">
           {selectedOrder ? (
-            <AnimatedContainer animationType="slideInRight" delay={100}>
+            <AnimatedContainer animationType="slideIn" delay={100}>
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
                 <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
                   <div className="flex justify-between items-center">

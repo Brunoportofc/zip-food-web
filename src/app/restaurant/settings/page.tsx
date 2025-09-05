@@ -211,14 +211,14 @@ export default function RestaurantSettings() {
                 placeholder={t('restaurant.settings.restaurant_name_placeholder')}
                 value={settings.name}
                 onChangeText={(text) => setSettings({ ...settings, name: text })}
-                icon={<MdStore size={20} className="text-gray-400" />}
+
               />
               <CustomInput
                 label={t('restaurant.settings.phone')}
                 placeholder={t('restaurant.settings.phone_placeholder')}
                 value={settings.phone}
                 onChangeText={(text) => setSettings({ ...settings, phone: text })}
-                icon={<MdPhone size={20} className="text-gray-400" />}
+
               />
               <div className="lg:col-span-2">
                 <CustomInput
@@ -226,24 +226,29 @@ export default function RestaurantSettings() {
                   placeholder={t('restaurant.settings.address_placeholder')}
                   value={settings.address}
                   onChangeText={(text) => setSettings({ ...settings, address: text })}
-                  icon={<MdLocationOn size={20} className="text-gray-400" />}
+  
                 />
               </div>
               <div className="lg:col-span-2">
-                <CustomInput
-                  label={t('restaurant.settings.description')}
-                  placeholder={t('restaurant.settings.description_placeholder')}
-                  value={settings.description}
-                  onChangeText={(text) => setSettings({ ...settings, description: text })}
-                  multiline
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('restaurant.settings.description')}
+                  </label>
+                  <textarea
+                    placeholder={t('restaurant.settings.description_placeholder')}
+                    value={settings.description}
+                    onChange={(e) => setSettings({ ...settings, description: e.target.value })}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none"
+                  />
+                </div>
               </div>
               <CustomInput
                 label={t('restaurant.settings.opening_hours')}
                 placeholder={t('restaurant.settings.opening_hours_placeholder')}
                 value={settings.openingHours}
                 onChangeText={(text) => setSettings({ ...settings, openingHours: text })}
-                icon={<MdAccessTime size={20} className="text-gray-400" />}
+
               />
             </div>
           </div>
@@ -267,7 +272,7 @@ export default function RestaurantSettings() {
                 value={settings.deliveryFee.toString()}
                 onChangeText={(text) => setSettings({ ...settings, deliveryFee: parseFloat(text) || 0 })}
                 keyboardType="numeric"
-                icon={<MdAttachMoney size={20} className="text-gray-400" />}
+
               />
               <CustomInput
                 label={t('restaurant.settings.min_order_value')}
@@ -275,7 +280,7 @@ export default function RestaurantSettings() {
                 value={settings.minOrderValue.toString()}
                 onChangeText={(text) => setSettings({ ...settings, minOrderValue: parseFloat(text) || 0 })}
                 keyboardType="numeric"
-                icon={<MdAttachMoney size={20} className="text-gray-400" />}
+
               />
             </div>
           </div>
@@ -309,10 +314,11 @@ export default function RestaurantSettings() {
             <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
               <div className="flex-1">
                 <CustomInput
+                  label={t('restaurant.settings.new_category')}
                   placeholder={t('restaurant.settings.new_category')}
                   value={newCategory}
                   onChangeText={setNewCategory}
-                  icon={<MdCategory size={20} className="text-gray-400" />}
+  
                 />
               </div>
               <button

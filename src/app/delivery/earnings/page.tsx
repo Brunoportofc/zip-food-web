@@ -194,7 +194,7 @@ export default function DeliveryEarnings() {
   // Obter título do período
   const getPeriodTitle = (): string => {
     switch (activePeriod) {
-      case 'today':
+      case 'day':
         return t('delivery.earnings.today');
       case 'week':
         return t('delivery.earnings.this_week');

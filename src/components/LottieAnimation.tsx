@@ -8,6 +8,9 @@ import foodBeverageAnimation from '@/app/Food & Beverage (1).json';
 import storeAnimation from '@/app/Store.json';
 import mainSceneAnimation from '@/app/Main Scene (1).json';
 
+// Tipagem para animações Lottie
+type LottieAnimationData = any;
+
 type UserType = 'customer' | 'restaurant' | 'delivery';
 
 interface LottieAnimationProps {
@@ -23,21 +26,21 @@ const LottieAnimation: React.FC<LottieAnimationProps> = ({
   height = 128,
   className = ''
 }) => {
-  const [animationData, setAnimationData] = useState(mainSceneAnimation);
+  const [animationData, setAnimationData] = useState<LottieAnimationData>(mainSceneAnimation as LottieAnimationData);
 
   useEffect(() => {
     switch (userType) {
       case 'customer':
-        setAnimationData(foodBeverageAnimation);
+        setAnimationData(foodBeverageAnimation as LottieAnimationData);
         break;
       case 'restaurant':
-        setAnimationData(storeAnimation);
+        setAnimationData(storeAnimation as LottieAnimationData);
         break;
       case 'delivery':
-        setAnimationData(mainSceneAnimation);
+        setAnimationData(mainSceneAnimation as LottieAnimationData);
         break;
       default:
-        setAnimationData(mainSceneAnimation);
+        setAnimationData(mainSceneAnimation as LottieAnimationData);
         break;
     }
   }, [userType]);

@@ -121,7 +121,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
       />
       
       {/* Notification Panel */}
-      <AnimatedContainer animationType="slideInRight" delay={0}>
+      <AnimatedContainer animationType="slideIn" delay={0}>
         <div className={`fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col ${className}`}>
           {/* Header */}
           <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6">

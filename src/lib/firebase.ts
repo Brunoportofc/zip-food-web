@@ -25,11 +25,7 @@ try {
   if (process.env.NODE_ENV === 'development') {
     // Configuração específica para desenvolvimento - evita completamente os erros WebChannel
     db = initializeFirestore(app, {
-      localCache: memoryLocalCache({
-        garbageCollectorOptions: {
-          cacheSizeBytes: 10 * 1024 * 1024 // 10MB - cache menor para dev
-        }
-      }),
+      localCache: memoryLocalCache(),
       experimentalForceLongPolling: true, // Força long polling
       ignoreUndefinedProperties: true
     });
@@ -40,8 +36,7 @@ try {
     // Produção: configuração otimizada mas com cache persistente
     db = initializeFirestore(app, {
       localCache: persistentLocalCache({
-        cacheSizeBytes: 50 * 1024 * 1024, // 50MB
-        tabManager: persistentSingleTabManager()
+        cacheSizeBytes: 50 * 1024 * 1024 // 50MB
       })
     });
   }

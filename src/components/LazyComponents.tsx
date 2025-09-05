@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import dynamic from 'next/dynamic';
 import { ComponentType } from 'react';
 
@@ -55,7 +56,7 @@ export function withLazyLoading<T extends object>(
   } = {}
 ) {
   return dynamic(importFn, {
-    loading: options.loading || LoadingSpinner,
+    loading: options.loading ? () => React.createElement(options.loading!) : LoadingSpinner,
     ssr: options.ssr ?? true
   });
 }

@@ -36,9 +36,9 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
-const useAuthStore = createWithEqualityFn<AuthState>(
+const useAuthStore = createWithEqualityFn<AuthState>()(
   subscribeWithSelector(
-    persist(
+    persist<AuthState>(
       (set, get) => ({
         isAuthenticated: false,
         user: null,
