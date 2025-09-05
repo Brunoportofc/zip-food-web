@@ -27,16 +27,16 @@ class AuthService {
   private cacheTimestamp: number = 0;
   private readonly CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
   private get USE_MOCK_AUTH(): boolean {
-    // Em produção, sempre usar Firebase
-    if (process.env.NODE_ENV === 'production') return false;
-    
-    // Em desenvolvimento, verificar configuração do toggle
+    // Verificar se deve usar credenciais demo (admin@gmail.com / 12341234)
     if (typeof window !== 'undefined') {
       const authMode = localStorage.getItem('auth-mode');
-      return authMode === 'mock' || authMode === null; // Default para mock em dev
+      // Se explicitamente configurado para Firebase, usar Firebase
+      if (authMode === 'firebase') return false;
+      // Caso contrário, usar mock (incluindo em produção para demo)
+      return true;
     }
     
-    // Fallback para mock em desenvolvimento
+    // Fallback para mock (permite demo em produção)
     return true;
   }
 
