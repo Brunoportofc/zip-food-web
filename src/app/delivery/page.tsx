@@ -85,7 +85,7 @@ export default function DeliveryDashboard() {
     return (
       <AnimatedContainer animationType="fadeInUp" className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
-          <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${colorClasses[color]} flex items-center justify-center`}>
+          <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${colorClasses[color as keyof typeof colorClasses]} flex items-center justify-center`}>
             <Icon size={24} className="text-white" />
           </div>
           {trend && (
@@ -108,7 +108,7 @@ export default function DeliveryDashboard() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <AnimatedContainer animationType="pulse">
+        <AnimatedContainer animationType="fadeIn">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </AnimatedContainer>
       </div>
@@ -228,7 +228,7 @@ export default function DeliveryDashboard() {
             {stats.availableOrders > 0 ? (
               <div className="space-y-4">
                 {Array.from({ length: stats.availableOrders }).map((_, index) => (
-                  <AnimatedContainer key={index} animationType="fadeInLeft" delay={300 + index * 100}>
+                  <AnimatedContainer key={index} animationType="fadeInUp" delay={300 + index * 100}>
                     <div className="border border-gray-200 rounded-xl p-4 lg:p-6 hover:border-blue-300 hover:shadow-md transition-all duration-300">
                       <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
                         <div className="flex-1">

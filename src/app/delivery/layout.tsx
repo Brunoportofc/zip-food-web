@@ -95,7 +95,7 @@ export default function DeliveryLayout({
                   const Icon = item.icon;
                   return (
                     <li key={item.href}>
-                      <AnimatedContainer animationType="fadeInLeft" delay={300 + index * 100}>
+                      <AnimatedContainer animationType="fadeIn" delay={300 + index * 100}>
                         <a
                           href={item.href}
                           className={`group flex items-center justify-between p-3 lg:p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
