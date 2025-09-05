@@ -8,6 +8,7 @@ import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 import { 
   MdDashboard, 
   MdDeliveryDining, 
@@ -96,7 +97,7 @@ export default function DeliveryLayout({
                   return (
                     <li key={item.href}>
                       <AnimatedContainer animationType="fadeIn" delay={300 + index * 100}>
-                        <a
+                        <Link
                           href={item.href}
                           className={`group flex items-center justify-between p-3 lg:p-4 rounded-xl transition-all duration-300 hover:scale-105 ${
                             item.active
@@ -122,7 +123,7 @@ export default function DeliveryLayout({
                               {item.badge}
                             </span>
                           )}
-                        </a>
+                        </Link>
                       </AnimatedContainer>
                     </li>
                   );

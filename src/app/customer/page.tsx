@@ -7,6 +7,7 @@ import { GiNoodles, GiSushis, GiTacos, GiCupcake, GiDonerKebab, GiChopsticks, Gi
 import { BiSolidDrink, BiSolidCoffee } from 'react-icons/bi';
 import RestaurantCarousel from '@/components/RestaurantCarousel';
 import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 import '@/i18n';
 
 // Mock data para restaurantes
@@ -401,30 +402,30 @@ export default function CustomerDashboard() {
             <div>
               <h3 className="font-bold text-black mb-3 lg:mb-4 text-base lg:text-lg">Zip Food</h3>
               <ul className="space-y-2 lg:space-y-3">
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Sobre nós</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Carreiras</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Imprensa</a></li>
+                <li><Link href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Sobre nós</Link></li>
+                <li><Link href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Carreiras</Link></li>
+                <li><Link href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Imprensa</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold text-black mb-3 lg:mb-4 text-base lg:text-lg">Para Restaurantes</h3>
               <ul className="space-y-2 lg:space-y-3">
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Cadastre seu restaurante</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Portal do Parceiro</a></li>
+                <li><Link href="/restaurant" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Cadastre seu restaurante</Link></li>
+                <li><Link href="/restaurant" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Portal do Parceiro</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold text-black mb-3 lg:mb-4 text-base lg:text-lg">Para Entregadores</h3>
               <ul className="space-y-2 lg:space-y-3">
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Seja um entregador</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Central do Entregador</a></li>
+                <li><Link href="/delivery" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Seja um entregador</Link></li>
+                <li><Link href="/delivery" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Central do Entregador</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="font-bold text-black mb-3 lg:mb-4 text-base lg:text-lg">Contato</h3>
               <ul className="space-y-2 lg:space-y-3">
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Ajuda</a></li>
-                <li><a href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Fale conosco</a></li>
+                <li><Link href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Ajuda</Link></li>
+                <li><Link href="#" className="text-gray-600 hover:text-red-600 text-sm transition-colors duration-200">Fale conosco</Link></li>
               </ul>
             </div>
           </div>

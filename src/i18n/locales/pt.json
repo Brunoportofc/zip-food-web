@@ -18,8 +18,7 @@
     "offline": "Offline",
     "onlineMode": "Modo online",
     "syncComplete": "Dados sincronizados com sucesso",
-    "firebaseConnected": "Conexão com o servidor restabelecida",
-    "firebaseDisconnected": "Sem conexão com o servidor",
+
     "offlineModeEnabled": "Modo offline ativado com sucesso",
     "offlineModeError": "Erro ao ativar modo offline",
     "reconnecting": "Reconectando ao servidor...",
@@ -65,9 +64,30 @@
     "info": "Informação"
   },
   "languages": {
+    "en": "English",
     "pt": "Português",
-    "en": "Inglês",
-    "he": "Hebraico"
+    "he": "עברית"
+  },
+  "mock_data": {
+    "currency_symbol": "R$",
+    "menu_items": {
+      "big_burger": "Big Burger",
+      "big_burger_desc": "Hambúrguer artesanal com 200g de carne, queijo, alface, tomate e molho especial",
+      "chicken_burger": "Chicken Burger",
+      "chicken_burger_desc": "Hambúrguer de frango grelhado com queijo, alface e maionese",
+      "veggie_burger": "Veggie Burger",
+      "veggie_burger_desc": "Hambúrguer vegetariano com quinoa, cogumelos e molho de ervas",
+      "french_fries": "Batata Frita",
+      "french_fries_desc": "Porção de batatas fritas crocantes",
+      "onion_rings": "Anéis de Cebola",
+      "onion_rings_desc": "Anéis de cebola empanados e fritos",
+      "coca_cola": "Coca-Cola",
+      "coca_cola_desc": "Refrigerante Coca-Cola 350ml",
+      "orange_juice": "Suco de Laranja",
+      "orange_juice_desc": "Suco natural de laranja 300ml",
+      "chocolate_cake": "Bolo de Chocolate",
+      "chocolate_cake_desc": "Fatia de bolo de chocolate com cobertura"
+    }
   },
   "components": {
     "alert_system": {
@@ -559,54 +579,112 @@
     },
     "menu": {
       "title": "Cardápio",
-      "subtitle": "Gerencie os itens do seu restaurante",
+      "manage_items": "Gerencie os itens do seu restaurante",
       "new_item": "Novo Item",
-      "search_placeholder": "Buscar itens...",
-      "view_grid": "Grid",
-      "view_list": "Lista",
-      "all_categories": "Todos",
-      "item_name": "Nome do Item",
-      "item_category": "Categoria",
-      "item_price": "Preço (R$)",
-      "item_image": "URL da Imagem",
-      "item_description": "Descrição",
-      "item_available": "Item disponível para pedidos",
       "edit_item": "Editar Item",
-      "update_item": "Atualizar",
-      "save_item": "Salvar",
-      "hide_item": "Ocultar",
-      "show_item": "Mostrar",
-      "delete_item": "Excluir",
-      "no_items_found": "Nenhum item encontrado",
-      "empty_menu": "Seu cardápio está vazio",
-      "adjust_filters": "Tente ajustar os filtros de busca",
-      "add_first_item": "Comece adicionando o primeiro item ao seu cardápio",
-      "add_first_item_button": "Adicionar Primeiro Item",
+      "cancel": "Cancelar",
+      "search_placeholder": "Buscar itens...",
+      "all_categories": "Todos",
+      "grid_view": "Grid",
+      "list_view": "Lista",
+      "item_name": "Nome do Item",
+      "category": "Categoria",
+      "price": "Preço",
+      "image_url": "URL da Imagem",
+      "description": "Descrição",
+      "available_for_orders": "Item disponível para pedidos",
+      "update": "Atualizar",
+      "save": "Salvar",
+      "available": "Disponível",
+      "unavailable": "Indisponível",
+      "confirm_delete": "Tem certeza que deseja excluir {{name}}?",
+      "item_deleted_success": "Item excluído com sucesso!",
       "item_added_success": "Item adicionado com sucesso!",
       "item_updated_success": "Item atualizado com sucesso!",
-      "item_deleted_success": "Item excluído com sucesso!",
-      "delete_confirmation": "Tem certeza que deseja excluir",
       "fill_required_fields": "Por favor, preencha todos os campos obrigatórios",
-      "item_status": {
-        "available": "Disponível",
-        "unavailable": "Indisponível",
-        "activated": "ativado",
-        "deactivated": "desativado"
+      "no_items_found": "Nenhum item encontrado",
+      "menu_empty": "Seu cardápio está vazio",
+      "try_adjust_filters": "Tente ajustar os filtros de busca",
+      "start_adding_items": "Comece adicionando o primeiro item ao seu cardápio",
+      "add_first_item": "Adicionar Primeiro Item",
+      "hide": "Ocultar",
+      "show": "Mostrar",
+      "delete": "Excluir",
+      "edit": "Editar",
+      "success": "sucesso",
+      "item_deactivated": "desativado",
+      "item_activated": "ativado",
+      "placeholders": {
+        "item_name": "ex.: Big Burger",
+        "category": "ex.: Hambúrgueres",
+        "image_url": "ex.: https://...",
+        "description": "Descreva o item..."
       },
       "categories": {
-        "hamburgers": "Hambúrgueres",
-        "sides": "Acompanhamentos",
-        "drinks": "Bebidas",
+        "burgers": "Hambúrgueres",
         "pizzas": "Pizzas",
+        "drinks": "Bebidas",
+        "sides": "Acompanhamentos",
         "salads": "Saladas",
-        "desserts": "Sobremesas"
+        "desserts": "Sobremesas",
+        "main_dishes": "Pratos Principais",
+        "appetizers": "Entradas",
+        "snacks": "Lanches"
+      },
+      "table": {
+        "item": "Item",
+        "category": "Categoria",
+        "price": "Preço",
+        "status": "Status",
+        "actions": "Ações"
       }
     },
     "orders": {
       "title": "Gerenciar Pedidos",
       "subtitle": "Acompanhe e gerencie todos os pedidos em tempo real",
       "last_update": "Última atualização",
-      "order_stats": {
+      "search_placeholder": "Buscar por ID do pedido ou nome do cliente...",
+      "filters": "Filtros",
+      "auto_refresh": "Auto-refresh",
+      "filter_all": "Todos",
+      "filter_pending": "Pendentes",
+      "filter_preparing": "Preparando",
+      "filter_ready": "Prontos",
+      "filter_delivering": "Entregando",
+      "filter_delivered": "Entregues",
+      "filter_cancelled": "Cancelados",
+      "no_orders_found": "Nenhum pedido encontrado",
+      "orders_updated": "Pedidos atualizados",
+      "item": "item",
+      "items": "itens",
+      "order_items": "Itens do Pedido",
+      "quantity": "Quantidade",
+      "each": "cada",
+      "total": "Total",
+      "advance": "Avançar",
+      "cancel": "Cancelar",
+      "advance_to": "Avançar para",
+      "cancel_order": "Cancelar Pedido",
+      "confirm_cancel": "Deseja cancelar o pedido {{id}}?",
+      "order_cancelled": "Pedido cancelado",
+      "order_cancelled_message": "Pedido {{id}} cancelado com sucesso",
+      "status": {
+        "pending": "Pendente",
+        "preparing": "Preparando",
+        "ready": "Pronto",
+        "delivering": "Entregando",
+        "delivered": "Entregue",
+        "cancelled": "Cancelado"
+      },
+      "status_messages": {
+        "pending": "Status atualizado para Pendente",
+        "preparing": "Status atualizado para Preparando",
+        "ready": "Status atualizado para Pronto",
+        "delivering": "Status atualizado para Entregando",
+        "delivered": "Status atualizado para Entregue",
+        "cancelled": "Status atualizado para Cancelado"
+      },
+      "stats": {
         "total": "Total",
         "pending": "Pendentes",
         "preparing": "Preparando",
@@ -614,50 +692,7 @@
         "delivering": "Entregando",
         "delivered": "Entregues",
         "cancelled": "Cancelados"
-      },
-      "search_placeholder": "Buscar por ID do pedido ou nome do cliente...",
-      "filters": "Filtros:",
-      "auto_refresh": "Auto-refresh",
-      "all_orders": "Todos",
-      "no_orders_found": "Nenhum pedido encontrado",
-      "no_orders_moment": "Não há pedidos no momento.",
-      "no_orders_status": "Não há pedidos com status",
-      "advance_order": "Avançar",
-      "cancel_order": "Cancelar",
-      "order_details": "Pedido {{orderId}}",
-      "customer": "Cliente",
-      "order_items": "Itens do Pedido",
-      "quantity_label": "Quantidade:",
-      "each": "cada",
-      "advance_to_status": "Avançar para {{status}}",
-      "cancel_order_button": "Cancelar Pedido",
-      "close": "Fechar",
-      "order_details_title": "Detalhes do Pedido",
-      "select_order_details": "Selecione um pedido para ver os detalhes",
-      "order_status": {
-        "pending": "Pendente",
-        "preparing": "Preparando",
-        "ready": "Pronto",
-        "delivering": "Em entrega",
-        "delivered": "Entregue",
-        "cancelled": "Cancelado"
-      },
-      "status_messages": {
-        "new_order": "Novo pedido:",
-        "order_preparing": "Pedido em preparo",
-        "order_ready": "Pedido pronto para entrega",
-        "order_delivering": "Pedido saiu para entrega",
-        "order_delivered": "Pedido entregue com sucesso",
-        "order_cancelled": "Pedido cancelado",
-        "orders_updated": "Pedidos atualizados",
-        "order_cancelled_title": "Pedido Cancelado",
-        "order_cancelled_message": "Pedido {{orderId}} foi cancelado"
-      },
-      "cancel_confirmation": "Tem certeza que deseja cancelar o pedido {{orderId}}?",
-      "mock_data": {
-          "customer_phone": "(11) 99999-9999",
-          "product_name": "Produto Exemplo"
-        }
+      }
     },
     "settings": {
       "title": "Configurações",
@@ -700,7 +735,7 @@
       },
       "mock_data": {
         "restaurant_description": "Restaurante especializado em hambúrgueres artesanais e porções",
-        "operating_hours": "11:00 - 23:00",
+        "opening_hours": "11:00 - 23:00",
         "default_categories": {
           "hamburgers": "Hambúrgueres",
           "sides": "Acompanhamentos", 
@@ -708,7 +743,21 @@
           "desserts": "Sobremesas"
         },
         "currency_symbol": "R$",
-        "placeholder_zero": "0.00"
+        "placeholder_zero": "0.00",
+        "orders_data": {
+          "customer_names": {
+            "joao_ferreira": "João Ferreira",
+            "maria_oliveira": "Maria Oliveira"
+          },
+          "addresses": {
+            "rua_das_flores_123": "Rua das Flores, 123",
+            "av_paulista_456": "Av. Paulista, 456"
+          },
+          "phones": {
+            "phone_1": "(11) 99999-1111",
+            "phone_2": "(11) 88888-2222"
+          }
+        }
       }
     },
     "mock_data": {

@@ -16,26 +16,26 @@ export default function AuthLayout({
   const { isAuthenticated } = useAuthStore();
   const router = useRouter();
 
-  // Redireciona para a página apropriada se estiver autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      const { userType } = useAuthStore.getState();
-      switch (userType) {
-        case 'restaurant':
-          router.push('/restaurant');
-          break;
-        case 'delivery':
-          router.push('/delivery');
-          break;
-        default:
-          router.push('/customer');
-          break;
-      }
-    }
-  }, [isAuthenticated, router]);
+  // Comentado o redirecionamento automático para permitir logout/troca de conta
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     const { userType } = useAuthStore.getState();
+  //     switch (userType) {
+  //       case 'restaurant':
+  //         router.push('/restaurant');
+  //         break;
+  //       case 'delivery':
+  //         router.push('/delivery');
+  //         break;
+  //       default:
+  //         router.push('/customer');
+  //         break;
+  //     }
+  //   }
+  // }, [isAuthenticated, router]);
 
-  // Se estiver autenticado, não renderiza nada enquanto redireciona
-  if (isAuthenticated) return null;
+  // Permite acesso às páginas de auth mesmo se autenticado (para logout/troca de conta)
+  // if (isAuthenticated) return null;
 
   return (
     <WebSafeKeyboardAvoidingView className="flex-1">

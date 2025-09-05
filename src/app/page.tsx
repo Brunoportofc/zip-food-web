@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import LanguageSelector from '@/components/LanguageSelector';
-import I18nClientProvider from '@/components/I18nClientProvider';
+
 import { useTranslation } from 'react-i18next';
 import { MdLogin, MdDeliveryDining, MdRestaurant, MdPerson } from 'react-icons/md';
 import '@/i18n';
@@ -126,11 +126,7 @@ const HomeContent = () => {
 };
 
 const Home = () => {
-  return (
-    <I18nClientProvider>
-      <HomeContent />
-    </I18nClientProvider>
-  );
+  return <HomeContent />;
 };
 
 export default Home;

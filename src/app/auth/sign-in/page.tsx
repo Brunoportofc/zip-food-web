@@ -35,7 +35,7 @@ const SignInContent = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [userType, setUserType] = useState<UserType>('customer');
   
-  const { signIn, setUserType: storeSetUserType, isAuthenticated } = useAuthStore();
+  const { signIn, setUserType: storeSetUserType, isAuthenticated, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   
   const { t } = useTranslation();
@@ -46,23 +46,23 @@ const SignInContent = () => {
     }
   }, [type]);
 
-  // Verificar se o usuário já está autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      const { userType } = useAuthStore.getState();
-      switch (userType) {
-        case 'restaurant':
-          router.push('/restaurant');
-          break;
-        case 'delivery':
-          router.push('/delivery');
-          break;
-        default:
-          router.push('/customer');
-          break;
-      }
-    }
-  }, [isAuthenticated, router]);
+  // Comentado o redirecionamento automático para permitir logout/troca de conta
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     const { userType } = useAuthStore.getState();
+  //     switch (userType) {
+  //       case 'restaurant':
+  //         router.push('/restaurant');
+  //         break;
+  //       case 'delivery':
+  //         router.push('/delivery');
+  //         break;
+  //       default:
+  //         router.push('/customer');
+  //         break;
+  //     }
+  //   }
+  // }, [isAuthenticated, router]);
 
   const submit = async () => {
     const { email, password } = form;
@@ -223,6 +223,22 @@ const SignInContent = () => {
           {/* Footer Links */}
           <AnimatedContainer animationType="fadeInUp" delay={600}>
             <div className="text-center mt-6 space-y-3">
+              {isAuthenticated && (
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Você já está logado. Deseja fazer logout?
+                  </p>
+                  <button
+                     onClick={() => {
+                       logout();
+                       showAlert('Sucesso', 'Logout realizado com sucesso!');
+                     }}
+                     className="text-red-600 hover:text-red-700 font-medium underline"
+                   >
+                     Fazer Logout
+                   </button>
+                </div>
+              )}
               <p className="text-gray-600">
                 {t('auth.signin.footer.no_account')}{' '}
                 <Link 

@@ -50,23 +50,23 @@ const SignUpContent = () => {
     }
   }, [type]);
 
-  // Verificar se o usuário já está autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      const { userType } = useAuthStore.getState();
-      switch (userType) {
-        case 'restaurant':
-          router.push('/restaurant');
-          break;
-        case 'delivery':
-          router.push('/delivery');
-          break;
-        default:
-          router.push('/customer');
-          break;
-      }
-    }
-  }, [isAuthenticated, router]);
+  // Comentado o redirecionamento automático para permitir logout/troca de conta
+  // useEffect(() => {
+  //   if (isAuthenticated) {
+  //     const { userType } = useAuthStore.getState();
+  //     switch (userType) {
+  //       case 'restaurant':
+  //         router.push('/restaurant');
+  //         break;
+  //       case 'delivery':
+  //         router.push('/delivery');
+  //         break;
+  //       default:
+  //         router.push('/customer');
+  //         break;
+  //     }
+  //   }
+  // }, [isAuthenticated, router]);
 
   const submit = async () => {
     const { name, email, password, confirmPassword } = form;
@@ -261,6 +261,27 @@ const SignUpContent = () => {
               </button>
             </div>
           </AnimatedContainer>
+
+          {/* Logout Button for Authenticated Users */}
+          {isAuthenticated && (
+            <AnimatedContainer animationType="fadeInUp" delay={550}>
+              <div className="text-center mt-4">
+                <p className="text-gray-600 mb-2">
+                  Você já está logado. Deseja fazer logout para criar uma nova conta?
+                </p>
+                <button
+                  onClick={() => {
+                    const { logout } = useAuthStore.getState();
+                    logout();
+                    alert('Logout realizado com sucesso!');
+                  }}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Fazer Logout
+                </button>
+              </div>
+            </AnimatedContainer>
+          )}
 
           {/* Sign In Link */}
           <AnimatedContainer animationType="fadeInUp" delay={600}>

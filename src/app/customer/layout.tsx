@@ -6,6 +6,7 @@ import LogoutButton from '@/components/LogoutButton';
 import { MdPerson, MdShoppingCart, MdFavorite, MdLocationOn } from 'react-icons/md';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 
 export default function CustomerLayout({
   children,
@@ -32,26 +33,26 @@ export default function CustomerLayout({
               {/* Navigation Links */}
               <div className="hidden md:block">
                 <div className="ml-10 flex items-baseline space-x-4">
-                  <a
+                  <Link
                     href="/customer"
                     className="text-black hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     {t('customer.layout.home')}
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/customer/orders"
                     className="text-gray-600 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
                   >
                     <MdShoppingCart className="mr-1" size={18} />
                     {t('customer.layout.orders')}
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/customer/favorites"
                     className="text-gray-600 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
                   >
                     <MdFavorite className="mr-1" size={18} />
                     {t('customer.layout.favorites')}
-                  </a>
+                  </Link>
                 </div>
               </div>
 
@@ -67,13 +68,13 @@ export default function CustomerLayout({
                 
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-                    <a
+                    <Link
                       href="/customer/profile"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       <MdPerson className="inline mr-2" size={16} />
                       {t('customer.layout.my_profile')}
-                    </a>
+                    </Link>
                     <div className="border-t border-gray-100 my-1"></div>
                     <div className="px-4 py-2">
                       <LogoutButton />

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
+import Link from 'next/link';
 import '@/i18n';
 
 // Mock data para pedidos
@@ -88,12 +89,12 @@ export default function OrdersPage() {
           <MdReceipt className="mx-auto text-gray-400" size={64} />
           <h2 className="text-xl font-semibold mt-4 mb-2">{t('customer.orders.no_orders')}</h2>
           <p className="text-gray-600 mb-6">{t('customer.orders.explore_restaurants')}</p>
-          <a 
+          <Link 
             href="/customer" 
             className="inline-block bg-red-500 text-white px-6 py-2 rounded-md font-medium hover:bg-red-600 transition-colors"
           >
             {t('customer.orders.explore_button')}
-          </a>
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">

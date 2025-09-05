@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="he" dir="rtl">
       <head>
         {/* Preload de recursos críticos */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />

@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { initializeFirestoreConfig } from '@/lib/firestore-config';
 import I18nClientProvider from '@/components/I18nClientProvider';
 
 // Lazy loading para ClientComponents
@@ -33,15 +32,6 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
   useEffect(() => {
-    // Inicializar configurações do Firestore para desenvolvimento
-    const initializeFirestore = async () => {
-      try {
-        await initializeFirestoreConfig();
-      } catch (error) {
-        console.warn('Erro ao inicializar configurações do Firestore:', error);
-      }
-    };
-    
     // Preload de rotas críticas após montagem do componente
     const preloadRoutesAsync = async () => {
       const criticalRoutes = [
@@ -63,9 +53,6 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
       
       await Promise.allSettled(preloadPromises);
     };
-    
-    // Executar inicialização do Firestore imediatamente
-    initializeFirestore();
     
     // Executar preload após um pequeno delay
     const timeoutId = setTimeout(preloadRoutesAsync, 1000);

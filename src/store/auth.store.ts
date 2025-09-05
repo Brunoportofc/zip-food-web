@@ -2,8 +2,6 @@ import { createWithEqualityFn } from 'zustand/traditional';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
 import { authService } from '@/services/auth.service';
-import { auth, db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
 
 export type UserType = 'customer' | 'restaurant' | 'delivery';
 
@@ -103,24 +101,6 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
           }
         }
         
-        // Verificação inicial rápida - se já está autenticado e tem usuário, não precisa verificar novamente
-        if (auth.currentUser && currentState.isAuthenticated && currentState.user) {
-          set({ lastAuthCheck: now });
-          return;
-        }
-        
-        // Se não há usuário no Firebase Auth, limpar estado
-        if (!auth.currentUser) {
-          set({
-            user: null,
-            isAuthenticated: false,
-            userType: null,
-            isLoading: false,
-            lastAuthCheck: now
-          });
-          return;
-        }
-        
         // Define loading apenas se não estiver já carregando
         if (!currentState.isLoading) {
           set({ isLoading: true });
@@ -141,14 +121,14 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
               lastAuthCheck: now
             });
           } else {
-              set({
-                user: null,
-                isAuthenticated: false,
-                userType: null,
-                isLoading: false,
-                lastAuthCheck: now
-              });
-            }
+            set({
+              user: null,
+              isAuthenticated: false,
+              userType: null,
+              isLoading: false,
+              lastAuthCheck: now
+            });
+          }
         } catch (error) {
           console.error('Erro ao verificar autenticação:', error);
           set({
@@ -163,13 +143,11 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
       
       syncUserData: async () => {
         try {
-          // Só tenta sincronizar se estiver autenticado e tiver um usuário atual no Firebase
-          if (get().isAuthenticated && auth.currentUser) {
-            const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
-            
-            if (userDoc.exists()) {
-              const userData = userDoc.data() as User;
-              set({ user: userData, userType: userData.type, isOfflineMode: false });
+          // Sincronização simulada - apenas atualiza o timestamp
+          if (get().isAuthenticated) {
+            const user = await authService.getCurrentUser();
+            if (user) {
+              set({ user, userType: user.type, isOfflineMode: false });
               console.log('Dados do usuário sincronizados com sucesso');
             }
           }

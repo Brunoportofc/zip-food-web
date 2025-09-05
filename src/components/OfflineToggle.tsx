@@ -8,24 +8,21 @@ interface OfflineToggleProps {
 
 const OfflineToggle: React.FC<OfflineToggleProps> = ({ className }) => {
   const { t } = useTranslation();
-  const { isOfflineMode, isFirebaseConnected, enableOfflineMode, disableOfflineMode } = useConnectivity();
-
-  // Funcionalidade de alternância removida - componente apenas para exibição de status
+  const { isOfflineMode, toggleOfflineMode } = useConnectivity();
 
   // Determina o estado do botão com base na conectividade
   const getButtonStyle = () => {
     if (isOfflineMode) {
       return 'bg-yellow-500 hover:bg-yellow-600';
-    } else if (!isFirebaseConnected) {
-      return 'bg-orange-500 hover:bg-orange-600';
     } else {
-      return 'bg-red-400 hover:bg-red-500';
+      return 'bg-green-500 hover:bg-green-600';
     }
   };
 
   return (
-    <div
-      className={`flex items-center px-4 py-2 rounded-md ${getButtonStyle()} text-white ${className}`}
+    <button
+      onClick={toggleOfflineMode}
+      className={`flex items-center px-4 py-2 rounded-md ${getButtonStyle()} text-white transition-colors ${className}`}
       title={isOfflineMode ? t('common.offlineMode') : t('common.onlineMode')}
     >
       {isOfflineMode ? (
@@ -43,12 +40,7 @@ const OfflineToggle: React.FC<OfflineToggleProps> = ({ className }) => {
           {t('common.online')}
         </>
       )}
-      
-      {/* Indicador de status do Firebase */}
-      {!isOfflineMode && !isFirebaseConnected && (
-        <span className="ml-2 h-2 w-2 rounded-full bg-red-500 animate-pulse" title={t('common.firebaseDisconnected')}></span>
-      )}
-    </div>
+    </button>
   );
 };
 

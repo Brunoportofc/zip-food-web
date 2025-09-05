@@ -26,9 +26,27 @@ class MockAuthService {
     await new Promise(resolve => setTimeout(resolve, 500));
     
     if (email === this.MOCK_EMAIL && password === this.MOCK_PASSWORD) {
-      console.log('🎭 Login simulado realizado com sucesso');
+      // Infere o tipo de usuário baseado na URL atual
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+      let userType: UserType = 'customer'; // padrão
+      
+      if (currentPath.startsWith('/restaurant')) {
+        userType = 'restaurant';
+      } else if (currentPath.startsWith('/delivery')) {
+        userType = 'delivery';
+      } else if (currentPath.startsWith('/customer')) {
+        userType = 'customer';
+      }
+      
+      // Atualiza o tipo do usuário simulado
+      const userWithCorrectType = {
+        ...this.mockUser,
+        type: userType
+      };
+      
+      console.log(`🎭 Login simulado realizado com sucesso para tipo: ${userType}`);
       return {
-        user: this.mockUser,
+        user: userWithCorrectType,
         token: this.MOCK_TOKEN
       };
     }
@@ -80,6 +98,14 @@ class MockAuthService {
   }
 
   /**
+   * Retorna token atual simulado
+   */
+  async getCurrentToken(): Promise<string | null> {
+    await new Promise(resolve => setTimeout(resolve, 50));
+    return this.MOCK_TOKEN;
+  }
+
+  /**
    * Atualiza dados do usuário simulado
    */
   updateMockUser(updates: Partial<User>): void {
@@ -95,6 +121,14 @@ class MockAuthService {
       email: this.MOCK_EMAIL,
       password: this.MOCK_PASSWORD
     };
+  }
+
+  /**
+   * Auto-login para desenvolvimento
+   */
+  async autoLoginForDev(): Promise<{ user: User; token: string } | null> {
+    console.log('🎭 Auto-login de desenvolvimento ativado');
+    return await this.signIn(this.MOCK_EMAIL, this.MOCK_PASSWORD);
   }
 }
 

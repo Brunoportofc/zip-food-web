@@ -23,13 +23,13 @@ const resources = {
 // Criar uma nova instância do i18n para o cliente
 const clientI18n = i18n.createInstance();
 
-// Configurar com React e forçar idioma português (sem detecção automática)
+// Configurar com React e forçar idioma hebraico (sem detecção automática)
 clientI18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'pt', // Força o idioma português
-    fallbackLng: 'pt',
+    lng: 'he', // Força o idioma hebraico
+    fallbackLng: 'he',
     debug: false, // Debug desativado
     interpolation: {
       escapeValue: false, // não é necessário para React
@@ -37,8 +37,8 @@ clientI18n
     // Removido LanguageDetector e detection para evitar mudança automática de idioma
   })
   .then(() => {
-    // Força o idioma português após a inicialização
-    clientI18n.changeLanguage('pt');
+    // Força o idioma hebraico após a inicialização
+    clientI18n.changeLanguage('he');
     
     // Limpa qualquer configuração de idioma no localStorage
     if (typeof window !== 'undefined') {
