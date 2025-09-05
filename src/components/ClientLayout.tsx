@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { initializeFirestoreConfig } from '../lib/firestore-config';
+import { initializeFirestoreConfig } from '@/lib/firestore-config';
+import I18nClientProvider from '@/components/I18nClientProvider';
 
 // Lazy loading para ClientComponents
 const ClientComponents = dynamic(
@@ -21,6 +22,8 @@ const AuthModeToggle = dynamic(
     loading: () => null
   }
 );
+
+
 
 
 
@@ -71,10 +74,10 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   }, []);
 
   return (
-    <>
+    <I18nClientProvider>
       {children}
       <ClientComponents />
       <AuthModeToggle />
-    </>
+    </I18nClientProvider>
   );
 }

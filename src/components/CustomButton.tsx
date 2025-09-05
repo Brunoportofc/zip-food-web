@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface CustomButtonProps {
   title: string;
@@ -17,6 +18,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   disabled = false,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const getButtonStyle = () => {
     const baseStyle = 'rounded-2xl py-4 px-6 font-quicksand-bold text-body-responsive border-2 transition-colors';
     
@@ -43,7 +45,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       {isLoading ? (
         <div className="flex items-center justify-center">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-          <span>Carregando...</span>
+          <span>{t('components.custom_button.loading')}</span>
         </div>
       ) : (
         title

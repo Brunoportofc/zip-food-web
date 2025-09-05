@@ -107,169 +107,174 @@ const SignUpContent = () => {
   };
 
   return (
-    <div className="flex-1 bg-white min-h-screen flex justify-center items-center">
-      <div className="w-full max-w-md p-4 md:p-8 space-y-8">
-        {/* Header Section */}
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left Side - Profile Selection and Animation */}
+      <div className="flex-1 flex flex-col justify-center items-center p-8 bg-white">
+        {/* Animation Section */}
         <AnimatedContainer animationType="fadeInDown" delay={200}>
-          <div className="flex flex-col items-center space-y-4">
-            <div className="flex justify-center mb-6">
-              <LottieAnimation userType={userType} width={80} height={80} />
+          <div className="mb-12">
+            <div className="w-48 h-48 flex items-center justify-center">
+              <LottieAnimation userType={userType} width={192} height={192} />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-primary">
-              {t('auth.signup.title')}
-            </h1>
-            <p className="text-lg md:text-xl font-medium text-gray-700 text-center">
-              {t('auth.signup.subtitle')}
-            </p>
           </div>
         </AnimatedContainer>
 
-        {/* User Type Selection */}
+        {/* Profile Selection */}
         <AnimatedContainer animationType="fadeInUp" delay={300}>
-          <div className="bg-zinc-900 rounded-3xl p-6 md:p-8 shadow-xl border-2 border-primary space-y-6">
-            <div className="flex flex-row items-center mb-4">
-              <h2 className="text-xl md:text-2xl font-semibold text-primary">
-                {t('userType.selectTitle')}
-              </h2>
-            </div>
+          <div className="w-full max-w-md">
+            <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
+              {t('profile_selection.title')}
+            </h2>
             
-            <div className="flex justify-between gap-2">
+            <div className="grid grid-cols-3 gap-4">
               <button
                 onClick={() => setUserType('customer')}
-                className={`flex-1 p-3 rounded-xl flex flex-col items-center justify-center transition-all ${userType === 'customer' ? 'bg-primary text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                className={`p-4 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${
+                  userType === 'customer' 
+                    ? 'bg-red-600 text-white border-red-600' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-red-600 hover:text-red-600'
+                }`}
               >
-                <LottieAnimation userType="customer" width={28} height={28} />
-                <span className="mt-2 font-medium">{t('userType.customer')}</span>
+                <MdPerson size={32} />
+                <span className="mt-2 font-medium text-sm">{t('profile_selection.customer')}</span>
               </button>
               
               <button
                 onClick={() => setUserType('restaurant')}
-                className={`flex-1 p-3 rounded-xl flex flex-col items-center justify-center transition-all ${userType === 'restaurant' ? 'bg-primary text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                className={`p-4 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${
+                  userType === 'restaurant' 
+                    ? 'bg-red-600 text-white border-red-600' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-red-600 hover:text-red-600'
+                }`}
               >
-                <LottieAnimation userType="restaurant" width={28} height={28} />
-                <span className="mt-2 font-medium">{t('userType.restaurant')}</span>
+                <MdRestaurant size={32} />
+                <span className="mt-2 font-medium text-sm">{t('profile_selection.restaurant')}</span>
               </button>
               
               <button
                 onClick={() => setUserType('delivery')}
-                className={`flex-1 p-3 rounded-xl flex flex-col items-center justify-center transition-all ${userType === 'delivery' ? 'bg-primary text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
+                className={`p-4 rounded-xl flex flex-col items-center justify-center transition-all border-2 ${
+                  userType === 'delivery' 
+                    ? 'bg-red-600 text-white border-red-600' 
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-red-600 hover:text-red-600'
+                }`}
               >
-                <LottieAnimation userType="delivery" width={28} height={28} />
-                <span className="mt-2 font-medium">{t('userType.delivery')}</span>
+                <MdDeliveryDining size={32} />
+                <span className="mt-2 font-medium text-sm">{t('profile_selection.delivery')}</span>
               </button>
             </div>
           </div>
         </AnimatedContainer>
+      </div>
 
-        {/* Signup Card */}
-        <AnimatedContainer animationType="fadeInUp" delay={400}>
-          <div className="bg-primary rounded-3xl p-6 md:p-8 shadow-xl border-2 border-black space-y-6">
-            {/* Name Input */}
-            <div>
-              <label className="block text-base md:text-lg font-medium text-black mb-2">
-                Nome
-              </label>
-              <div className="flex flex-row items-center bg-white rounded-2xl px-4 py-4 border-2 border-black">
-                <FiUser size={20} color="#000000" />
-                <input
-                  className="flex-1 ml-3 text-base md:text-lg font-medium text-black bg-transparent outline-none"
-                  placeholder="Digite seu nome"
-                  value={form.name}
-                  onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  type="text"
-                />
+      {/* Right Side - Signup Form */}
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="w-full max-w-md">
+          {/* Header */}
+          <AnimatedContainer animationType="fadeInUp" delay={400}>
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-red-600 mb-2">Zip Food</h1>
+            </div>
+          </AnimatedContainer>
+
+          {/* Signup Form */}
+          <AnimatedContainer animationType="fadeInUp" delay={500}>
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 space-y-6">
+              {/* Name Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nome
+                </label>
+                <div className="relative">
+                  <FiUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="text"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    placeholder="Digite seu nome"
+                    value={form.name}
+                    onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Email Input */}
-            <div>
-              <label className="block text-base md:text-lg font-medium text-black mb-2">
-                {t('auth.fields.email_label')}
-              </label>
-              <div className="flex flex-row items-center bg-white rounded-2xl px-4 py-4 border-2 border-black">
-                <FiMail size={20} color="#000000" />
-                <input
-                  className="flex-1 ml-3 text-base md:text-lg font-medium text-black bg-transparent outline-none"
-                  placeholder={t('auth.fields.email_placeholder')}
-                  value={form.email}
-                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                  type="email"
-                />
+              {/* Email Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('auth.fields.email_label')}
+                </label>
+                <div className="relative">
+                  <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="email"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    placeholder={t('auth.fields.email_placeholder')}
+                    value={form.email}
+                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Password Input */}
-            <div>
-              <label className="block text-base md:text-lg font-medium text-black mb-2">
-                {t('auth.fields.password_label')}
-              </label>
-              <div className="flex flex-row items-center bg-white rounded-2xl px-4 py-4 border-2 border-black">
-                <FiLock size={20} color="#000000" />
-                <input
-                  className="flex-1 ml-3 text-base md:text-lg font-medium text-black bg-transparent outline-none"
-                  placeholder={t('auth.fields.password_placeholder')}
-                  value={form.password}
-                  onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
-                  type="password"
-                />
+              {/* Password Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('auth.fields.password_label')}
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="password"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    placeholder={t('auth.fields.password_placeholder')}
+                    value={form.password}
+                    onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Confirm Password Input */}
-            <div>
-              <label className="block text-base md:text-lg font-medium text-black mb-2">
-                Confirmar Senha
-              </label>
-              <div className="flex flex-row items-center bg-white rounded-2xl px-4 py-4 border-2 border-black">
-                <FiLock size={20} color="#000000" />
-                <input
-                  className="flex-1 ml-3 text-base md:text-lg font-medium text-black bg-transparent outline-none"
-                  placeholder="Confirme sua senha"
-                  value={form.confirmPassword}
-                  onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                  type="password"
-                  onKeyDown={(e) => e.key === 'Enter' && submit()}
-                />
+              {/* Confirm Password Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('auth.fields.confirm_password_label')}
+                </label>
+                <div className="relative">
+                  <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="password"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    placeholder={t('auth.fields.confirm_password_placeholder')}
+                    value={form.confirmPassword}
+                    onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                    onKeyDown={(e) => e.key === 'Enter' && submit()}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <CustomButton
-                title={t('auth.signup.button.sign_up')}
-                isLoading={isSubmitting || isLoading}
-                onPress={submit}
-                variant="black"
-              />
-            </div>
-          </div>
-        </AnimatedContainer>
-
-        {/* Sign In Link */}
-        <AnimatedContainer animationType="fadeInUp" delay={600}>
-          <div className="flex justify-center items-center">
-            <p className="text-base md:text-lg font-medium text-gray-700">
-              {t('auth.signup.footer.has_account')}{' '}
-              <Link 
-                href={`/auth/sign-in?type=${userType}`} 
-                className="text-primary font-semibold hover:underline"
+              {/* Submit Button */}
+              <button
+                onClick={submit}
+                disabled={isSubmitting || isLoading}
+                className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {t('auth.signup.footer.sign_in')}
-              </Link>
-            </p>
-          </div>
-        </AnimatedContainer>
-        
-        {/* Back to Selection */}
-        <AnimatedContainer animationType="fadeInUp" delay={700}>
-          <div className="flex justify-center items-center">
-            <Link 
-              href="/user-type-selection" 
-              className="text-gray-500 text-sm hover:text-primary transition-colors"
-            >
-              {t('common.back_to_selection')}
-            </Link>
-          </div>
-        </AnimatedContainer>
+                {isSubmitting || isLoading ? t('auth.signup.button.creating_account') : t('auth.signup.button.sign_up')}
+              </button>
+            </div>
+          </AnimatedContainer>
+
+          {/* Sign In Link */}
+          <AnimatedContainer animationType="fadeInUp" delay={600}>
+            <div className="text-center mt-6">
+              <p className="text-gray-600">
+                {t('auth.signup.footer.has_account')}{' '}
+                <Link 
+                  href={`/auth/sign-in?type=${userType}`} 
+                  className="text-red-600 font-medium hover:text-red-700 hover:underline"
+                >
+                  {t('auth.signup.footer.sign_in')}
+                </Link>
+              </p>
+            </div>
+          </AnimatedContainer>
+        </div>
       </div>
     </div>
   );

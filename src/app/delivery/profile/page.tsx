@@ -4,7 +4,7 @@ import { useState } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomInput from '@/components/CustomInput';
 import CustomButton from '@/components/CustomButton';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuthData, useAuthActions } from '@/store/auth.store';
 import { useTranslation } from 'react-i18next';
 import '@/i18n';
 
@@ -36,32 +36,33 @@ interface DeliveryProfile {
 
 export default function DeliveryProfile() {
   const { t } = useTranslation();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthData();
+  const { logout } = useAuthActions();
   
   // Dados simulados do perfil do entregador
   const [profile, setProfile] = useState<DeliveryProfile>({
-    name: user?.name || 'Carlos Oliveira',
-    email: user?.email || 'carlos.oliveira@email.com',
-    phone: '(11) 98765-4321',
-    cpf: '123.456.789-00',
-    birthDate: '1990-05-15',
+    name: user?.name || t('delivery.profile.mock_data.name', 'Carlos Oliveira'),
+    email: user?.email || t('delivery.profile.mock_data.email', 'carlos.oliveira@email.com'),
+    phone: t('delivery.profile.mock_data.phone', '(11) 98765-4321'),
+    cpf: t('delivery.profile.mock_data.cpf', '123.456.789-00'),
+    birthDate: t('delivery.profile.mock_data.birth_date', '1990-05-15'),
     vehicleType: 'motorcycle',
-    licensePlate: 'ABC1D23',
+    licensePlate: t('delivery.profile.mock_data.license_plate', 'ABC1D23'),
     bankInfo: {
-      bankName: 'Nubank',
+      bankName: t('delivery.profile.mock_data.bank_name', 'Nubank'),
       accountType: 'checking',
-      accountNumber: '12345678',
-      agency: '0001',
-      pixKey: 'carlos.oliveira@email.com',
+      accountNumber: t('delivery.profile.mock_data.account_number', '12345678'),
+      agency: t('delivery.profile.mock_data.agency', '0001'),
+      pixKey: t('delivery.profile.mock_data.pix_key', 'carlos.oliveira@email.com'),
     },
     address: {
-      street: 'Rua das Flores',
-      number: '123',
-      complement: 'Apto 45',
-      neighborhood: 'Jardim Primavera',
-      city: 'São Paulo',
-      state: 'SP',
-      zipCode: '01234-567',
+      street: t('delivery.profile.mock_data.street', 'Rua das Flores'),
+      number: t('delivery.profile.mock_data.number', '123'),
+      complement: t('delivery.profile.mock_data.complement', 'Apto 45'),
+      neighborhood: t('delivery.profile.mock_data.neighborhood', 'Jardim Primavera'),
+      city: t('delivery.profile.mock_data.city', 'São Paulo'),
+      state: t('delivery.profile.mock_data.state', 'SP'),
+      zipCode: t('delivery.profile.mock_data.zip_code', '01234-567'),
     },
   });
 
@@ -76,13 +77,16 @@ export default function DeliveryProfile() {
       setProfile({ ...profile, [field]: value });
     } else if (fieldParts.length === 2) {
       const [section, subfield] = fieldParts;
-      setProfile({
-        ...profile,
-        [section]: {
-          ...profile[section as keyof DeliveryProfile],
-          [subfield]: value,
-        },
-      });
+      const currentSection = profile[section as keyof DeliveryProfile];
+      if (typeof currentSection === 'object' && currentSection !== null) {
+        setProfile({
+          ...profile,
+          [section]: {
+            ...currentSection,
+            [subfield]: value,
+          },
+        });
+      }
     }
   };
 
@@ -99,49 +103,49 @@ export default function DeliveryProfile() {
   const getVehicleTypeText = (type: string) => {
     switch (type) {
       case 'motorcycle':
-        return 'Motocicleta';
+        return t('delivery.profile.vehicle_types.motorcycle');
       case 'bicycle':
-        return 'Bicicleta';
+        return t('delivery.profile.vehicle_types.bicycle');
       case 'car':
-        return 'Carro';
+        return t('delivery.profile.vehicle_types.car');
       case 'on_foot':
-        return 'A pé';
+        return t('delivery.profile.vehicle_types.walking');
       default:
         return type;
     }
   };
 
   const getAccountTypeText = (type: string) => {
-    return type === 'checking' ? 'Conta Corrente' : 'Conta Poupança';
+    return type === 'checking' ? t('delivery.profile.account_types.checking') : t('delivery.profile.account_types.savings');
   };
 
   return (
-    <AnimatedContainer animation="fadeIn" className="h-full">
+    <AnimatedContainer animationType="fadeIn" className="h-full">
       <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">Meu Perfil</h1>
-          <p className="text-gray-600">Gerencie suas informações pessoais</p>
+          <h1 className="text-2xl font-bold">{t('delivery.profile.title')}</h1>
+          <p className="text-gray-600">{t('delivery.profile.subtitle')}</p>
         </div>
         <div className="flex space-x-2">
           {!isEditing ? (
-            <CustomButton 
-              text="Editar Perfil" 
-              onClick={() => setIsEditing(true)} 
-              variant="outlined"
+            <CustomButton
+              title={t('delivery.profile.edit_profile')}
+              onPress={() => setIsEditing(true)}
+              variant="outline"
               className="px-4 py-2"
             />
           ) : (
             <>
               <CustomButton 
-                text="Cancelar" 
-                onClick={() => setIsEditing(false)} 
-                variant="outlined"
+                title={t('delivery.profile.cancel')} 
+                onPress={() => setIsEditing(false)} 
+                variant="outline"
                 className="px-4 py-2"
               />
               <CustomButton 
-                text="Salvar" 
-                onClick={handleSaveProfile} 
-                loading={isSaving}
+                title={t('delivery.profile.save')} 
+                onPress={handleSaveProfile} 
+                isLoading={isSaving}
                 className="px-4 py-2"
               />
             </>
@@ -155,25 +159,25 @@ export default function DeliveryProfile() {
             className={`px-4 py-3 font-medium ${activeTab === 'personal' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
             onClick={() => setActiveTab('personal')}
           >
-            Dados Pessoais
+            {t('delivery.profile.personal_data')}
           </button>
           <button
             className={`px-4 py-3 font-medium ${activeTab === 'vehicle' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
             onClick={() => setActiveTab('vehicle')}
           >
-            Veículo
+            {t('delivery.profile.vehicle')}
           </button>
           <button
             className={`px-4 py-3 font-medium ${activeTab === 'bank' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
             onClick={() => setActiveTab('bank')}
           >
-            Dados Bancários
+            {t('delivery.profile.bank_data')}
           </button>
           <button
             className={`px-4 py-3 font-medium ${activeTab === 'address' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
             onClick={() => setActiveTab('address')}
           >
-            Endereço
+            {t('delivery.profile.address')}
           </button>
         </div>
 
@@ -182,25 +186,27 @@ export default function DeliveryProfile() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.full_name')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Nome"
                       value={profile.name}
-                      onChange={(e) => handleInputChange('name', e.target.value)}
-                      placeholder="Nome completo"
+                      onChangeText={(text) => handleInputChange('name', text)}
+                      placeholder={t('delivery.profile.full_name')}
                     />
                   ) : (
                     <p className="text-gray-900">{profile.name}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.email')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="E-mail"
                       value={profile.email}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
+                      onChangeText={(text) => handleInputChange('email', text)}
                       placeholder="E-mail"
-                      type="email"
+                      keyboardType="email-address"
                     />
                   ) : (
                     <p className="text-gray-900">{profile.email}</p>
@@ -210,23 +216,26 @@ export default function DeliveryProfile() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.phone')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Telefone"
                       value={profile.phone}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
+                      onChangeText={(text) => handleInputChange('phone', text)}
                       placeholder="Telefone"
+                      keyboardType="phone-pad"
                     />
                   ) : (
                     <p className="text-gray-900">{profile.phone}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.cpf')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="CPF"
                       value={profile.cpf}
-                      onChange={(e) => handleInputChange('cpf', e.target.value)}
+                      onChangeText={(text) => handleInputChange('cpf', text)}
                       placeholder="CPF"
                     />
                   ) : (
@@ -236,13 +245,13 @@ export default function DeliveryProfile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.birth_date')}</label>
                 {isEditing ? (
                   <CustomInput
+                    label="Data de Nascimento"
                     value={profile.birthDate}
-                    onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                    onChangeText={(text) => handleInputChange('birthDate', text)}
                     placeholder="Data de Nascimento"
-                    type="date"
                   />
                 ) : (
                   <p className="text-gray-900">{new Date(profile.birthDate).toLocaleDateString()}</p>
@@ -251,7 +260,7 @@ export default function DeliveryProfile() {
 
               <div className="pt-4 mt-4 border-t">
                 <CustomButton 
-                  text="Alterar Senha" 
+                  text={t('delivery.profile.change_password')} 
                   onClick={() => {}} 
                   variant="outlined"
                   className="px-4 py-2"
@@ -263,17 +272,17 @@ export default function DeliveryProfile() {
           {activeTab === 'vehicle' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Veículo</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.vehicle_type')}</label>
                 {isEditing ? (
                   <select
                     value={profile.vehicleType}
                     onChange={(e) => handleInputChange('vehicleType', e.target.value)}
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
-                    <option value="motorcycle">Motocicleta</option>
-                    <option value="bicycle">Bicicleta</option>
-                    <option value="car">Carro</option>
-                    <option value="on_foot">A pé</option>
+                    <option value="motorcycle">{t('delivery.profile.vehicle_types.motorcycle')}</option>
+                      <option value="bicycle">{t('delivery.profile.vehicle_types.bicycle')}</option>
+                      <option value="car">{t('delivery.profile.vehicle_types.car')}</option>
+                      <option value="on_foot">{t('delivery.profile.vehicle_types.walking')}</option>
                   </select>
                 ) : (
                   <p className="text-gray-900">{getVehicleTypeText(profile.vehicleType)}</p>
@@ -282,11 +291,12 @@ export default function DeliveryProfile() {
 
               {(profile.vehicleType === 'motorcycle' || profile.vehicleType === 'car') && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Placa do Veículo</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.vehicle_plate')}</label>
                   {isEditing ? (
                     <CustomInput
+                      label="Placa do Veículo"
                       value={profile.licensePlate || ''}
-                      onChange={(e) => handleInputChange('licensePlate', e.target.value)}
+                      onChangeText={(text) => handleInputChange('licensePlate', text)}
                       placeholder="Placa do Veículo"
                     />
                   ) : (
@@ -296,22 +306,22 @@ export default function DeliveryProfile() {
               )}
 
               <div className="pt-4 mt-4 border-t">
-                <h3 className="text-lg font-medium mb-2">Documentos</h3>
-                <p className="text-sm text-gray-600 mb-4">Envie fotos dos seus documentos para verificação</p>
+                <h3 className="text-lg font-medium mb-2">{t('delivery.profile.documents')}</h3>
+                <p className="text-sm text-gray-600 mb-4">{t('delivery.profile.documents_description')}</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <p className="text-sm font-medium mb-2">CNH (Frente e Verso)</p>
+                    <p className="text-sm font-medium mb-2">{t('delivery.profile.drivers_license')}</p>
                     <button className="text-primary text-sm font-medium">
-                      {isEditing ? 'Enviar documento' : 'Ver documento'}
-                    </button>
+                          {isEditing ? t('delivery.profile.upload_document') : t('delivery.profile.view_document')}
+                        </button>
                   </div>
                   
                   {(profile.vehicleType === 'motorcycle' || profile.vehicleType === 'car') && (
                     <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
-                      <p className="text-sm font-medium mb-2">Documento do Veículo</p>
+                      <p className="text-sm font-medium mb-2">{t('delivery.profile.vehicle_document')}</p>
                       <button className="text-primary text-sm font-medium">
-                        {isEditing ? 'Enviar documento' : 'Ver documento'}
+                        {isEditing ? t('delivery.profile.upload_document') : t('delivery.profile.view_document')}
                       </button>
                     </div>
                   )}
@@ -323,12 +333,13 @@ export default function DeliveryProfile() {
           {activeTab === 'bank' && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Banco</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.bank')}</label>
                 {isEditing ? (
                   <CustomInput
+                    label="Banco"
                     value={profile.bankInfo.bankName}
-                    onChange={(e) => handleInputChange('bankInfo.bankName', e.target.value)}
-                    placeholder="Nome do Banco"
+                    onChangeText={(text) => handleInputChange('bankInfo.bankName', text)}
+                    placeholder={t('delivery.profile.bank_name')}
                   />
                 ) : (
                   <p className="text-gray-900">{profile.bankInfo.bankName}</p>
@@ -336,7 +347,7 @@ export default function DeliveryProfile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Conta</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.account_type')}</label>
                 {isEditing ? (
                   <select
                     value={profile.bankInfo.accountType}
@@ -353,7 +364,7 @@ export default function DeliveryProfile() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Agência</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.agency')}</label>
                   {isEditing ? (
                     <CustomInput
                       value={profile.bankInfo.agency}
@@ -365,7 +376,7 @@ export default function DeliveryProfile() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Número da Conta</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.account_number')}</label>
                   {isEditing ? (
                     <CustomInput
                       value={profile.bankInfo.accountNumber}
@@ -379,7 +390,7 @@ export default function DeliveryProfile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Chave PIX</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('delivery.profile.pix_key')}</label>
                 {isEditing ? (
                   <CustomInput
                     value={profile.bankInfo.pixKey || ''}
@@ -397,7 +408,7 @@ export default function DeliveryProfile() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rua</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.street')}</label>
                   {isEditing ? (
                     <CustomInput
                       value={profile.address.street}
@@ -409,7 +420,7 @@ export default function DeliveryProfile() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.number')}</label>
                   {isEditing ? (
                     <CustomInput
                       value={profile.address.number}
@@ -423,7 +434,7 @@ export default function DeliveryProfile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.complement')}</label>
                 {isEditing ? (
                   <CustomInput
                     value={profile.address.complement || ''}
@@ -436,7 +447,7 @@ export default function DeliveryProfile() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.neighborhood')}</label>
                 {isEditing ? (
                   <CustomInput
                     value={profile.address.neighborhood}
@@ -450,7 +461,7 @@ export default function DeliveryProfile() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.zip_code')}</label>
                   {isEditing ? (
                     <CustomInput
                       value={profile.address.zipCode}
@@ -462,7 +473,7 @@ export default function DeliveryProfile() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.city')}</label>
                   {isEditing ? (
                     <CustomInput
                       value={profile.address.city}
@@ -474,7 +485,7 @@ export default function DeliveryProfile() {
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('delivery.profile.state')}</label>
                   {isEditing ? (
                     <CustomInput
                       value={profile.address.state}
@@ -493,7 +504,7 @@ export default function DeliveryProfile() {
 
       <div className="mt-6">
         <CustomButton 
-          text="Sair da Conta" 
+          text={t('delivery.profile.logout')} 
           onClick={logout} 
           variant="outlined"
           className="px-4 py-2 text-red-500 border-red-500 hover:bg-red-50"

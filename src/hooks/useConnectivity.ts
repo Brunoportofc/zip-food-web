@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { connectivityService } from '../services/connectivity.service';
-import useAuthStore from '../store/auth.store';
+import { connectivityService } from '@/services/connectivity.service';
+import useAuthStore from '@/store/auth.store';
 import { useNotification } from './useNotification';
 import { useTranslation } from 'react-i18next';
 

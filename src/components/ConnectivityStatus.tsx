@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useConnectivity } from '../hooks/useConnectivity';
+import { useConnectivity } from '@/hooks/useConnectivity';
 
 interface ConnectivityStatusProps {
   className?: string;
@@ -9,33 +9,12 @@ interface ConnectivityStatusProps {
 const ConnectivityStatus: React.FC<ConnectivityStatusProps> = ({ className }) => {
   const { t } = useTranslation();
   const { isOnline, isOfflineMode, isFirebaseConnected } = useConnectivity();
-  const [showSyncNotification, setShowSyncNotification] = useState(false);
 
-  // Efeito para mostrar notificação de sincronização quando voltar ao modo online
-  useEffect(() => {
-    if (isOnline && !isOfflineMode && isFirebaseConnected) {
-      setShowSyncNotification(true);
-      const timer = setTimeout(() => {
-        setShowSyncNotification(false);
-      }, 3000); // Mostra a notificação por 3 segundos
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isOnline, isOfflineMode, isFirebaseConnected]);
+  // Notificação de sincronização removida
 
   return (
     <>
-      {/* Notificação de sincronização */}
-      {showSyncNotification && (
-        <div className={`fixed top-4 right-4 bg-red-400 text-white p-3 rounded-md shadow-lg z-50 transition-opacity duration-300 ${className}`}>
-          <span className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            {t('common.syncComplete')}
-          </span>
-        </div>
-      )}
+      {/* Notificação de sincronização removida */}
 
       {/* Banner de modo offline */}
       {!isOnline && (

@@ -1,4 +1,4 @@
-import { User, UserType } from '../store/auth.store';
+import { User, UserType } from '@/store/auth.store';
 
 /**
  * Serviço de autenticação simulada para desenvolvimento

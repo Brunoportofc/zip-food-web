@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useConnectivity } from '../hooks/useConnectivity';
+import { useConnectivity } from '@/hooks/useConnectivity';
 
 interface OfflineToggleProps {
   className?: string;
@@ -10,17 +10,7 @@ const OfflineToggle: React.FC<OfflineToggleProps> = ({ className }) => {
   const { t } = useTranslation();
   const { isOfflineMode, isFirebaseConnected, enableOfflineMode, disableOfflineMode } = useConnectivity();
 
-  const handleToggle = async () => {
-    try {
-      if (isOfflineMode) {
-        await disableOfflineMode();
-      } else {
-        await enableOfflineMode();
-      }
-    } catch (error) {
-      console.error('Erro ao alternar modo offline:', error);
-    }
-  };
+  // Funcionalidade de alternância removida - componente apenas para exibição de status
 
   // Determina o estado do botão com base na conectividade
   const getButtonStyle = () => {
@@ -34,25 +24,23 @@ const OfflineToggle: React.FC<OfflineToggleProps> = ({ className }) => {
   };
 
   return (
-    <button
-      onClick={handleToggle}
-      className={`flex items-center px-4 py-2 rounded-md ${getButtonStyle()} text-white transition-colors ${className}`}
-      disabled={!navigator.onLine && !isOfflineMode}
-      title={!navigator.onLine && !isOfflineMode ? t('common.cannotReconnectOffline') : ''}
+    <div
+      className={`flex items-center px-4 py-2 rounded-md ${getButtonStyle()} text-white ${className}`}
+      title={isOfflineMode ? t('common.offlineMode') : t('common.onlineMode')}
     >
       {isOfflineMode ? (
         <>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14M12 5l7 7-7 7" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
           </svg>
-          {t('common.goOnline')}
+          {t('common.offline')}
         </>
       ) : (
         <>
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          {t('common.goOffline')}
+          {t('common.online')}
         </>
       )}
       
@@ -60,7 +48,7 @@ const OfflineToggle: React.FC<OfflineToggleProps> = ({ className }) => {
       {!isOfflineMode && !isFirebaseConnected && (
         <span className="ml-2 h-2 w-2 rounded-full bg-red-500 animate-pulse" title={t('common.firebaseDisconnected')}></span>
       )}
-    </button>
+    </div>
   );
 };
 

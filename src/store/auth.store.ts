@@ -1,8 +1,8 @@
-import { create } from 'zustand';
+import { createWithEqualityFn } from 'zustand/traditional';
 import { persist, subscribeWithSelector } from 'zustand/middleware';
 import { shallow } from 'zustand/shallow';
-import { authService } from '../services/auth.service';
-import { auth, db } from '../lib/firebase';
+import { authService } from '@/services/auth.service';
+import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 export type UserType = 'customer' | 'restaurant' | 'delivery';
@@ -36,7 +36,7 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
 }
 
-const useAuthStore = create<AuthState>(
+const useAuthStore = createWithEqualityFn<AuthState>(
   subscribeWithSelector(
     persist(
       (set, get) => ({
@@ -130,22 +130,25 @@ const useAuthStore = create<AuthState>(
           const user = await authService.getCurrentUser();
           
           if (user) {
+            // Preserva userType atual se disponível, senão usa o do usuário
+            const finalUserType = currentState.userType || user.type;
+            
             set({
               user,
               isAuthenticated: true,
-              userType: currentState.userType || user.type, // Preserva userType atual se disponível
+              userType: finalUserType,
               isLoading: false,
               lastAuthCheck: now
             });
           } else {
-            set({
-              user: null,
-              isAuthenticated: false,
-              userType: null,
-              isLoading: false,
-              lastAuthCheck: now
-            });
-          }
+              set({
+                user: null,
+                isAuthenticated: false,
+                userType: null,
+                isLoading: false,
+                lastAuthCheck: now
+              });
+            }
         } catch (error) {
           console.error('Erro ao verificar autenticação:', error);
           set({
@@ -187,7 +190,8 @@ const useAuthStore = create<AuthState>(
       name: 'auth-storage', // nome para o armazenamento persistente
     }
     )
-  )
+  ),
+  shallow
 );
 
 // Seletor otimizado para componentes que só precisam de dados específicos
@@ -197,8 +201,7 @@ export const useAuthData = () => useAuthStore(
     user: state.user,
     userType: state.userType,
     isLoading: state.isLoading
-  }),
-  shallow
+  })
 );
 
 // Seletor para ações (não causa re-render quando estado muda)
@@ -211,8 +214,7 @@ export const useAuthActions = () => useAuthStore(
     checkAuth: state.checkAuth,
     setUserType: state.setUserType,
     setLoading: state.setLoading
-  }),
-  shallow
+  })
 );
 
 export default useAuthStore;

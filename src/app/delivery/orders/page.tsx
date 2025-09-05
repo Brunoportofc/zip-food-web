@@ -1,8 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { useTranslation } from 'react-i18next';
+import { 
+  MdDeliveryDining, 
+  MdLocationOn, 
+  MdAccessTime,
+  MdPhone,
+  MdCheckCircle,
+  MdCancel,
+  MdDirections,
+  MdAttachMoney,
+  MdRestaurant,
+  MdPerson,
+  MdFilterList
+} from 'react-icons/md';
 import '@/i18n';
 
 type OrderStatus = 'available' | 'accepted' | 'picked_up' | 'delivered' | 'cancelled';
@@ -36,7 +49,11 @@ export default function DeliveryOrders() {
   const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
   
   // Dados simulados de pedidos
-  const [orders, setOrders] = useState<DeliveryOrder[]>([
+  const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+
+  // Initialize orders after translations are ready
+  useEffect(() => {
+    const initialOrders: DeliveryOrder[] = [
     {
       id: '#5678',
       restaurant: {
@@ -46,7 +63,7 @@ export default function DeliveryOrders() {
       customer: {
         name: 'João Silva',
         address: 'Rua das Flores, 123 - Jardim Primavera',
-        phone: '(11) 98765-4321',
+        phone: t('delivery.orders.mock_data.customer_phone_1', '(11) 98765-4321'),
       },
       items: [
         { name: 'Whopper', quantity: 2 },
@@ -69,7 +86,7 @@ export default function DeliveryOrders() {
       customer: {
         name: 'Maria Oliveira',
         address: 'Av. Principal, 456 - Centro',
-        phone: '(11) 91234-5678',
+        phone: t('delivery.orders.mock_data.customer_phone_2', '(11) 91234-5678'),
       },
       items: [
         { name: 'Pizza Grande Calabresa', quantity: 1 },
@@ -91,7 +108,7 @@ export default function DeliveryOrders() {
       customer: {
         name: 'Carlos Mendes',
         address: 'Rua dos Pinheiros, 789 - Pinheiros',
-        phone: '(11) 97890-1234',
+        phone: t('delivery.orders.mock_data.customer_phone_3', '(11) 97890-1234'),
       },
       items: [
         { name: 'Big Mac', quantity: 2 },
@@ -105,7 +122,9 @@ export default function DeliveryOrders() {
       estimatedTime: 15,
       createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
     },
-  ]);
+    ];
+    setOrders(initialOrders);
+  }, [t]);
 
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders(
@@ -127,32 +146,49 @@ export default function DeliveryOrders() {
   const getStatusBadgeClass = (status: OrderStatus) => {
     switch (status) {
       case 'available':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300';
       case 'accepted':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
       case 'picked_up':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-800 border-indigo-300';
       case 'delivered':
-        return 'bg-red-100 text-red-600';
+        return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
+    }
+  };
+
+  const getStatusIcon = (status: OrderStatus) => {
+    switch (status) {
+      case 'available':
+        return MdAccessTime;
+      case 'accepted':
+        return MdCheckCircle;
+      case 'picked_up':
+        return MdDeliveryDining;
+      case 'delivered':
+        return MdCheckCircle;
+      case 'cancelled':
+        return MdCancel;
+      default:
+        return MdAccessTime;
     }
   };
 
   const getStatusText = (status: OrderStatus) => {
     switch (status) {
       case 'available':
-        return 'Disponível';
+        return t('delivery.orders.status.available');
       case 'accepted':
-        return 'Aceito';
+        return t('delivery.orders.status.accepted');
       case 'picked_up':
-        return 'Retirado';
+        return t('delivery.orders.status.picked_up');
       case 'delivered':
-        return 'Entregue';
+        return t('delivery.orders.status.delivered');
       case 'cancelled':
-        return 'Cancelado';
+        return t('delivery.orders.status.cancelled');
       default:
         return status;
     }
@@ -174,80 +210,158 @@ export default function DeliveryOrders() {
   const getNextStatusText = (currentStatus: OrderStatus): string => {
     switch (currentStatus) {
       case 'available':
-        return 'Aceitar Pedido';
+        return t('delivery.orders.accept_order');
       case 'accepted':
-        return 'Confirmar Retirada';
+        return t('delivery.orders.confirm_pickup');
       case 'picked_up':
-        return 'Confirmar Entrega';
+        return t('delivery.orders.confirm_delivery');
       default:
         return '';
     }
   };
 
   return (
-    <AnimatedContainer animation="fadeIn" className="h-full">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Pedidos</h1>
-        <p className="text-gray-600">Gerencie suas entregas</p>
-      </div>
-
-      <div className="flex space-x-2 mb-6">
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'current' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('current')}
-        >
-          Pedidos Atuais
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'history' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('history')}
-        >
-          Histórico
-        </button>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-6">
-        <div className="lg:w-2/3">
-          {displayOrders.length > 0 ? (
-            <div className="space-y-4">
-              {displayOrders.map((order) => (
-                <div 
-                  key={order.id} 
-                  className={`bg-white rounded-lg shadow p-4 cursor-pointer hover:bg-gray-50 ${selectedOrder?.id === order.id ? 'border-2 border-primary' : ''}`}
-                  onClick={() => setSelectedOrder(order)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="flex items-center">
-                        <h3 className="font-medium">{order.id}</h3>
-                        <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(order.status)}`}>
-                          {getStatusText(order.status)}
-                        </span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-1">Restaurante: {order.restaurant.name}</p>
-                      <p className="text-sm text-gray-600">Cliente: {order.customer.name}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold">R$ {order.deliveryFee.toFixed(2)}</p>
-                      <p className="text-xs text-gray-500">Taxa de entrega</p>
-                      <p className="text-sm mt-1">{order.distance.toFixed(1)} km</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <AnimatedContainer animationType="fadeInDown" delay={0}>
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 lg:p-8 rounded-b-3xl shadow-2xl mb-6 lg:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
+            <div className="flex items-center space-x-3 lg:space-x-4">
+              <div className="w-12 h-12 lg:w-16 lg:h-16 bg-white/20 rounded-2xl flex items-center justify-center">
+                <MdDeliveryDining size={24} className="text-white lg:hidden" />
+                <MdDeliveryDining size={32} className="text-white hidden lg:block" />
+              </div>
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold">{t('delivery.orders.title')}</h1>
+                <p className="text-blue-100 mt-1 text-sm lg:text-base hidden sm:block">{t('delivery.orders.subtitle')}</p>
+              </div>
             </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow p-8 text-center">
-              <p className="text-gray-500">
-                {activeTab === 'current' ? 'Nenhum pedido disponível no momento' : 'Nenhum pedido no histórico'}
-              </p>
+            <div className="text-left sm:text-right">
+              <p className="text-blue-100 text-xs lg:text-sm">{t('delivery.orders.total_orders')}</p>
+              <p className="text-white font-bold text-lg lg:text-xl">{orders.length}</p>
             </div>
-          )}
+          </div>
         </div>
+      </AnimatedContainer>
+
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 pb-6 lg:pb-8">
+        {/* Filter Buttons */}
+        <AnimatedContainer animationType="fadeInUp" delay={100}>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 mb-6 lg:mb-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                <MdFilterList size={18} className="text-blue-600" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">{t('delivery.orders.filter_orders')}</h2>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <button
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 flex items-center space-x-2 ${
+                  activeTab === 'current' 
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg' 
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+                onClick={() => setActiveTab('current')}
+              >
+                <span>{t('delivery.orders.current_orders')}</span>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  activeTab === 'current' ? 'bg-white/20' : 'bg-gray-200'
+                }`}>
+                  {currentOrders.length}
+                </span>
+              </button>
+              <button
+                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 hover:scale-105 flex items-center space-x-2 ${
+                  activeTab === 'history' 
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg' 
+                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                }`}
+                onClick={() => setActiveTab('history')}
+              >
+                <span>{t('delivery.orders.history')}</span>
+                <span className={`px-2 py-1 rounded-full text-xs ${
+                  activeTab === 'history' ? 'bg-white/20' : 'bg-gray-200'
+                }`}>
+                  {historyOrders.length}
+                </span>
+              </button>
+            </div>
+          </div>
+        </AnimatedContainer>
+
+        {/* Orders List */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="lg:w-2/3">
+            {displayOrders.length > 0 ? (
+              <div className="space-y-4 lg:space-y-6">
+                {displayOrders.map((order, index) => {
+                  const StatusIcon = getStatusIcon(order.status);
+                  return (
+                    <AnimatedContainer key={order.id} animationType="fadeInUp" delay={200 + index * 100}>
+                      <div 
+                        className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 cursor-pointer hover:shadow-xl transition-all duration-300 ${
+                          selectedOrder?.id === order.id ? 'border-2 border-blue-500 shadow-xl' : ''
+                        }`}
+                        onClick={() => setSelectedOrder(order)}
+                      >
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">{order.id}</span>
+                            </div>
+                            <div>
+                              <div className="flex items-center space-x-3">
+                                <h3 className="text-lg font-bold text-gray-900">{order.id}</h3>
+                                <span className={`px-3 py-1 rounded-xl text-xs font-semibold border flex items-center space-x-1 ${getStatusBadgeClass(order.status)}`}>
+                                  <StatusIcon size={14} />
+                                  <span>{getStatusText(order.status)}</span>
+                                </span>
+                              </div>
+                              <div className="flex items-center space-x-2 mt-2">
+                                <MdRestaurant size={16} className="text-gray-400" />
+                                <p className="text-sm text-gray-600">{order.restaurant.name}</p>
+                              </div>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <MdPerson size={16} className="text-gray-400" />
+                                <p className="text-sm text-gray-600">{order.customer.name}</p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="bg-gray-50 rounded-xl p-4 text-center">
+                            <div className="flex items-center justify-center space-x-1 mb-1">
+                              <MdAttachMoney size={16} className="text-green-600" />
+                              <p className="font-bold text-green-600 text-lg">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {order.deliveryFee.toFixed(2)}</p>
+                            </div>
+                            <p className="text-xs text-gray-500 mb-2">{t('delivery.orders.delivery_fee')}</p>
+                            <div className="flex items-center justify-center space-x-1">
+                              <MdDirections size={14} className="text-gray-400" />
+                              <p className="text-sm font-medium text-gray-700">{order.distance.toFixed(1)} km</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </AnimatedContainer>
+                  );
+                })}
+              </div>
+            ) : (
+              <AnimatedContainer animationType="fadeInUp" delay={200}>
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MdDeliveryDining size={32} className="text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg font-medium">
+                    {activeTab === 'current' ? t('delivery.orders.no_current_orders') : t('delivery.orders.no_history_orders')}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-2">{t('delivery.orders.orders_will_appear')}</p>
+                </div>
+              </AnimatedContainer>
+            )}
+          </div>
 
         <div className="lg:w-1/3">
           {selectedOrder ? (
-            <AnimatedContainer animation="fadeIn" className="bg-white rounded-lg shadow p-6">
+            <AnimatedContainer animationType="fadeIn" className="bg-white rounded-lg shadow p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h2 className="text-lg font-semibold">{selectedOrder.id}</h2>
@@ -261,20 +375,20 @@ export default function DeliveryOrders() {
               </div>
 
               <div className="border-t border-b py-4 my-4">
-                <h3 className="font-medium mb-2">Restaurante</h3>
+                <h3 className="font-medium mb-2">{t('delivery.orders.restaurant')}</h3>
                 <p className="text-sm">{selectedOrder.restaurant.name}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.restaurant.address}</p>
               </div>
 
               <div className="border-b py-4 mb-4">
-                <h3 className="font-medium mb-2">Cliente</h3>
+                <h3 className="font-medium mb-2">{t('delivery.orders.customer')}</h3>
                 <p className="text-sm">{selectedOrder.customer.name}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.customer.phone}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.customer.address}</p>
               </div>
 
               <div className="mb-4">
-                <h3 className="font-medium mb-2">Itens do Pedido</h3>
+                <h3 className="font-medium mb-2">{t('delivery.orders.order_items')}</h3>
                 <ul className="space-y-2">
                   {selectedOrder.items.map((item, index) => (
                     <li key={index} className="text-sm">
@@ -286,34 +400,36 @@ export default function DeliveryOrders() {
 
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <p className="text-sm">Distância</p>
+                  <p className="text-sm">{t('delivery.orders.distance')}</p>
                   <p className="font-medium">{selectedOrder.distance.toFixed(1)} km</p>
                 </div>
                 <div>
-                  <p className="text-sm">Tempo estimado</p>
+                  <p className="text-sm">{t('delivery.orders.estimated_time')}</p>
                   <p className="font-medium">{selectedOrder.estimatedTime} min</p>
                 </div>
                 <div>
-                  <p className="text-sm">Taxa de entrega</p>
-                  <p className="font-medium">R$ {selectedOrder.deliveryFee.toFixed(2)}</p>
+                  <p className="text-sm">{t('delivery.orders.delivery_fee')}</p>
+                  <p className="font-medium">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {selectedOrder.deliveryFee.toFixed(2)}</p>
                 </div>
               </div>
 
               {['available', 'accepted', 'picked_up'].includes(selectedOrder.status) && (
                 <div className="mt-6">
                   <button
-                    className="w-full bg-primary text-white py-3 rounded-md font-medium"
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
                     onClick={() => handleUpdateStatus(selectedOrder.id, getNextStatus(selectedOrder.status)!)}
                   >
-                    {getNextStatusText(selectedOrder.status)}
+                    <MdCheckCircle size={18} />
+                    <span>{getNextStatusText(selectedOrder.status)}</span>
                   </button>
                   
                   {selectedOrder.status !== 'available' && (
                     <button
-                      className="w-full mt-2 border border-red-500 text-red-500 py-2 rounded-md font-medium"
+                      className="w-full mt-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
                       onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
                     >
-                      Cancelar Entrega
+                      <MdCancel size={18} />
+                      <span>{t('delivery.orders.cancel_delivery')}</span>
                     </button>
                   )}
                 </div>
@@ -321,11 +437,12 @@ export default function DeliveryOrders() {
             </AnimatedContainer>
           ) : (
             <div className="bg-white rounded-lg shadow p-6 text-center">
-              <p className="text-gray-500">Selecione um pedido para ver os detalhes</p>
+              <p className="text-gray-500">{t('delivery.orders.select_order_details')}</p>
             </div>
           )}
         </div>
       </div>
-    </AnimatedContainer>
+      </div>
+    </div>
   );
 }

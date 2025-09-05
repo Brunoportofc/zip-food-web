@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Toaster } from 'react-hot-toast';
 
 // Importar apenas a configuração básica do i18n
 import '@/i18n';
@@ -33,7 +34,6 @@ export default function RootLayout({
     <html lang="pt-BR">
       <head>
         {/* Preload de recursos críticos */}
-        <link rel="preload" href="/fonts" as="font" type="font/woff2" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
@@ -45,6 +45,26 @@ export default function RootLayout({
             {children}
           </ClientLayout>
         </AuthCheck>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              style: {
+                background: '#10B981',
+              },
+            },
+            error: {
+              style: {
+                background: '#EF4444',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );

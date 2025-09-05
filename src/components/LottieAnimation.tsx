@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import Lottie from 'lottie-react';
 
 // Importar as animações JSON
-import foodBeverageAnimation from '../app/Food & Beverage (1).json';
-import storeAnimation from '../app/Store.json';
-import mainSceneAnimation from '../app/Main Scene (1).json';
+import foodBeverageAnimation from '@/app/Food & Beverage (1).json';
+import storeAnimation from '@/app/Store.json';
+import mainSceneAnimation from '@/app/Main Scene (1).json';
 
 type UserType = 'customer' | 'restaurant' | 'delivery';
 

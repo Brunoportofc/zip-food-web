@@ -85,10 +85,19 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
           ? requiredUserType 
           : [requiredUserType];
         
-        // Se o usuário não tiver o tipo correto
-        if (!requiredTypes.includes(userType)) {
+        // Se o usuário não tiver o tipo correto OU se o userType for null/undefined
+        if (!userType || !requiredTypes.includes(userType)) {
+
+          
           hasRedirected.current = true;
           setCachedValidation(false);
+          
+          // Se userType é null/undefined, redireciona para login para reautenticar
+          if (!userType) {
+            console.log('🔴 ProtectedRoute: Redirecionando para login - userType é null');
+            router.replace('/auth/sign-in');
+            return;
+          }
           
           // Redireciona para a página apropriada com base no tipo do usuário
           switch (userType) {
@@ -102,8 +111,8 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
               router.replace('/delivery');
               break;
             default:
-              // Se não tiver tipo definido, redireciona para seleção de tipo
-              router.replace('/user-type-selection');
+              // Se não tiver tipo definido, redireciona para a página principal
+              router.replace('/');
           }
           return;
         }
@@ -139,7 +148,7 @@ const ProtectedRoute = ({ children, requiredUserType }: ProtectedRouteProps) => 
       ? requiredUserType 
       : [requiredUserType];
     
-    if (!requiredTypes.includes(userType)) {
+    if (!userType || !requiredTypes.includes(userType)) {
       return (
         <div className="flex items-center justify-center min-h-screen bg-black">
           <div className="flex flex-col items-center space-y-4">

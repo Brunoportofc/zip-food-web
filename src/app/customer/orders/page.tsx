@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
+import { useTranslation } from 'react-i18next';
+import '@/i18n';
 
 // Mock data para pedidos
 const mockOrders = [
@@ -66,6 +68,7 @@ interface Order {
 }
 
 export default function OrdersPage() {
+  const { t } = useTranslation();
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
 
   const toggleOrderDetails = (orderId: string) => {
@@ -78,18 +81,18 @@ export default function OrdersPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Meus Pedidos</h1>
+      <h1 className="text-2xl font-bold mb-6">{t('customer.orders.title')}</h1>
       
       {mockOrders.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <MdReceipt className="mx-auto text-gray-400" size={64} />
-          <h2 className="text-xl font-semibold mt-4 mb-2">Você ainda não fez nenhum pedido</h2>
-          <p className="text-gray-600 mb-6">Explore restaurantes e faça seu primeiro pedido!</p>
+          <h2 className="text-xl font-semibold mt-4 mb-2">{t('customer.orders.no_orders')}</h2>
+          <p className="text-gray-600 mb-6">{t('customer.orders.explore_restaurants')}</p>
           <a 
             href="/customer" 
             className="inline-block bg-red-500 text-white px-6 py-2 rounded-md font-medium hover:bg-red-600 transition-colors"
           >
-            Explorar restaurantes
+            {t('customer.orders.explore_button')}
           </a>
         </div>
       ) : (
@@ -107,7 +110,7 @@ export default function OrdersPage() {
                     <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                       {order.status}
                     </span>
-                    <p className="text-sm text-gray-500 mt-1">Pedido #{order.id}</p>
+                    <p className="text-sm text-gray-500 mt-1">{t('customer.orders.order_number', { number: order.id })}</p>
                   </div>
                 </div>
               </div>
@@ -117,7 +120,7 @@ export default function OrdersPage() {
                 <div className="flex items-center">
                   <MdRestaurant className="text-gray-600 mr-2" size={20} />
                   <span className="text-gray-800">
-                    {order.items.length} {order.items.length === 1 ? 'item' : 'itens'}
+                    {order.items.length} {order.items.length === 1 ? t('customer.orders.item') : t('customer.orders.items')}
                   </span>
                   <span className="mx-2">•</span>
                   <MdAccessTime className="text-gray-600 mr-2" size={20} />
@@ -137,7 +140,7 @@ export default function OrdersPage() {
               {expandedOrder === order.id && (
                 <div className="p-4 bg-gray-50 border-t border-gray-100">
                   <div className="mb-4">
-                    <h4 className="font-medium mb-2">Itens do pedido</h4>
+                    <h4 className="font-medium mb-2">{t('customer.orders.order_items')}</h4>
                     <div className="space-y-2">
                       {order.items.map((item, index) => (
                         <div key={index} className="flex justify-between">
@@ -150,19 +153,19 @@ export default function OrdersPage() {
                   
                   <div className="border-t border-gray-200 pt-3 mb-3">
                     <div className="flex justify-between font-medium">
-                      <span>Total</span>
+                      <span>{t('common.total')}</span>
                       <span>R$ {order.total.toFixed(2)}</span>
                     </div>
                   </div>
                   
                   <div className="mb-2">
-                    <h4 className="font-medium mb-1">Endereço de entrega</h4>
+                    <h4 className="font-medium mb-1">{t('customer.orders.delivery_address')}</h4>
                     <p className="text-gray-700">{order.address}</p>
                   </div>
                   
                   <div className="flex justify-end mt-4">
                     <button className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 transition-colors">
-                      Pedir novamente
+                      {t('customer.orders.order_again')}
                     </button>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { db } from '../lib/firebase';
+import { db } from '@/lib/firebase';
 import { enableNetwork, disableNetwork, onSnapshotsInSync, collection, getDocs } from 'firebase/firestore';
 
 class ConnectivityService {

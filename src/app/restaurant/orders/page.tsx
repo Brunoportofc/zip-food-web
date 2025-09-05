@@ -1,9 +1,27 @@
 'use client';
 
-import { useState } from 'react';
-import AnimatedContainer from '@/components/AnimatedContainer';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import '@/i18n';
+import AnimatedContainer from '@/components/AnimatedContainer';
+import { toast } from 'react-hot-toast';
+import { showSuccessAlert, showConfirmAlert } from '@/components/AlertSystem';
+import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
+import { 
+  MdShoppingCart, 
+  MdPerson, 
+  MdLocationOn, 
+  MdPhone, 
+  MdAccessTime, 
+  MdPlayArrow, 
+  MdCheck, 
+  MdCancel,
+  MdRefresh,
+  MdFilterList,
+  MdSearch,
+  MdTrendingUp,
+  MdRestaurant,
+  MdDeliveryDining
+} from 'react-icons/md';
 
 type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
 
@@ -25,64 +43,87 @@ interface Order {
   total: number;
   status: OrderStatus;
   createdAt: Date;
-  deliveryPerson?: string;
 }
 
 export default function RestaurantOrders() {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<OrderStatus | 'all'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAutoRefresh, setIsAutoRefresh] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const { notifyOrderStatusChange } = useRealTimeNotifications();
   
-  // Dados simulados de pedidos
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: '#1234',
-      customer: {
-        name: 'João Silva',
-        address: 'Rua das Flores, 123 - Jardim Primavera',
-        phone: '(11) 98765-4321',
+  const [orders, setOrders] = useState<Order[]>([]);
+
+  // Initialize orders after translations are ready
+  useEffect(() => {
+    const initialOrders: Order[] = [
+      {
+        id: '#1234',
+        customer: {
+          name: t('restaurant.mock_data.orders_data.customer_names.joao_ferreira'),
+          address: t('restaurant.mock_data.orders_data.addresses.rua_das_flores_123'),
+          phone: t('restaurant.mock_data.orders_data.phones.phone_1'),
+        },
+        items: [
+          { id: '1', name: t('mock_data.menu_items.big_burger'), quantity: 2, price: 29.9 },
+          { id: '2', name: t('mock_data.menu_items.french_fries'), quantity: 1, price: 15.9 },
+        ],
+        total: 75.7,
+        status: 'pending',
+        createdAt: new Date(),
       },
-      items: [
-        { id: '1', name: 'X-Burger Especial', quantity: 2, price: 29.9 },
-        { id: '2', name: 'Batata Frita Grande', quantity: 1, price: 15.9 },
-        { id: '3', name: 'Milk Shake de Chocolate', quantity: 2, price: 18.9 },
-      ],
-      total: 113.5,
-      status: 'pending',
-      createdAt: new Date(),
-    },
-    {
-      id: '#1233',
-      customer: {
-        name: 'Maria Oliveira',
-        address: 'Av. Principal, 456 - Centro',
-        phone: '(11) 91234-5678',
-      },
-      items: [
-        { id: '2', name: 'Batata Frita Grande', quantity: 1, price: 15.9 },
-        { id: '4', name: 'Pizza Média Margherita', quantity: 1, price: 45.9 },
-      ],
-      total: 61.8,
-      status: 'preparing',
-      createdAt: new Date(Date.now() - 30 * 60000), // 30 minutos atrás
-    },
-    {
-      id: '#1232',
-      customer: {
-        name: 'Carlos Mendes',
-        address: 'Rua dos Pinheiros, 789 - Pinheiros',
-        phone: '(11) 97890-1234',
-      },
-      items: [
-        { id: '5', name: 'Combo Família', quantity: 1, price: 89.9 },
-        { id: '6', name: 'Refrigerante 2L', quantity: 1, price: 12.9 },
-      ],
-      total: 102.8,
-      status: 'delivered',
-      createdAt: new Date(Date.now() - 120 * 60000), // 2 horas atrás
-      deliveryPerson: 'Pedro Alves',
-    },
-  ]);
+      {
+        id: '#1233',
+        customer: {
+          name: t('restaurant.mock_data.orders_data.customer_names.maria_oliveira'),
+          address: t('restaurant.mock_data.orders_data.addresses.av_paulista_456'),
+          phone: t('restaurant.mock_data.orders_data.phones.phone_2'),
+        },
+        items: [
+            { id: '3', name: t('mock_data.menu_items.chicken_burger'), quantity: 1, price: 45.9 },
+          ],
+         total: 45.9,
+         status: 'preparing',
+         createdAt: new Date(Date.now() - 30 * 60000),
+       },
+     ];
+     setOrders(initialOrders);
+   }, [t]);
+
+  useEffect(() => {
+    if (!isAutoRefresh) return;
+
+    const interval = setInterval(() => {
+      if (Math.random() < 0.1) {
+        const newOrder: Order = {
+          id: `#${Math.floor(Math.random() * 9000) + 1000}`,
+          customer: {
+            name: `Cliente ${Math.floor(Math.random() * 100)}`,
+            address: `Endereço ${Math.floor(Math.random() * 100)}`,
+            phone: t('restaurant.orders.mock_data.customer_phone', '(11) 99999-9999'),
+          },
+          items: [
+            {
+              id: Math.random().toString(),
+              name: t('restaurant.orders.mock_data.product_name', 'Produto Exemplo'),
+              quantity: 1,
+              price: 25.0,
+            },
+          ],
+          total: 25.0,
+          status: 'pending',
+          createdAt: new Date(),
+        };
+        setOrders(prev => [newOrder, ...prev]);
+        toast.success(t('restaurant.orders.new_order', { id: newOrder.id }));
+      }
+      setLastUpdate(new Date());
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [isAutoRefresh]);
 
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders(
@@ -94,233 +135,535 @@ export default function RestaurantOrders() {
     if (selectedOrder?.id === orderId) {
       setSelectedOrder({ ...selectedOrder, status: newStatus });
     }
+
+    const statusMessages = {
+      preparing: t('restaurant.orders.status_messages.preparing'),
+      ready: t('restaurant.orders.status_messages.ready'),
+      delivering: t('restaurant.orders.status_messages.delivering'),
+      delivered: t('restaurant.orders.status_messages.delivered'),
+      cancelled: t('restaurant.orders.status_messages.cancelled')
+    };
+
+    if (statusMessages[newStatus]) {
+      toast.success(`${statusMessages[newStatus]}: ${orderId}`);
+      notifyOrderStatusChange(orderId, newStatus);
+    }
   };
 
-  const filteredOrders = activeTab === 'all' 
-    ? orders 
-    : orders.filter(order => order.status === activeTab);
+  const handleCancelOrder = (orderId: string) => {
+    showConfirmAlert(
+      t('restaurant.orders.cancel_order'),
+      t('restaurant.orders.confirm_cancel', { id: orderId }),
+      () => {
+        setOrders(prev => prev.filter(order => order.id !== orderId));
+        setSelectedOrder(null);
+        showSuccessAlert(t('restaurant.orders.order_cancelled'), t('restaurant.orders.order_cancelled_message', { id: orderId }));
+        notifyOrderStatusChange(orderId, 'cancelled');
+      },
+      () => {}
+    );
+  };
+
+  const handleRefresh = () => {
+    setLastUpdate(new Date());
+    toast.success(t('restaurant.orders.orders_updated'));
+  };
+
+  const filteredOrders = orders
+    .filter(order => {
+      const matchesTab = activeTab === 'all' || order.status === activeTab;
+      const matchesSearch = searchTerm === '' || 
+        order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        order.customer.name.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesTab && matchesSearch;
+    })
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  const getOrderStats = () => {
+    return {
+      total: orders.length,
+      pending: orders.filter(o => o.status === 'pending').length,
+      preparing: orders.filter(o => o.status === 'preparing').length,
+      ready: orders.filter(o => o.status === 'ready').length,
+      delivering: orders.filter(o => o.status === 'delivering').length,
+      delivered: orders.filter(o => o.status === 'delivered').length,
+      cancelled: orders.filter(o => o.status === 'cancelled').length,
+    };
+  };
+
+  const stats = getOrderStats();
 
   const getStatusBadgeClass = (status: OrderStatus) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
       case 'preparing':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 text-blue-800 border border-blue-200';
       case 'ready':
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-green-100 text-green-800 border border-green-200';
       case 'delivering':
-        return 'bg-purple-100 text-purple-800';
+        return 'bg-purple-100 text-purple-800 border border-purple-200';
       case 'delivered':
-        return 'bg-red-100 text-red-600';
+        return 'bg-emerald-100 text-emerald-800 border border-emerald-200';
       case 'cancelled':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
   };
 
   const getStatusText = (status: OrderStatus) => {
     switch (status) {
-      case 'pending':
-        return 'Pendente';
-      case 'preparing':
-        return 'Preparando';
-      case 'ready':
-        return 'Pronto';
-      case 'delivering':
-        return 'Em entrega';
-      case 'delivered':
-        return 'Entregue';
-      case 'cancelled':
-        return 'Cancelado';
-      default:
-        return status;
+      case 'pending': return t('restaurant.orders.status.pending');
+      case 'preparing': return t('restaurant.orders.status.preparing');
+      case 'ready': return t('restaurant.orders.status.ready');
+      case 'delivering': return t('restaurant.orders.status.delivering');
+      case 'delivered': return t('restaurant.orders.status.delivered');
+      case 'cancelled': return t('restaurant.orders.status.cancelled');
+      default: return status;
+    }
+  };
+
+  const getStatusIcon = (status: OrderStatus) => {
+    switch (status) {
+      case 'pending': return <MdAccessTime className="w-4 h-4" />;
+      case 'preparing': return <MdRestaurant className="w-4 h-4" />;
+      case 'ready': return <MdCheck className="w-4 h-4" />;
+      case 'delivering': return <MdDeliveryDining className="w-4 h-4" />;
+      case 'delivered': return <MdCheck className="w-4 h-4" />;
+      case 'cancelled': return <MdCancel className="w-4 h-4" />;
+      default: return <MdShoppingCart className="w-4 h-4" />;
     }
   };
 
   const getNextStatus = (currentStatus: OrderStatus): OrderStatus | null => {
     switch (currentStatus) {
-      case 'pending':
-        return 'preparing';
-      case 'preparing':
-        return 'ready';
-      case 'ready':
-        return 'delivering';
-      case 'delivering':
-        return 'delivered';
-      default:
-        return null;
+      case 'pending': return 'preparing';
+      case 'preparing': return 'ready';
+      case 'ready': return 'delivering';
+      case 'delivering': return 'delivered';
+      default: return null;
     }
   };
 
   return (
-    <AnimatedContainer animation="fadeIn" className="h-full">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Pedidos</h1>
-        <p className="text-gray-600">Gerencie os pedidos do seu restaurante</p>
-      </div>
+    <AnimatedContainer animationType="fadeIn" delay={100}>
+      <AnimatedContainer animationType="slideInDown" delay={200}>
+        <div className="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl shadow-lg p-6 lg:p-8 text-white mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-4 lg:mb-0">
+              <h1 className="text-2xl lg:text-3xl font-bold flex items-center space-x-3 mb-2">
+                <MdShoppingCart size={32} />
+                <span>{t('restaurant.orders.title')}</span>
+              </h1>
+              <p className="text-red-100">{t('restaurant.orders.subtitle')}</p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-sm text-red-100">{t('restaurant.orders.last_update')}</p>
+                <p className="font-semibold">{lastUpdate.toLocaleTimeString()}</p>
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="p-3 bg-white bg-opacity-20 rounded-xl hover:bg-white hover:bg-opacity-30 transition-colors"
+              >
+                <MdRefresh size={20} />
+              </button>
+            </div>
+          </div>
 
-      <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'all' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('all')}
-        >
-          Todos
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'pending' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('pending')}
-        >
-          Pendentes
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'preparing' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('preparing')}
-        >
-          Preparando
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'ready' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('ready')}
-        >
-          Prontos
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'delivering' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('delivering')}
-        >
-          Em entrega
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'delivered' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('delivered')}
-        >
-          Entregues
-        </button>
-        <button
-          className={`px-4 py-2 rounded-md ${activeTab === 'cancelled' ? 'bg-primary text-white' : 'bg-gray-100 text-gray-700'}`}
-          onClick={() => setActiveTab('cancelled')}
-        >
-          Cancelados
-        </button>
-      </div>
+          <div className="grid grid-cols-2 lg:grid-cols-7 gap-4 mt-6">
+            <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <MdTrendingUp className="text-white" size={20} />
+                <span className="text-sm font-medium">{t('restaurant.orders.stats.total')}</span>
+              </div>
+              <p className="text-2xl font-bold">{stats.total}</p>
+            </div>
+            <div className="bg-yellow-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <MdAccessTime className="text-yellow-200" size={20} />
+                <span className="text-sm font-medium">{t('restaurant.orders.stats.pending')}</span>
+              </div>
+              <p className="text-2xl font-bold">{stats.pending}</p>
+            </div>
+            <div className="bg-blue-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <MdRestaurant className="text-blue-200" size={20} />
+                <span className="text-sm font-medium">{t('restaurant.orders.stats.preparing')}</span>
+              </div>
+              <p className="text-2xl font-bold">{stats.preparing}</p>
+            </div>
+            <div className="bg-green-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <MdCheck className="text-green-200" size={20} />
+                <span className="text-sm font-medium">{t('restaurant.orders.stats.ready')}</span>
+              </div>
+              <p className="text-2xl font-bold">{stats.ready}</p>
+            </div>
+            <div className="bg-purple-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <MdDeliveryDining className="text-purple-200" size={20} />
+                <span className="text-sm font-medium">{t('restaurant.orders.stats.delivering')}</span>
+              </div>
+              <p className="text-2xl font-bold">{stats.delivering}</p>
+            </div>
+            <div className="bg-emerald-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <MdCheck className="text-emerald-200" size={20} />
+                <span className="text-sm font-medium">{t('restaurant.orders.stats.delivered')}</span>
+              </div>
+              <p className="text-2xl font-bold">{stats.delivered}</p>
+            </div>
+            <div className="bg-red-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
+              <div className="flex items-center space-x-2 mb-2">
+                <MdCancel className="text-red-200" size={20} />
+                <span className="text-sm font-medium">{t('restaurant.orders.stats.cancelled')}</span>
+              </div>
+              <p className="text-2xl font-bold">{stats.cancelled}</p>
+            </div>
+          </div>
+        </div>
+      </AnimatedContainer>
+
+      <AnimatedContainer animationType="slideInUp" delay={250}>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 mb-6">
+          <div className="flex flex-col space-y-4">
+            <div className="w-full">
+              <div className="relative">
+                <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <input
+                  type="text"
+                  placeholder={t('restaurant.orders.search_placeholder')}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <MdFilterList className="text-gray-500" size={20} />
+                <span className="text-sm font-medium text-gray-700">{t('restaurant.orders.filters')}:</span>
+              </div>
+              <label className="flex items-center space-x-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAutoRefresh}
+                  onChange={(e) => setIsAutoRefresh(e.target.checked)}
+                  className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                />
+                <span>{t('restaurant.orders.auto_refresh')}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </AnimatedContainer>
+
+      <AnimatedContainer animationType="slideInUp" delay={300}>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 mb-6">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'all'
+                  ? 'bg-red-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <MdTrendingUp size={18} />
+              <span>{t('restaurant.orders.filter_all')} ({stats.total})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'pending'
+                  ? 'bg-yellow-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <MdAccessTime size={18} />
+              <span>{t('restaurant.orders.filter_pending')} ({stats.pending})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('preparing')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'preparing'
+                  ? 'bg-blue-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <MdRestaurant size={18} />
+              <span>{t('restaurant.orders.filter_preparing')} ({stats.preparing})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('ready')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'ready'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <MdCheck size={18} />
+              <span>{t('restaurant.orders.filter_ready')} ({stats.ready})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('delivering')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'delivering'
+                  ? 'bg-purple-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <MdDeliveryDining size={18} />
+              <span>{t('restaurant.orders.filter_delivering')} ({stats.delivering})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('delivered')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'delivered'
+                  ? 'bg-emerald-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <MdCheck size={18} />
+              <span>{t('restaurant.orders.filter_delivered')} ({stats.delivered})</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('cancelled')}
+              className={`px-4 py-2 rounded-xl font-medium transition-all flex items-center space-x-2 ${
+                activeTab === 'cancelled'
+                  ? 'bg-red-500 text-white shadow-lg'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <MdCancel size={18} />
+              <span>{t('restaurant.orders.filter_cancelled')} ({stats.cancelled})</span>
+            </button>
+          </div>
+        </div>
+      </AnimatedContainer>
 
       <div className="flex flex-col lg:flex-row gap-6">
         <div className="lg:w-2/3">
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pedido</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horário</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order) => (
-                    <tr 
-                      key={order.id} 
-                      className={`hover:bg-gray-50 cursor-pointer ${selectedOrder?.id === order.id ? 'bg-blue-50' : ''}`}
-                      onClick={() => setSelectedOrder(order)}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.customer.name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ {order.total.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(order.status)}`}>
-                          {getStatusText(order.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {order.createdAt.toLocaleTimeString()}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                      Nenhum pedido encontrado
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          <AnimatedContainer animationType="fadeInUp" delay={300}>
+            <div className="space-y-4">
+              {filteredOrders.length === 0 ? (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+                  <MdShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('restaurant.orders.no_orders_found')}</h3>
+                  <p className="text-gray-500">
+                    {activeTab === 'all' 
+                      ? t('restaurant.orders.no_orders_moment') 
+                      : t('restaurant.orders.no_orders_status', { status: getStatusText(activeTab as OrderStatus) })
+                    }
+                  </p>
+                </div>
+              ) : (
+                filteredOrders.map((order) => (
+                  <div 
+                    key={order.id} 
+                    className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-6 hover:shadow-xl transition-all duration-300 cursor-pointer ${
+                      selectedOrder?.id === order.id ? 'ring-2 ring-red-500 bg-red-50' : ''
+                    }`}
+                    onClick={() => setSelectedOrder(order)}
+                  >
+                    <div className="flex flex-col space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex-shrink-0">
+                            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-r from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white font-bold text-xs lg:text-sm">
+                              {order.id}
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-base lg:text-lg font-semibold text-gray-900 flex items-center space-x-2">
+                              <MdPerson size={16} className="text-gray-500 lg:w-5 lg:h-5" />
+                              <span className="truncate">{order.customer.name}</span>
+                            </h3>
+                          </div>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-lg lg:text-xl font-bold text-gray-900">{t('mock_data.currency_symbol')} {order.total.toFixed(2)}</div>
+                          <div className="text-xs lg:text-sm text-gray-500">{order.items.length} {order.items.length === 1 ? t('restaurant.orders.item') : t('restaurant.orders.items')}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-xs lg:text-sm text-gray-500">
+                          <span className="flex items-center space-x-1">
+                            <MdLocationOn size={14} className="lg:w-4 lg:h-4" />
+                            <span className="truncate">{order.customer.address}</span>
+                          </span>
+                          <span className="flex items-center space-x-1">
+                            <MdAccessTime size={14} className="lg:w-4 lg:h-4" />
+                            <span>{order.createdAt.toLocaleTimeString()}</span>
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <span className={`px-3 py-1.5 text-xs lg:text-sm font-semibold rounded-lg flex items-center space-x-1 ${getStatusBadgeClass(order.status)}`}>
+                            {getStatusIcon(order.status)}
+                            <span>{getStatusText(order.status)}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        {order.status !== 'delivered' && order.status !== 'cancelled' && getNextStatus(order.status) && (
+                          <button
+                            className="bg-green-100 text-green-700 px-3 lg:px-4 py-2 rounded-xl font-medium hover:bg-green-200 transition-all flex items-center justify-center space-x-2 text-sm lg:text-base"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleUpdateStatus(order.id, getNextStatus(order.status)!);
+                            }}
+                          >
+                            <MdPlayArrow size={16} />
+                            <span>{t('restaurant.orders.advance')}</span>
+                          </button>
+                        )}
+                        {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                          <button
+                            className="bg-red-100 text-red-700 px-3 lg:px-4 py-2 rounded-xl font-medium hover:bg-red-200 transition-all flex items-center justify-center space-x-2 text-sm lg:text-base"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCancelOrder(order.id);
+                            }}
+                          >
+                            <MdCancel size={16} />
+                            <span>{t('restaurant.orders.cancel')}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </AnimatedContainer>
         </div>
 
         <div className="lg:w-1/3">
           {selectedOrder ? (
-            <AnimatedContainer animation="fadeIn" className="bg-white rounded-lg shadow p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h2 className="text-lg font-semibold">{selectedOrder.id}</h2>
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(selectedOrder.status)}`}>
-                    {getStatusText(selectedOrder.status)}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500">
-                  {selectedOrder.createdAt.toLocaleTimeString()} - {selectedOrder.createdAt.toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="border-t border-b py-4 my-4">
-                <h3 className="font-medium mb-2">Cliente</h3>
-                <p className="text-sm">{selectedOrder.customer.name}</p>
-                <p className="text-sm text-gray-600">{selectedOrder.customer.phone}</p>
-                <p className="text-sm text-gray-600">{selectedOrder.customer.address}</p>
-              </div>
-
-              <div className="mb-4">
-                <h3 className="font-medium mb-2">Itens do Pedido</h3>
-                <ul className="space-y-2">
-                  {selectedOrder.items.map((item) => (
-                    <li key={item.id} className="flex justify-between text-sm">
-                      <span>
-                        {item.quantity}x {item.name}
-                      </span>
-                      <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
-                    </li>
-                  ))}
-                </ul>
-                <div className="border-t mt-4 pt-2 flex justify-between font-semibold">
-                  <span>Total</span>
-                  <span>R$ {selectedOrder.total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
-                <div className="mt-6">
-                  <div className="flex space-x-2">
-                    {getNextStatus(selectedOrder.status) && (
-                      <button
-                        className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium flex-1"
-                        onClick={() => handleUpdateStatus(selectedOrder.id, getNextStatus(selectedOrder.status)!)}
-                      >
-                        {selectedOrder.status === 'pending' && 'Iniciar Preparo'}
-                        {selectedOrder.status === 'preparing' && 'Marcar como Pronto'}
-                        {selectedOrder.status === 'ready' && 'Enviar para Entrega'}
-                        {selectedOrder.status === 'delivering' && 'Confirmar Entrega'}
-                      </button>
-                    )}
-                    {selectedOrder.status !== 'cancelled' && (
-                      <button
-                        className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium"
-                        onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
-                      >
-                        Cancelar
-                      </button>
-                    )}
+            <AnimatedContainer animationType="slideInRight" delay={100}>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <h3 className="text-xl font-bold flex items-center space-x-2">
+                        <MdShoppingCart size={24} />
+                        <span>{t('restaurant.orders.order')} {selectedOrder.id}</span>
+                      </h3>
+                      <p className="text-red-100 mt-1">
+                        {selectedOrder.createdAt.toLocaleString()}
+                      </p>
+                    </div>
+                    <button
+                      className="text-white hover:bg-white hover:bg-opacity-20 p-2 rounded-xl transition-all"
+                      onClick={() => setSelectedOrder(null)}
+                    >
+                      <MdCancel size={24} />
+                    </button>
                   </div>
                 </div>
-              )}
+
+                <div className="p-6 space-y-6">
+                  <div className="text-center">
+                    <span className={`px-6 py-3 text-lg font-semibold rounded-2xl flex items-center justify-center space-x-2 ${getStatusBadgeClass(selectedOrder.status)}`}>
+                      {getStatusIcon(selectedOrder.status)}
+                      <span>{getStatusText(selectedOrder.status)}</span>
+                    </span>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-2xl p-4">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                      <MdPerson size={20} className="text-red-500" />
+                      <span>{t('restaurant.orders.customer')}</span>
+                    </h4>
+                    <div className="space-y-2">
+                      <p className="text-gray-700 font-medium">{selectedOrder.customer.name}</p>
+                      <p className="text-gray-600 flex items-center space-x-2">
+                        <MdLocationOn size={16} className="text-gray-400" />
+                        <span>{selectedOrder.customer.address}</span>
+                      </p>
+                      <p className="text-gray-600 flex items-center space-x-2">
+                        <MdPhone size={16} className="text-gray-400" />
+                        <span>{selectedOrder.customer.phone}</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                      <MdRestaurant size={20} className="text-red-500" />
+                      <span>{t('restaurant.orders.order_items')}</span>
+                    </h4>
+                    <div className="space-y-3">
+                      {selectedOrder.items.map((item) => (
+                        <div key={item.id} className="bg-gray-50 rounded-xl p-4 flex justify-between items-center">
+                          <div>
+                            <p className="font-medium text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-500">{t('restaurant.orders.quantity')}: {item.quantity}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-900">{t('mock_data.currency_symbol')} {(item.price * item.quantity).toFixed(2)}</p>
+                <p className="text-sm text-gray-500">{t('mock_data.currency_symbol')} {item.price.toFixed(2)} {t('restaurant.orders.each')}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xl font-bold text-gray-900">{t('restaurant.orders.total')}</span>
+                      <span className="text-2xl font-bold text-red-600">{t('mock_data.currency_symbol')} {selectedOrder.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && getNextStatus(selectedOrder.status) && (
+                      <button
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center space-x-2 shadow-lg"
+                        onClick={() => {
+                          handleUpdateStatus(selectedOrder.id, getNextStatus(selectedOrder.status)!);
+                          setSelectedOrder(null);
+                        }}
+                      >
+                        <MdPlayArrow size={20} />
+                        <span>{t('restaurant.orders.advance_to')} {getStatusText(getNextStatus(selectedOrder.status)!)}</span>
+                      </button>
+                    )}
+                    {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
+                      <button
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-2xl font-semibold hover:from-red-600 hover:to-red-700 transition-all flex items-center justify-center space-x-2 shadow-lg"
+                        onClick={() => {
+                          handleCancelOrder(selectedOrder.id);
+                        }}
+                      >
+                        <MdCancel size={20} />
+                        <span>{t('restaurant.orders.cancel_order')}</span>
+                      </button>
+                    )}
+                    <button
+                      className="w-full bg-gray-100 text-gray-700 px-6 py-4 rounded-2xl font-semibold hover:bg-gray-200 transition-all flex items-center justify-center space-x-2"
+                      onClick={() => setSelectedOrder(null)}
+                    >
+                      <MdCancel size={20} />
+                      <span>{t('restaurant.orders.close')}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </AnimatedContainer>
           ) : (
-            <div className="bg-white rounded-lg shadow p-6 text-center">
-              <p className="text-gray-500">Selecione um pedido para ver os detalhes</p>
-            </div>
+            <AnimatedContainer animationType="fadeIn" delay={100}>
+              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
+                <MdShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('restaurant.orders.order_details')}</h3>
+                <p className="text-gray-500">{t('restaurant.orders.select_order_details')}</p>
+              </div>
+            </AnimatedContainer>
           )}
         </div>
       </div>

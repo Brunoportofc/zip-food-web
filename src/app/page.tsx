@@ -1,225 +1,135 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
-import { FiLock, FiMail } from 'react-icons/fi';
-import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
-import LottieAnimation from '../components/LottieAnimation';
-
-import { showAlert } from '@/lib/platform';
-import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import CustomButton from '@/components/CustomButton';
+import LanguageSelector from '@/components/LanguageSelector';
 import I18nClientProvider from '@/components/I18nClientProvider';
+import { useTranslation } from 'react-i18next';
+import { MdLogin, MdDeliveryDining, MdRestaurant, MdPerson } from 'react-icons/md';
+import '@/i18n';
+
+const HomeContent = () => {
+  const router = useRouter();
+  const { t } = useTranslation();
+
+  const handleLoginClick = () => {
+    router.push('/auth/sign-in');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-red-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-red-50 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+
+      {/* Glass Header */}
+      <AnimatedContainer animationType="fadeInDown" delay={0}>
+        <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-200 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4 lg:py-6">
+              {/* Logo */}
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-600 rounded-xl flex items-center justify-center">
+                  <MdDeliveryDining size={24} className="text-white lg:hidden" />
+                  <MdDeliveryDining size={28} className="text-white hidden lg:block" />
+                </div>
+                <div>
+                  <h1 className="text-xl lg:text-2xl font-bold text-red-600">
+                    ZipFood
+                  </h1>
+                  <p className="text-xs lg:text-sm text-gray-600 hidden sm:block">{t('home.tagline')}</p>
+                </div>
+              </div>
+
+              {/* Language Selector and Login Button */}
+              <div className="flex items-center space-x-4">
+                <LanguageSelector />
+                <button
+                  onClick={handleLoginClick}
+                  className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold shadow-lg hover:bg-red-700 hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <MdLogin size={20} />
+                  <span>{t('home.login')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+      </AnimatedContainer>
+
+      {/* Main Content */}
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 pb-16">
+        {/* Hero Section */}
+        <AnimatedContainer animationType="fadeInUp" delay={200}>
+          <div className="text-center mb-16">
+            <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
+              {t('home.hero_title_part1')} <span className="text-red-600">{t('home.hero_title_part2')}</span>
+              <br />{t('home.hero_title_part3')} <span className="text-red-600">{t('home.hero_title_part4')}</span>
+            </h1>
+            <p className="text-xl lg:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              {t('home.hero_subtitle')}
+            </p>
+            <button
+              onClick={handleLoginClick}
+              className="inline-flex items-center space-x-3 px-8 py-4 bg-red-600 text-white text-lg font-semibold rounded-2xl shadow-xl hover:bg-red-700 hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              <MdLogin size={24} />
+              <span>{t('home.start_now')}</span>
+            </button>
+          </div>
+        </AnimatedContainer>
+
+        {/* Features Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+          <AnimatedContainer animationType="fadeInUp" delay={400}>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mb-6">
+                <MdPerson size={32} className="text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('home.for_customers')}</h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t('home.customers_description')}
+              </p>
+            </div>
+          </AnimatedContainer>
+
+          <AnimatedContainer animationType="fadeInUp" delay={500}>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mb-6">
+                <MdRestaurant size={32} className="text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('home.for_restaurants')}</h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t('home.restaurants_description')}
+              </p>
+            </div>
+          </AnimatedContainer>
+
+          <AnimatedContainer animationType="fadeInUp" delay={600}>
+            <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300">
+              <div className="w-16 h-16 bg-red-600 rounded-2xl flex items-center justify-center mb-6">
+                <MdDeliveryDining size={32} className="text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('home.for_delivery')}</h3>
+              <p className="text-gray-600 leading-relaxed">
+                {t('home.delivery_description')}
+              </p>
+            </div>
+          </AnimatedContainer>
+        </div>
+      </main>
+    </div>
+  );
+};
 
 const Home = () => {
   return (
     <I18nClientProvider>
       <HomeContent />
     </I18nClientProvider>
-  );
-};
-
-const HomeContent = () => {
-  const router = useRouter();
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [userType, setUserType] = useState<UserType>('customer');
-  
-  const { signIn, setUserType: storeSetUserType, isAuthenticated } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { t } = useTranslation();
-
-  // Verificar se o usuário já está autenticado
-  useEffect(() => {
-    if (isAuthenticated) {
-      const { userType } = useAuthStore.getState();
-      switch (userType) {
-        case 'restaurant':
-          router.push('/restaurant');
-          break;
-        case 'delivery':
-          router.push('/delivery');
-          break;
-        default:
-          router.push('/customer');
-          break;
-      }
-    }
-  }, [isAuthenticated, router]);
-
-  const submit = async () => {
-    const { email, password } = form;
-
-    if (!email || !password) {
-      return showAlert(t('auth.common.error_title'), t('auth.signin.alerts.enter_valid_credentials'));
-    }
-
-    setIsSubmitting(true);
-    setIsLoading(true);
-
-    try {
-      // Salva o tipo de usuário no store antes de fazer login
-      storeSetUserType(userType);
-      await signIn(email, password);
-      
-      // Redirecionamentos baseados no tipo de usuário
-      switch (userType) {
-        case 'restaurant':
-          router.push('/restaurant');
-          break;
-        case 'delivery':
-          router.push('/delivery');
-          break;
-        default:
-          router.push('/customer');
-          break;
-      }
-    } catch (error: any) {
-      showAlert(t('auth.common.error_title'), error.message || t('auth.signin.alerts.failed_sign_in'));
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <div className="flex-1 bg-white min-h-screen flex justify-center items-center">
-      <div className="w-full max-w-md p-4 md:p-8 space-y-8">
-        {/* Header Section */}
-        <AnimatedContainer animationType="fadeInDown" delay={200}>
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-32 h-32 flex items-center justify-center mb-6">
-              <LottieAnimation userType={userType} width={128} height={128} />
-            </div>
-          </div>
-        </AnimatedContainer>
-
-        {/* User Type Selection */}
-        <AnimatedContainer animationType="fadeInUp" delay={300}>
-          <div className="bg-zinc-900 rounded-3xl p-6 md:p-8 shadow-xl border-2 border-primary space-y-6">
-            <div className="flex flex-row items-center mb-4">
-              <h2 className="text-xl md:text-2xl font-semibold text-primary">
-                {t('userType.selectTitle')}
-              </h2>
-            </div>
-            
-            <div className="flex justify-between gap-2">
-              <button
-                onClick={() => setUserType('customer')}
-                className={`flex-1 p-3 rounded-xl flex flex-col items-center justify-center transition-all ${userType === 'customer' ? 'bg-primary text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-              >
-                <MdPerson size={28} className={userType === 'customer' ? 'text-black' : 'text-primary'} />
-                <span className="mt-2 font-medium">{t('userType.customer')}</span>
-              </button>
-              
-              <button
-                onClick={() => setUserType('restaurant')}
-                className={`flex-1 p-3 rounded-xl flex flex-col items-center justify-center transition-all ${userType === 'restaurant' ? 'bg-primary text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-              >
-                <MdRestaurant size={28} className={userType === 'restaurant' ? 'text-black' : 'text-primary'} />
-                <span className="mt-2 font-medium">{t('userType.restaurant')}</span>
-              </button>
-              
-              <button
-                onClick={() => setUserType('delivery')}
-                className={`flex-1 p-3 rounded-xl flex flex-col items-center justify-center transition-all ${userType === 'delivery' ? 'bg-primary text-black' : 'bg-zinc-800 text-white hover:bg-zinc-700'}`}
-              >
-                <MdDeliveryDining size={28} className={userType === 'delivery' ? 'text-black' : 'text-primary'} />
-                <span className="mt-2 font-medium">{t('userType.delivery')}</span>
-              </button>
-            </div>
-          </div>
-        </AnimatedContainer>
-
-        {/* Login Card */}
-        <AnimatedContainer animationType="fadeInUp" delay={400}>
-          <div className="bg-primary rounded-3xl p-6 md:p-8 shadow-xl border-2 border-black space-y-6">
-            <div className="flex flex-row items-center">
-              <FiLock size={20} color="black" />
-              <h2 className="text-xl md:text-2xl font-semibold text-black ml-2">
-                {t('auth.signin.section.access_data')}
-              </h2>
-            </div>
-
-            {/* Email Input */}
-            <div>
-              <label className="block text-base md:text-lg font-medium text-black mb-2">
-                {t('auth.fields.email_label')}
-              </label>
-              <div className="flex flex-row items-center bg-white rounded-2xl px-4 py-4 border-2 border-black">
-                <FiMail size={20} color="#000000" />
-                <input
-                  className="flex-1 ml-3 text-base md:text-lg font-medium text-black bg-transparent outline-none"
-                  placeholder={t('auth.fields.email_placeholder')}
-                  value={form.email}
-                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                  type="email"
-                />
-              </div>
-            </div>
-
-            {/* Password Input */}
-            <div>
-              <label className="block text-base md:text-lg font-medium text-black mb-2">
-                {t('auth.fields.password_label')}
-              </label>
-              <div className="flex flex-row items-center bg-white rounded-2xl px-4 py-4 border-2 border-black">
-                <FiLock size={20} color="#000000" />
-                <input
-                  className="flex-1 ml-3 text-base md:text-lg font-medium text-black bg-transparent outline-none"
-                  placeholder={t('auth.fields.password_placeholder')}
-                  value={form.password}
-                  onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
-                  type="password"
-                />
-              </div>
-            </div>
-
-            <div>
-              <CustomButton
-                title={t('auth.signin.button.sign_in')}
-                isLoading={isSubmitting || isLoading}
-                onPress={submit}
-                variant="black"
-              />
-            </div>
-          </div>
-        </AnimatedContainer>
-
-        {/* Sign Up Link */}
-        <AnimatedContainer animationType="fadeInUp" delay={600}>
-          <div className="flex justify-center items-center">
-            <p className="text-base md:text-lg font-medium text-gray-700">
-              {t('auth.signin.footer.no_account')}{' '}
-              <Link 
-                href={`/auth/sign-up?type=${userType}`} 
-                className="text-primary font-semibold hover:underline"
-              >
-                {t('auth.signin.footer.create_account')}
-              </Link>
-            </p>
-          </div>
-        </AnimatedContainer>
-        
-        {/* Back to Selection */}
-        <AnimatedContainer animationType="fadeInUp" delay={700}>
-          <div className="flex justify-center items-center">
-            <Link 
-              href="/user-type-selection" 
-              className="text-gray-500 text-sm hover:text-primary transition-colors"
-            >
-              {t('common.back_to_selection')}
-            </Link>
-          </div>
-        </AnimatedContainer>
-      </div>
-    </div>
   );
 };
 

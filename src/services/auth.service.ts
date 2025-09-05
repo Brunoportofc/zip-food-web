@@ -1,14 +1,14 @@
-import { auth, db } from '../lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
-  signOut,
-  UserCredential,
-  updateProfile
+  signOut, 
+  User as FirebaseUser,
+  onAuthStateChanged
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { User, UserType } from '../store/auth.store';
-import { withFirestoreNetwork } from '../lib/firestore-config';
+import { User, UserType } from '@/store/auth.store';
+import { withFirestoreNetwork } from '@/lib/firestore-config';
 import { mockAuthService } from './mock-auth.service';
 
 export interface AuthCredentials {
