@@ -31,6 +31,185 @@ export const getDimensions = () => {
 };
 
 /**
+ * Função para obter informações do dispositivo
+ */
+export const getDeviceInfo = () => {
+  if (typeof window !== 'undefined') {
+    return {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      language: navigator.language,
+      cookieEnabled: navigator.cookieEnabled,
+      onLine: navigator.onLine,
+      deviceMemory: (navigator as any).deviceMemory || null,
+      hardwareConcurrency: navigator.hardwareConcurrency || null,
+    };
+  }
+  
+  return {
+    userAgent: '',
+    platform: '',
+    language: 'pt-BR',
+    cookieEnabled: false,
+    onLine: false,
+    deviceMemory: null,
+    hardwareConcurrency: null,
+  };
+};
+
+/**
+ * Função para detectar se é dispositivo móvel
+ */
+export const isMobile = () => {
+  if (typeof window !== 'undefined') {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  }
+  return false;
+};
+
+/**
+ * Função para detectar se é tablet
+ */
+export const isTablet = () => {
+  if (typeof window !== 'undefined') {
+    return /iPad|Android(?!.*Mobile)/i.test(navigator.userAgent);
+  }
+  return false;
+};
+
+/**
+ * Função para detectar se é desktop
+ */
+export const isDesktop = () => {
+  return !isMobile() && !isTablet();
+};
+
+/**
+ * Função para obter orientação da tela
+ */
+export const getOrientation = () => {
+  if (typeof window !== 'undefined') {
+    const { width, height } = getDimensions().window;
+    return width > height ? 'landscape' : 'portrait';
+  }
+  return 'portrait';
+};
+
+/**
+ * Função para vibrar o dispositivo (se suportado)
+ */
+export const vibrate = (pattern: number | number[] = 200) => {
+  if (typeof window !== 'undefined' && 'vibrate' in navigator) {
+    navigator.vibrate(pattern);
+  }
+};
+
+/**
+ * Função para copiar texto para a área de transferência
+ */
+export const copyToClipboard = async (text: string): Promise<boolean> => {
+  if (typeof window !== 'undefined') {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } else {
+        // Fallback para navegadores mais antigos
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const result = document.execCommand('copy');
+        textArea.remove();
+        return result;
+      }
+    } catch (error) {
+      console.error('Erro ao copiar texto:', error);
+      return false;
+    }
+  }
+  return false;
+};
+
+/**
+ * Função para compartilhar conteúdo (se suportado)
+ */
+export const share = async (data: {
+  title?: string;
+  text?: string;
+  url?: string;
+}): Promise<boolean> => {
+  if (typeof window !== 'undefined' && 'share' in navigator) {
+    try {
+      await navigator.share(data);
+      return true;
+    } catch (error) {
+      console.error('Erro ao compartilhar:', error);
+      return false;
+    }
+  }
+  return false;
+};
+
+/**
+ * Função para obter localização (se permitido)
+ */
+export const getCurrentPosition = (): Promise<GeolocationPosition> => {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined' && 'geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        resolve,
+        reject,
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        }
+      );
+    } else {
+      reject(new Error('Geolocalização não suportada'));
+    }
+  });
+};
+
+/**
+ * Função para detectar se está online
+ */
+export const isOnline = () => {
+  if (typeof window !== 'undefined') {
+    return navigator.onLine;
+  }
+  return true;
+};
+
+/**
+ * Função para adicionar listener de mudança de conectividade
+ */
+export const addConnectivityListener = (
+  onOnline: () => void,
+  onOffline: () => void
+) => {
+  if (typeof window !== 'undefined') {
+    window.addEventListener('online', onOnline);
+    window.addEventListener('offline', onOffline);
+    
+    // Retorna função para remover os listeners
+    return () => {
+      window.removeEventListener('online', onOnline);
+      window.removeEventListener('offline', onOffline);
+    };
+  }
+  
+  return () => {};
+};
+
+/**
  * Função para exibir alertas
  * Adaptada do React Native Alert para web
  */

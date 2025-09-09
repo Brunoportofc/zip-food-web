@@ -13,6 +13,11 @@
     "promotions": "Promoções",
     "no_promotions": "Não há promoções disponíveis no momento",
     "logout": "Sair",
+    "user_types": {
+      "customer": "Cliente",
+      "restaurant": "Restaurante",
+      "delivery": "Entregador"
+    },
     "offlineMode": "Modo offline - Algumas funcionalidades podem estar limitadas",
     "online": "Online",
     "offline": "Offline",
@@ -108,7 +113,7 @@
     }
   },
   "home": {
-    "tagline": "Delivery rápido e fácil",
+    "tagline": "Delivery rápido e saboroso",
     "login": "Login",
     "hero_title_part1": "Delivery",
     "hero_title_part2": "Rápido",
@@ -130,6 +135,8 @@
     "delivery": "Entregador"
   },
   "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
     "common": {
       "error_title": "Erro"
     },

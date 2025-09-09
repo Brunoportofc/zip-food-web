@@ -2,19 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import LanguageSelector from '@/components/LanguageSelector';
-
+import GlobalHeader from '@/components/GlobalHeader';
 import { useTranslation } from 'react-i18next';
-import { MdLogin, MdDeliveryDining, MdRestaurant, MdPerson } from 'react-icons/md';
+import { MdDeliveryDining, MdRestaurant, MdPerson } from 'react-icons/md';
 import '@/i18n';
 
 const HomeContent = () => {
   const router = useRouter();
   const { t } = useTranslation();
-
-  const handleLoginClick = () => {
-    router.push('/auth/sign-in');
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 relative overflow-hidden">
@@ -25,43 +20,11 @@ const HomeContent = () => {
         <div className="absolute top-40 left-40 w-80 h-80 bg-red-50 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Glass Header */}
-      <AnimatedContainer animationType="fadeInDown" delay={0}>
-        <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-white/80 border-b border-gray-200 shadow-lg">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-4 lg:py-6">
-              {/* Logo */}
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-600 rounded-xl flex items-center justify-center">
-                  <MdDeliveryDining size={24} className="text-white lg:hidden" />
-                  <MdDeliveryDining size={28} className="text-white hidden lg:block" />
-                </div>
-                <div>
-                  <h1 className="text-xl lg:text-2xl font-bold text-red-600">
-                    ZipFood
-                  </h1>
-                  <p className="text-xs lg:text-sm text-gray-600 hidden sm:block">{t('home.tagline')}</p>
-                </div>
-              </div>
-
-              {/* Language Selector and Login Button */}
-              <div className="flex items-center space-x-4">
-                <LanguageSelector />
-                <button
-                  onClick={handleLoginClick}
-                  className="flex items-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold shadow-lg hover:bg-red-700 hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                >
-                  <MdLogin size={20} />
-                  <span>{t('home.login')}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
-      </AnimatedContainer>
+      {/* Global Header */}
+      <GlobalHeader showBackground={true} />
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 lg:pt-40 pb-16">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16">
         {/* Hero Section */}
         <AnimatedContainer animationType="fadeInUp" delay={200}>
           <div className="text-center mb-16">
@@ -73,10 +36,9 @@ const HomeContent = () => {
               {t('home.hero_subtitle')}
             </p>
             <button
-              onClick={handleLoginClick}
+              onClick={() => router.push('/auth/sign-in')}
               className="inline-flex items-center space-x-3 px-8 py-4 bg-red-600 text-white text-lg font-semibold rounded-2xl shadow-xl hover:bg-red-700 hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              <MdLogin size={24} />
               <span>{t('home.start_now')}</span>
             </button>
           </div>
