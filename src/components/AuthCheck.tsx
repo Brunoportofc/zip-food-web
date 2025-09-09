@@ -29,15 +29,11 @@ const AuthCheck = ({ children }: AuthCheckProps) => {
     // Preload componentes críticos
     preloadCriticalComponents();
     
-    // Só verifica autenticação se não estiver nas páginas de auth ou na home
-    const isAuthPage = pathname?.startsWith('/auth') || pathname === '/';
-    
-    if (!hasChecked && !isAuthPage) {
+    // Sempre verifica autenticação na inicialização para restaurar sessão persistida
+    if (!hasChecked) {
       checkAuthRef.current().finally(() => setHasChecked(true));
-    } else if (isAuthPage) {
-      setHasChecked(true);
     }
-  }, [hasChecked, pathname]);
+  }, [hasChecked]);
 
   return <>{children}</>;
 };

@@ -8,7 +8,6 @@ import { BiSolidDrink, BiSolidCoffee } from 'react-icons/bi';
 import RestaurantCarousel from '@/components/RestaurantCarousel';
 import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
-import '@/i18n';
 
 // Mock data para restaurantes
 const mockRestaurants = [

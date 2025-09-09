@@ -22,8 +22,8 @@ class AuthService {
   /**
    * Realiza login com email e senha
    */
-  async signIn({ email, password }: AuthCredentials): Promise<{ user: User; token: string }> {
-    return await mockAuthService.signIn(email, password);
+  async signIn({ email, password }: AuthCredentials, userType?: UserType): Promise<{ user: User; token: string }> {
+    return await mockAuthService.signIn(email, password, userType);
   }
 
   /**

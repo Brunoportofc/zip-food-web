@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { MdChevronLeft, MdChevronRight, MdStar, MdAccessTime } from 'react-icons/md';
 
 interface Restaurant {
@@ -23,6 +24,11 @@ export default function RestaurantCarousel({ restaurants, title }: RestaurantCar
   const [currentIndex, setCurrentIndex] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const [itemsPerView, setItemsPerView] = useState(4);
+  const router = useRouter();
+
+  const handleRestaurantClick = (restaurantId: string) => {
+    router.push(`/customer/restaurant/${restaurantId}`);
+  };
 
   useEffect(() => {
     const updateItemsPerView = () => {
@@ -77,7 +83,10 @@ export default function RestaurantCarousel({ restaurants, title }: RestaurantCar
               className="flex-shrink-0 px-2"
               style={{ width: `${100 / itemsPerView}%` }}
             >
-              <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all cursor-pointer">
+              <div 
+                className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all cursor-pointer"
+                onClick={() => handleRestaurantClick(restaurant.id)}
+              >
                 <div className="relative">
                   <img
                     src={restaurant.image}

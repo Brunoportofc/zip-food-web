@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaCommentDots, FaReceipt, FaTicketAlt, FaHeart, FaCreditCard, FaMedal, FaQuestionCircle, FaUserAlt, FaShieldAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
+import { FaUserAlt, FaMapMarkerAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import '@/i18n';
 
 interface Address {
   id: string;
@@ -19,23 +18,7 @@ interface Address {
   isDefault?: boolean;
 }
 
-interface PaymentMethod {
-  id: string;
-  type: 'credit' | 'debit';
-  cardNumber: string;
-  expiryDate: string;
-  holderName: string;
-  isDefault?: boolean;
-}
 
-interface Order {
-  id: string;
-  restaurantName: string;
-  items: string[];
-  total: number;
-  status: 'delivered' | 'cancelled' | 'pending';
-  date: string;
-}
 
 export default function CustomerProfilePage() {
   const { t } = useTranslation();
@@ -48,8 +31,7 @@ export default function CustomerProfilePage() {
   const [personalData, setPersonalData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: user?.phone || '',
-    birthDate: ''
+    phone: user?.phone || ''
   });
   
   // Estados para endereços
@@ -76,30 +58,7 @@ export default function CustomerProfilePage() {
     zipCode: ''
   });
   
-  // Estados para métodos de pagamento
-  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([
-    {
-      id: '1',
-      type: 'credit',
-      cardNumber: '**** **** **** 1234',
-      expiryDate: '12/25',
-      holderName: 'Nome do Usuário',
-      isDefault: true
-    }
-  ]);
-  const [isAddingPayment, setIsAddingPayment] = useState(false);
-  const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
-  const [newPayment, setNewPayment] = useState<Omit<PaymentMethod, 'id'>>({
-    type: 'credit',
-    cardNumber: '',
-    expiryDate: '',
-    holderName: ''
-  });
-  
-  // Estados para pedidos
-  const [orders] = useState<Order[]>([
-    // Exemplo de pedidos - em produção viria da API
-  ]);
+
   
   useEffect(() => {
     // Não redirecionar se ainda estiver carregando
@@ -117,8 +76,7 @@ export default function CustomerProfilePage() {
       setPersonalData({
         name: user.name,
         email: user.email,
-        phone: user.phone || '',
-        birthDate: ''
+        phone: user.phone || ''
       });
     }
   }, [user, isAuthenticated, isLoading, router]);
@@ -216,50 +174,14 @@ export default function CustomerProfilePage() {
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
               <h2 className="text-xl font-bold mb-6 text-gray-900">{t('customer.profile.menu')}</h2>
               <nav className="space-y-2">
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaCommentDots className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.chats')}</span>
-                </div>
-                
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaReceipt className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.orders')}</span>
-                </div>
-                
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer relative border-2 border-transparent hover:border-red-200">
-                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">10</div>
-                  <FaTicketAlt className="text-red-500" size={18} />
-                  <span className="text-red-500 font-medium">{t('customer.profile.my_coupons')}</span>
-                </div>
-                
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaHeart className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.favorites')}</span>
-                </div>
-                
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaCreditCard className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.payment')}</span>
-                </div>
-                
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaMedal className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.loyalty')}</span>
-                </div>
-                
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaQuestionCircle className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.help')}</span>
-                </div>
-                
                 <div className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-red-50 cursor-pointer border-2 border-red-100">
                   <FaUserAlt className="text-red-600" size={18} />
                   <span className="text-red-600 font-medium">{t('customer.profile.my_data')}</span>
                 </div>
                 
                 <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaShieldAlt className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.security')}</span>
+                  <FaMapMarkerAlt className="text-gray-700" size={18} />
+                  <span className="text-gray-800">{t('customer.profile.addresses')}</span>
                 </div>
                 
                 <div 
@@ -300,7 +222,7 @@ export default function CustomerProfilePage() {
               {/* Personal Information */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">{t('customer.profile.personal_information')}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{t('customer.profile.personal_data')}</h2>
                   {!isEditingPersonal ? (
                     <button 
                       onClick={() => setIsEditingPersonal(true)}
@@ -329,7 +251,7 @@ export default function CustomerProfilePage() {
                 {isEditingPersonal ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.name')}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.full_name')}</label>
                       <input
                         type="text"
                         value={personalData.name}
@@ -356,20 +278,12 @@ export default function CustomerProfilePage() {
                         placeholder="(11) 99999-9999"
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.birth_date')}</label>
-                      <input
-                        type="date"
-                        value={personalData.birthDate}
-                        onChange={(e) => setPersonalData({...personalData, birthDate: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                      />
-                    </div>
+
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.name')}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.full_name')}</label>
                       <p className="text-gray-900 py-3">{personalData.name}</p>
                     </div>
                     <div>
@@ -380,10 +294,7 @@ export default function CustomerProfilePage() {
                       <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.phone')}</label>
                       <p className="text-gray-900 py-3">{personalData.phone || t('customer.profile.not_informed')}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.birth_date')}</label>
-                      <p className="text-gray-900 py-3">{personalData.birthDate || t('customer.profile.not_informed')}</p>
-                    </div>
+
                   </div>
                 )}
               </div>
@@ -484,135 +395,6 @@ export default function CustomerProfilePage() {
               >
                 <FaPlus /> {t('customer.profile.add_new_address')}
               </button>
-            )}
-          </div>
-
-              {/* Métodos de Pagamento */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('customer.profile.payment_methods')}</h3>
-            
-            {paymentMethods.map((payment) => (
-              <div key={payment.id} className="border border-gray-200 rounded-xl p-4 mb-4 bg-gray-50">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-gray-900">{payment.type === 'credit' ? t('customer.profile.credit_card') : t('customer.profile.debit_card')}</p>
-                    <p className="text-gray-700">{payment.cardNumber}</p>
-                    <p className="text-gray-700">{t('customer.profile.validity')}: {payment.expiryDate}</p>
-                    <p className="text-gray-700">{payment.holderName}</p>
-                  </div>
-                  <div className="flex gap-3">
-                    <button className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1">
-                      <FaEdit size={16} /> {t('customer.profile.edit')}
-                    </button>
-                    <button 
-                      onClick={() => handleRemovePayment(payment.id)}
-                      className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1"
-                    >
-                      <FaTrash size={16} /> {t('customer.profile.remove')}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {isAddingPayment ? (
-              <div className="bg-red-50 p-4 rounded-xl mb-4 border border-red-200">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                  <select
-                    value={newPayment.type}
-                    onChange={(e) => setNewPayment({...newPayment, type: e.target.value as 'credit' | 'debit'})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                  >
-                    <option value="credit">{t('customer.profile.credit_card')}</option>
-                    <option value="debit">{t('customer.profile.debit_card')}</option>
-                  </select>
-                  <input
-                    type="text"
-                    placeholder={t('customer.profile.holder_name_placeholder')}
-                    value={newPayment.holderName}
-                    onChange={(e) => setNewPayment({...newPayment, holderName: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                  />
-                  <input
-                    type="text"
-                    placeholder={t('customer.profile.card_number_placeholder')}
-                    value={newPayment.cardNumber}
-                    onChange={(e) => setNewPayment({...newPayment, cardNumber: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                    maxLength={19}
-                  />
-                  <input
-                    type="text"
-                    placeholder={t('customer.profile.expiry_date_placeholder')}
-                    value={newPayment.expiryDate}
-                    onChange={(e) => setNewPayment({...newPayment, expiryDate: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                    maxLength={5}
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button 
-                    onClick={handleAddPayment}
-                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-                  >
-                    <FaSave /> {t('customer.profile.save')}
-                  </button>
-                  <button 
-                    onClick={() => setIsAddingPayment(false)}
-                    className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-                  >
-                    <FaTimes /> {t('customer.profile.cancel')}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button 
-                onClick={() => setIsAddingPayment(true)}
-                className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-xl flex items-center gap-2 mt-4 font-medium focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-              >
-                <FaPlus /> {t('customer.profile.add_new_payment_method')}
-              </button>
-            )}
-          </div>
-
-              {/* Histórico de Pedidos */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('customer.profile.order_history')}</h3>
-            {orders.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-700 italic mb-6">{t('customer.profile.no_orders_yet')}</p>
-                <button 
-                  onClick={() => router.push('/customer')} 
-                  className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-xl font-medium focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-                >
-                  {t('customer.profile.explore_restaurants')}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {orders.map((order) => (
-                  <div key={order.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <p className="font-medium text-gray-900">{order.restaurantName}</p>
-                        <p className="text-gray-700">{order.items.join(', ')}</p>
-                        <p className="text-gray-700">{t('customer.profile.date')}: {order.date}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">R$ {order.total.toFixed(2)}</p>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                          order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                          'bg-yellow-100 text-yellow-800'
-                        }`}>
-                          {order.status === 'delivered' ? t('customer.profile.delivered') :
-                           order.status === 'cancelled' ? t('customer.profile.cancelled') : t('customer.profile.pending')}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
           </div>
             </div>

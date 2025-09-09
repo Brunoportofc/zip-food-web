@@ -20,8 +20,8 @@ const resources = {
 // Configuração básica do i18n (sem React)
 i18n.init({
   resources,
-  lng: 'he',
-  fallbackLng: 'he',
+  lng: 'pt',
+  fallbackLng: 'pt',
   debug: false,
   interpolation: {
     escapeValue: false, // não é necessário para React

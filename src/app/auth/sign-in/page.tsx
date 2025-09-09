@@ -9,7 +9,7 @@ import { FiLock, FiMail } from 'react-icons/fi';
 import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
 import LottieAnimation from '@/components/LottieAnimation';
 
-import { showAlert } from '@/lib/platform';
+import { showErrorAlert, showSuccessAlert } from '@/components/AlertSystem';
 import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomInput from '@/components/CustomInput';
@@ -68,7 +68,7 @@ const SignInContent = () => {
     const { email, password } = form;
 
     if (!email || !password) {
-      return showAlert(t('auth.common.error_title'), t('auth.signin.alerts.enter_valid_credentials'));
+      return showErrorAlert(t('auth.common.error_title'), t('auth.signin.alerts.enter_valid_credentials'));
     }
 
     setIsSubmitting(true);
@@ -92,7 +92,7 @@ const SignInContent = () => {
           break;
       }
     } catch (error: any) {
-      showAlert(t('auth.common.error_title'), error.message || t('auth.signin.alerts.failed_sign_in'));
+      showErrorAlert(t('auth.common.error_title'), error.message || t('auth.signin.alerts.failed_sign_in'));
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -231,7 +231,7 @@ const SignInContent = () => {
                   <button
                      onClick={() => {
                        logout();
-                       showAlert('Sucesso', 'Logout realizado com sucesso!');
+                       showSuccessAlert('Sucesso', 'Logout realizado com sucesso!');
                      }}
                      className="text-red-600 hover:text-red-700 font-medium underline"
                    >

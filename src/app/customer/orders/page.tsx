@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
-import '@/i18n';
 
 // Mock data para pedidos
 const mockOrders = [

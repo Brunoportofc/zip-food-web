@@ -23,30 +23,28 @@ const resources = {
 // Criar uma nova instância do i18n para o cliente
 const clientI18n = i18n.createInstance();
 
-// Configurar com React e forçar idioma hebraico (sem detecção automática)
+// Configurar com React e permitir seleção de idioma
 clientI18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'he', // Força o idioma hebraico
-    fallbackLng: 'he',
+    lng: 'pt', // Idioma padrão português
+    fallbackLng: 'pt',
     debug: false, // Debug desativado
     interpolation: {
       escapeValue: false, // não é necessário para React
     },
-    // Removido LanguageDetector e detection para evitar mudança automática de idioma
-  })
-  .then(() => {
-    // Força o idioma hebraico após a inicialização
-    clientI18n.changeLanguage('he');
-    
-    // Limpa qualquer configuração de idioma no localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('i18nextLng');
-      localStorage.removeItem('i18next');
-      sessionStorage.removeItem('i18nextLng');
-      sessionStorage.removeItem('i18next');
-    }
+    // Configurações de namespace - remover para usar estrutura aninhada
+    // defaultNS: 'translation',
+    // ns: ['translation'],
+    // Permitir detecção e mudança de idioma
+    detection: {
+      order: ['localStorage', 'navigator'],
+      caches: ['localStorage']
+    },
+    // Configurações de carregamento
+    load: 'languageOnly',
+    cleanCode: true
   });
 
 export default clientI18n;

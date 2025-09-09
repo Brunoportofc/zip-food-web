@@ -1,6 +1,5 @@
 'use client';
 
-import '@/i18n';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { MdPerson, MdShoppingCart, MdFavorite, MdLocationOn } from 'react-icons/md';

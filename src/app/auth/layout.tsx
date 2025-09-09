@@ -4,9 +4,15 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { WebSafeKeyboardAvoidingView } from '@/components/WebSafeComponents';
 import useAuthStore from '@/store/auth.store';
+import dynamic from 'next/dynamic';
 
 // Importar i18n para garantir que está inicializado
 import '@/i18n';
+
+// Importação dinâmica do AlertSystem
+const AlertSystem = dynamic(() => import('@/components/AlertSystem'), {
+  ssr: false
+});
 
 export default function AuthLayout({
   children,
@@ -42,6 +48,8 @@ export default function AuthLayout({
       <div className="bg-black min-h-screen overflow-auto">
         {children}
       </div>
+      {/* Sistema de Alertas */}
+      <AlertSystem />
     </WebSafeKeyboardAvoidingView>
   );
 }

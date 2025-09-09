@@ -1,0 +1,694 @@
+[
+  {
+    "id": "TC001",
+    "title": "Customer Registration and Login Success",
+    "description": "Verify that a new customer can successfully register, log in, and maintain session state.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to customer registration page"
+      },
+      {
+        "type": "action",
+        "description": "Fill out registration form with valid details"
+      },
+      {
+        "type": "action",
+        "description": "Submit registration"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm successful registration message"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Input registered customer's username and password"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify customer is logged in and session persists on page reload"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Restaurant Registration and Login Success",
+    "description": "Verify that a new restaurant can successfully register, log in, and maintain session state.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to restaurant registration page"
+      },
+      {
+        "type": "action",
+        "description": "Fill out registration form with valid restaurant details"
+      },
+      {
+        "type": "action",
+        "description": "Submit registration"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm successful registration message"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Input registered restaurant's username and password"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify restaurant is logged in and session persists on reload"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Delivery Driver Registration and Login Success",
+    "description": "Verify that a new delivery driver can successfully register, log in, and maintain session state.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to delivery driver registration page"
+      },
+      {
+        "type": "action",
+        "description": "Fill out registration form with valid driver details"
+      },
+      {
+        "type": "action",
+        "description": "Submit registration"
+      },
+      {
+        "type": "assertion",
+        "description": "Confirm successful registration message"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Input registered driver's username and password"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify driver is logged in and session persists on reload"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Login Failure with Invalid Credentials",
+    "description": "Verify login fails and appropriate error message is displayed when incorrect credentials are used.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to login page"
+      },
+      {
+        "type": "action",
+        "description": "Input incorrect username and/or password"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify error message shown indicating invalid credentials"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Customer Places Order Flow",
+    "description": "Verify full flow of customer browsing restaurants, selecting menu items, customizing order, and placing order successfully.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as customer"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to restaurant browsing page"
+      },
+      {
+        "type": "action",
+        "description": "Select a restaurant from the list"
+      },
+      {
+        "type": "action",
+        "description": "View restaurant menu"
+      },
+      {
+        "type": "action",
+        "description": "Select menu items with customizations"
+      },
+      {
+        "type": "action",
+        "description": "Add items to cart"
+      },
+      {
+        "type": "action",
+        "description": "Proceed to order placement and confirm order details"
+      },
+      {
+        "type": "action",
+        "description": "Place order"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order confirmation and display of order status"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Restaurant Receives and Updates Order Status",
+    "description": "Verify that restaurant receives order notification, can confirm order, update preparation status and mark as ready for pickup.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as restaurant"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to orders dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify new order notification received"
+      },
+      {
+        "type": "action",
+        "description": "Confirm the received order"
+      },
+      {
+        "type": "action",
+        "description": "Update order status through preparation stages"
+      },
+      {
+        "type": "action",
+        "description": "Mark order as ready for pickup"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify updated order status is saved and visible"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Delivery Driver Accepts and Completes Delivery",
+    "description": "Verify that delivery driver receives order notifications, accepts delivery, updates status, picks up, delivers order, and marks delivery complete.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as delivery driver"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to orders dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify notification for new nearby delivery order"
+      },
+      {
+        "type": "action",
+        "description": "Accept delivery request"
+      },
+      {
+        "type": "action",
+        "description": "Update availability status toggling between available and unavailable"
+      },
+      {
+        "type": "action",
+        "description": "Pickup order from restaurant"
+      },
+      {
+        "type": "action",
+        "description": "Deliver order to customer address"
+      },
+      {
+        "type": "action",
+        "description": "Mark delivery as completed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify delivery status updates are reflected globally"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Real-Time Order Status Synchronization Across User Types",
+    "description": "Verify that order status updates made by any actor are propagated in real-time and visible to all relevant stakeholders (customer, restaurant, delivery driver).",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Place order as a customer"
+      },
+      {
+        "type": "action",
+        "description": "Login as restaurant and receive order"
+      },
+      {
+        "type": "action",
+        "description": "Update order status to 'preparing'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify customer side reflects updated status immediately"
+      },
+      {
+        "type": "action",
+        "description": "Login as delivery driver"
+      },
+      {
+        "type": "action",
+        "description": "Accept delivery and update status to 'picked up'"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify customer and restaurant views update to 'picked up' instantly"
+      },
+      {
+        "type": "action",
+        "description": "Mark order as delivered"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all actors see final ‘delivered’ status in real-time"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Multi-Language Support and RTL Layout Verification",
+    "description": "Verify user interface supports Portuguese, English, Spanish, and Hebrew with correct translations and layout adjustment for Hebrew RTL reading.",
+    "category": "internationalization",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to any user interface page"
+      },
+      {
+        "type": "action",
+        "description": "Switch language selector to Portuguese"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify texts are correctly translated to Portuguese"
+      },
+      {
+        "type": "action",
+        "description": "Switch language selector to English"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify texts are correctly translated to English"
+      },
+      {
+        "type": "action",
+        "description": "Switch language selector to Spanish"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify texts are correctly translated to Spanish"
+      },
+      {
+        "type": "action",
+        "description": "Switch language selector to Hebrew"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify texts are correctly translated to Hebrew and layout switches to RTL"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Global Header and Navigation Responsiveness and Adaptation",
+    "description": "Verify that the global header and navigation adaptively display correct navigational elements per user type and respond correctly on different device sizes.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as Customer and view header and navigation on desktop screen size"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify customer-specific navigation options are present and visually correct"
+      },
+      {
+        "type": "action",
+        "description": "Resize viewport to mobile size"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify navigation adapts responsively with hamburger menu or expanded menu as appropriate"
+      },
+      {
+        "type": "action",
+        "description": "Repeat above steps for Restaurant user"
+      },
+      {
+        "type": "action",
+        "description": "Repeat above steps for Delivery Driver user"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Notification System: Alerts, Toasts, and Notification Center",
+    "description": "Verify that real-time notifications for orders and system events display as alerts, toasts, and accumulate correctly in the notification center for all user types.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Trigger a new order event as a customer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify restaurant receives notification alert and toast"
+      },
+      {
+        "type": "action",
+        "description": "Trigger order status update as restaurant"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify customer receives toast notification"
+      },
+      {
+        "type": "action",
+        "description": "Open notification center"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all incoming notifications are listed and timestamps correct"
+      },
+      {
+        "type": "action",
+        "description": "Acknowledge/clear notifications"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify notifications remove appropriately from the center"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Connectivity Management: Online/Offline Detection and Offline Mode Handling",
+    "description": "Verify the application detects connectivity changes and handles offline mode gracefully without loss of critical functionality or data corruption.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simulate network going offline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify connectivity status indicator updates to offline"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify application enters offline mode with appropriate UI indication"
+      },
+      {
+        "type": "action",
+        "description": "Attempt actions requiring network (e.g., place order)"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user receives message about offline status and action queuing if applicable"
+      },
+      {
+        "type": "action",
+        "description": "Simulate network reconnect"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify connectivity status indicator updates to online and queued actions sync correctly"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "UI Component Library Consistency and Responsiveness",
+    "description": "Verify reusable UI components render consistently with correct styles, animations, and responsiveness across different user interfaces and devices.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Render core UI components such as buttons, inputs, animated containers in customer, restaurant, and delivery interfaces"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify consistent styling, responsiveness, and animation smoothness across components"
+      },
+      {
+        "type": "action",
+        "description": "Change viewport size to test responsiveness of components"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify layout and usability remain optimal on mobile, tablet, and desktop"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Order History Visibility and Accuracy for All User Types",
+    "description": "Verify completed and past orders are visible under order history for customers, restaurants, and delivery drivers with accurate status and details.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as customer and navigate to order history page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify list of past orders shows accurate statuses and details"
+      },
+      {
+        "type": "action",
+        "description": "Repeat above for restaurant user order history interface"
+      },
+      {
+        "type": "action",
+        "description": "Repeat above for delivery driver order history interface"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Validation of Input Forms and Error Messaging",
+    "description": "Verify all forms (registration, login, order placement, menu management) validate inputs correctly and provide meaningful error messages for invalid or missing data.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attempt registration with empty or invalid inputs for customer, restaurant, and delivery driver"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify appropriate validation error messages appear for all invalid fields"
+      },
+      {
+        "type": "action",
+        "description": "Attempt order placement with invalid quantity or missing selections"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order cannot be submitted and relevant validation messages appear"
+      },
+      {
+        "type": "action",
+        "description": "Attempt login with empty username/password"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify validation errors prompt user to fill required fields"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Session Persistence and Logout Functionality",
+    "description": "Verify that after login, the session persists across page reloads and reopening the browser, and logout properly clears session data.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as any user type"
+      },
+      {
+        "type": "action",
+        "description": "Reload page and verify user remains authenticated"
+      },
+      {
+        "type": "action",
+        "description": "Close and reopen browser; verify session persistence"
+      },
+      {
+        "type": "action",
+        "description": "Perform logout action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user is redirected to login page and session data is cleared"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access protected routes after logout"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify redirection to login for unauthorized access"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Access Control: Route Protection Based on User Role",
+    "description": "Verify that users cannot access pages and functionalities restricted to other user types via URL or navigation manipulation.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Login as customer and attempt to navigate to restaurant or delivery driver dashboards via URL"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify access is denied and user is redirected or shown error"
+      },
+      {
+        "type": "action",
+        "description": "Login as restaurant and attempt to access customer or delivery driver pages"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify same access restrictions apply"
+      },
+      {
+        "type": "action",
+        "description": "Repeat for delivery driver user"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Debug and Translation Management Tools Functionality",
+    "description": "Verify development tools including debug header, simple test pages, and translation management scripts operate correctly and assist in development and quality assurance.",
+    "category": "functional",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Access debug header page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify debug information is displayed correctly"
+      },
+      {
+        "type": "action",
+        "description": "Run auto-translation script and verify translations update properly"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify no errors occur and translations are applied"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Automated Test Suite Execution and Coverage Validation",
+    "description": "Run the automated Playwright test suite for authentication, internationalization, and core functionalities to verify tests execute successfully and provide full feature coverage.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Execute full Playwright test suite"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all test cases pass without errors"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify coverage reports show comprehensive coverage of authentication, internationalization, and core flows"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Edge Case: Handling of Simultaneous Order Updates",
+    "description": "Verify system handles concurrent updates to an order status by different actors without data loss or race conditions.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simultaneously update order status to different states from restaurant and delivery driver interfaces"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify order status resolves consistently and no conflicting updates persist"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify all users see consistent final status after update resolution"
+      }
+    ]
+  }
+]

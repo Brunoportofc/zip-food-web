@@ -65,10 +65,10 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
       signIn: async (email, password) => {
         try {
           const currentUserType = get().userType;
-          const { user, token } = await authService.signIn({ email, password });
+          const { user, token } = await authService.signIn({ email, password }, currentUserType);
           
-          // Preserva o userType selecionado pelo usuário, ou usa o do banco se não houver seleção
-          const finalUserType = currentUserType || user.type;
+          // Usa o userType do usuário retornado pelo serviço (que já considera o tipo selecionado)
+          const finalUserType = user.type;
           
           set({ isAuthenticated: true, user, token, userType: finalUserType });
         } catch (error) {

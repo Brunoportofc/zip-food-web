@@ -208,7 +208,8 @@
       "home": "Início",
       "orders": "Pedidos",
       "favorites": "Favoritos",
-      "my_account": "Minha Conta"
+      "my_account": "Minha Conta",
+      "my_profile": "Meu Perfil"
     },
     "dashboard": {
       "title": "Dashboard",
@@ -269,28 +270,30 @@
       "order_again": "Pedir Novamente"
     },
     "profile": {
+      "menu": "Menu",
+      "my_data": "Meus Dados",
+      "addresses": "Endereços",
+      "logout": "Sair",
       "title": "Meu Perfil",
       "personal_data": "Dados Pessoais",
-      "addresses": "Endereços",
-      "payment_methods": "Métodos de Pagamento",
-      "order_history": "Histórico de Pedidos",
-      "settings": "Configurações",
-      "help": "Ajuda",
-      "logout": "Sair",
+        "personal_information": "Dados Pessoais",
       "edit": "Editar",
-      "save": "Salvar",
       "cancel": "Cancelar",
-      "add_address": "Adicionar Endereço",
-      "add_payment_method": "Adicionar Método de Pagamento",
-      "personal_data_updated": "Dados pessoais atualizados com sucesso",
-      "fill_required_fields": "Preencha todos os campos obrigatórios",
-      "address_added": "Endereço adicionado com sucesso",
-      "address_removed": "Endereço removido com sucesso",
-      "payment_method_added": "Método de pagamento adicionado com sucesso",
-      "payment_method_removed": "Método de pagamento removido com sucesso",
-      "logout_success": "Logout realizado com sucesso",
-      "logout_error": "Erro ao fazer logout",
-      "loading": "Carregando..."
+      "save": "Salvar",
+      "full_name": "Nome Completo",
+        "name": "Nome",
+      "email": "E-mail",
+      "phone": "Telefone",
+      "cpf": "CPF",
+      "not_informed": "Não informado",
+      "add_new_address": "Adicionar Novo Endereço",
+      "address_name_placeholder": "Nome do endereço (ex: Casa, Trabalho)",
+      "street_placeholder": "Rua e número",
+      "neighborhood_placeholder": "Bairro",
+      "city_placeholder": "Cidade",
+      "state_placeholder": "Estado",
+      "zipcode_placeholder": "CEP",
+      "remove": "Remover"
     },
     "delivery": {
       "layout": {

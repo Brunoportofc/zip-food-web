@@ -21,30 +21,36 @@ class MockAuthService {
   /**
    * Simula login com credenciais fixas
    */
-  async signIn(email: string, password: string): Promise<{ user: User; token: string }> {
+  async signIn(email: string, password: string, userType?: UserType): Promise<{ user: User; token: string }> {
     // Simula delay de rede
     await new Promise(resolve => setTimeout(resolve, 500));
     
     if (email === this.MOCK_EMAIL && password === this.MOCK_PASSWORD) {
-      // Infere o tipo de usuário baseado na URL atual
-      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-      let userType: UserType = 'customer'; // padrão
+      // Usa o userType fornecido ou tenta obter do store de autenticação
+      let finalUserType: UserType = userType || 'customer';
       
-      if (currentPath.startsWith('/restaurant')) {
-        userType = 'restaurant';
-      } else if (currentPath.startsWith('/delivery')) {
-        userType = 'delivery';
-      } else if (currentPath.startsWith('/customer')) {
-        userType = 'customer';
+      // Se não foi fornecido userType, tenta obter do localStorage (store persistido)
+      if (!userType && typeof window !== 'undefined') {
+        try {
+          const authData = localStorage.getItem('auth-storage');
+          if (authData) {
+            const parsedData = JSON.parse(authData);
+            if (parsedData.state && parsedData.state.userType) {
+              finalUserType = parsedData.state.userType;
+            }
+          }
+        } catch (error) {
+          console.warn('Erro ao obter userType do localStorage:', error);
+        }
       }
       
       // Atualiza o tipo do usuário simulado
       const userWithCorrectType = {
         ...this.mockUser,
-        type: userType
+        type: finalUserType
       };
       
-      console.log(`🎭 Login simulado realizado com sucesso para tipo: ${userType}`);
+      console.log(`🎭 Login simulado realizado com sucesso para tipo: ${finalUserType}`);
       return {
         user: userWithCorrectType,
         token: this.MOCK_TOKEN
@@ -82,19 +88,46 @@ class MockAuthService {
   }
 
   /**
-   * Retorna usuário atual simulado
+   * Retorna usuário atual simulado baseado na sessão persistida
    */
   async getCurrentUser(): Promise<User | null> {
     // Simula verificação de token
     await new Promise(resolve => setTimeout(resolve, 100));
-    return this.mockUser;
+    
+    // Verifica se há dados de autenticação persistidos
+    if (typeof window !== 'undefined') {
+      try {
+        const authData = localStorage.getItem('auth-storage');
+        if (authData) {
+          const parsedData = JSON.parse(authData);
+          if (parsedData.state && parsedData.state.isAuthenticated && parsedData.state.user) {
+            return parsedData.state.user;
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao verificar dados de autenticação:', error);
+      }
+    }
+    
+    return null;
   }
 
   /**
-   * Verifica se está autenticado (sempre true no modo simulado)
+   * Verifica se está autenticado baseado na sessão persistida
    */
   isAuthenticated(): boolean {
-    return true;
+    if (typeof window !== 'undefined') {
+      try {
+        const authData = localStorage.getItem('auth-storage');
+        if (authData) {
+          const parsedData = JSON.parse(authData);
+          return parsedData.state && parsedData.state.isAuthenticated === true;
+        }
+      } catch (error) {
+        console.error('Erro ao verificar autenticação:', error);
+      }
+    }
+    return false;
   }
 
   /**
