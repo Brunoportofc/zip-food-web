@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import { useTranslation } from 'react-i18next';
 import { 
   MdDeliveryDining, 
   MdLocationOn, 
@@ -16,7 +15,6 @@ import {
   MdPerson,
   MdFilterList
 } from 'react-icons/md';
-import '@/i18n';
 
 type OrderStatus = 'available' | 'accepted' | 'picked_up' | 'delivered' | 'cancelled';
 
@@ -44,7 +42,6 @@ interface DeliveryOrder {
 }
 
 export default function DeliveryOrders() {
-  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
   const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
   
@@ -63,7 +60,7 @@ export default function DeliveryOrders() {
       customer: {
         name: 'João Silva',
         address: 'Rua das Flores, 123 - Jardim Primavera',
-        phone: t('delivery.orders.mock_data.customer_phone_1', '(11) 98765-4321'),
+        phone: '(11) 98765-4321',
       },
       items: [
         { name: 'Whopper', quantity: 2 },
@@ -86,7 +83,7 @@ export default function DeliveryOrders() {
       customer: {
         name: 'Maria Oliveira',
         address: 'Av. Principal, 456 - Centro',
-        phone: t('delivery.orders.mock_data.customer_phone_2', '(11) 91234-5678'),
+        phone: '(11) 91234-5678',
       },
       items: [
         { name: 'Pizza Grande Calabresa', quantity: 1 },
@@ -108,7 +105,7 @@ export default function DeliveryOrders() {
       customer: {
         name: 'Carlos Mendes',
         address: 'Rua dos Pinheiros, 789 - Pinheiros',
-        phone: t('delivery.orders.mock_data.customer_phone_3', '(11) 97890-1234'),
+        phone: '(11) 97890-1234',
       },
       items: [
         { name: 'Big Mac', quantity: 2 },
@@ -124,7 +121,7 @@ export default function DeliveryOrders() {
     },
     ];
     setOrders(initialOrders);
-  }, [t]);
+  }, []);
 
   const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
     setOrders(
@@ -180,15 +177,15 @@ export default function DeliveryOrders() {
   const getStatusText = (status: OrderStatus) => {
     switch (status) {
       case 'available':
-        return t('delivery.orders.status.available');
+        return 'Disponível';
       case 'accepted':
-        return t('delivery.orders.status.accepted');
+        return 'Aceito';
       case 'picked_up':
-        return t('delivery.orders.status.picked_up');
+        return 'Coletado';
       case 'delivered':
-        return t('delivery.orders.status.delivered');
+        return 'Entregue';
       case 'cancelled':
-        return t('delivery.orders.status.cancelled');
+        return 'Cancelado';
       default:
         return status;
     }
@@ -210,11 +207,11 @@ export default function DeliveryOrders() {
   const getNextStatusText = (currentStatus: OrderStatus): string => {
     switch (currentStatus) {
       case 'available':
-        return t('delivery.orders.accept_order');
+        return 'Aceitar Pedido';
       case 'accepted':
-        return t('delivery.orders.confirm_pickup');
+        return 'Confirmar Coleta';
       case 'picked_up':
-        return t('delivery.orders.confirm_delivery');
+        return 'Confirmar Entrega';
       default:
         return '';
     }
@@ -232,12 +229,12 @@ export default function DeliveryOrders() {
                 <MdDeliveryDining size={32} className="text-white hidden lg:block" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold">{t('delivery.orders.title')}</h1>
-                <p className="text-blue-100 mt-1 text-sm lg:text-base hidden sm:block">{t('delivery.orders.subtitle')}</p>
+                <h1 className="text-2xl lg:text-3xl font-bold">Pedidos</h1>
+                <p className="text-blue-100 mt-1 text-sm lg:text-base hidden sm:block">Gerencie seus pedidos de entrega</p>
               </div>
             </div>
             <div className="text-left sm:text-right">
-              <p className="text-blue-100 text-xs lg:text-sm">{t('delivery.orders.total_orders')}</p>
+              <p className="text-blue-100 text-xs lg:text-sm">Total de Pedidos</p>
               <p className="text-white font-bold text-lg lg:text-xl">{orders.length}</p>
             </div>
           </div>
@@ -252,7 +249,7 @@ export default function DeliveryOrders() {
               <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                 <MdFilterList size={18} className="text-blue-600" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">{t('delivery.orders.filter_orders')}</h2>
+              <h2 className="text-lg font-bold text-gray-900">Filtrar Pedidos</h2>
             </div>
             <div className="flex flex-wrap gap-3">
               <button
@@ -263,7 +260,7 @@ export default function DeliveryOrders() {
                 }`}
                 onClick={() => setActiveTab('current')}
               >
-                <span>{t('delivery.orders.current_orders')}</span>
+                <span>Pedidos Atuais</span>
                 <span className={`px-2 py-1 rounded-full text-xs ${
                   activeTab === 'current' ? 'bg-white/20' : 'bg-gray-200'
                 }`}>
@@ -278,7 +275,7 @@ export default function DeliveryOrders() {
                 }`}
                 onClick={() => setActiveTab('history')}
               >
-                <span>{t('delivery.orders.history')}</span>
+                <span>Histórico</span>
                 <span className={`px-2 py-1 rounded-full text-xs ${
                   activeTab === 'history' ? 'bg-white/20' : 'bg-gray-200'
                 }`}>
@@ -330,9 +327,9 @@ export default function DeliveryOrders() {
                           <div className="bg-gray-50 rounded-xl p-4 text-center">
                             <div className="flex items-center justify-center space-x-1 mb-1">
                               <MdAttachMoney size={16} className="text-green-600" />
-                              <p className="font-bold text-green-600 text-lg">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {order.deliveryFee.toFixed(2)}</p>
+                              <p className="font-bold text-green-600 text-lg">R$ {order.deliveryFee.toFixed(2)}</p>
                             </div>
-                            <p className="text-xs text-gray-500 mb-2">{t('delivery.orders.delivery_fee')}</p>
+                            <p className="text-xs text-gray-500 mb-2">Taxa de Entrega</p>
                             <div className="flex items-center justify-center space-x-1">
                               <MdDirections size={14} className="text-gray-400" />
                               <p className="text-sm font-medium text-gray-700">{order.distance.toFixed(1)} km</p>
@@ -351,9 +348,9 @@ export default function DeliveryOrders() {
                     <MdDeliveryDining size={32} className="text-gray-400" />
                   </div>
                   <p className="text-gray-500 text-lg font-medium">
-                    {activeTab === 'current' ? t('delivery.orders.no_current_orders') : t('delivery.orders.no_history_orders')}
+                    {activeTab === 'current' ? 'Nenhum pedido atual' : 'Nenhum pedido no histórico'}
                   </p>
-                  <p className="text-sm text-gray-400 mt-2">{t('delivery.orders.orders_will_appear')}</p>
+                  <p className="text-sm text-gray-400 mt-2">Os pedidos aparecerão aqui quando disponíveis</p>
                 </div>
               </AnimatedContainer>
             )}
@@ -375,20 +372,20 @@ export default function DeliveryOrders() {
               </div>
 
               <div className="border-t border-b py-4 my-4">
-                <h3 className="font-medium mb-2">{t('delivery.orders.restaurant')}</h3>
+                <h3 className="font-medium mb-2">Restaurante</h3>
                 <p className="text-sm">{selectedOrder.restaurant.name}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.restaurant.address}</p>
               </div>
 
               <div className="border-b py-4 mb-4">
-                <h3 className="font-medium mb-2">{t('delivery.orders.customer')}</h3>
+                <h3 className="font-medium mb-2">Cliente</h3>
                 <p className="text-sm">{selectedOrder.customer.name}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.customer.phone}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.customer.address}</p>
               </div>
 
               <div className="mb-4">
-                <h3 className="font-medium mb-2">{t('delivery.orders.order_items')}</h3>
+                <h3 className="font-medium mb-2">Itens do Pedido</h3>
                 <ul className="space-y-2">
                   {selectedOrder.items.map((item, index) => (
                     <li key={index} className="text-sm">
@@ -400,16 +397,16 @@ export default function DeliveryOrders() {
 
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <p className="text-sm">{t('delivery.orders.distance')}</p>
+                  <p className="text-sm">Distância</p>
                   <p className="font-medium">{selectedOrder.distance.toFixed(1)} km</p>
                 </div>
                 <div>
-                  <p className="text-sm">{t('delivery.orders.estimated_time')}</p>
+                  <p className="text-sm">Tempo Estimado</p>
                   <p className="font-medium">{selectedOrder.estimatedTime} min</p>
                 </div>
                 <div>
-                  <p className="text-sm">{t('delivery.orders.delivery_fee')}</p>
-                  <p className="font-medium">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {selectedOrder.deliveryFee.toFixed(2)}</p>
+                  <p className="text-sm">Taxa de Entrega</p>
+                  <p className="font-medium">R$ {selectedOrder.deliveryFee.toFixed(2)}</p>
                 </div>
               </div>
 
@@ -429,7 +426,7 @@ export default function DeliveryOrders() {
                       onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}
                     >
                       <MdCancel size={18} />
-                      <span>{t('delivery.orders.cancel_delivery')}</span>
+                      <span>Cancelar Entrega</span>
                     </button>
                   )}
                 </div>
@@ -437,7 +434,7 @@ export default function DeliveryOrders() {
             </AnimatedContainer>
           ) : (
             <div className="bg-white rounded-lg shadow p-6 text-center">
-              <p className="text-gray-500">{t('delivery.orders.select_order_details')}</p>
+              <p className="text-gray-500">Selecione um pedido para ver os detalhes</p>
             </div>
           )}
         </div>

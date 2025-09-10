@@ -7,7 +7,7 @@ import CustomInput from '@/components/CustomInput';
 import useAuthStore, { User } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import { showSuccessAlert, showErrorAlert, showWarningAlert } from '@/components/AlertSystem';
-import { useTranslation } from 'react-i18next';
+
 import { 
   MdSettings, 
   MdStore, 
@@ -47,7 +47,7 @@ interface RestaurantSettings {
 
 export default function RestaurantSettings() {
   const { user, login } = useAuthStore();
-  const { t } = useTranslation();
+
   
   const [settings, setSettings] = useState<RestaurantSettings>({
     name: '',
@@ -70,18 +70,18 @@ export default function RestaurantSettings() {
   useEffect(() => {
     setSettings({
       name: user?.name || 'Usuário de Desenvolvimento',
-      description: t('restaurant.mock_data.restaurant_description'),
+      description: 'Restaurante especializado em hambúrgueres artesanais e comida caseira',
       address: user?.address || 'Rua de Desenvolvimento, 123 - São Paulo, SP',
       phone: user?.phone || '(11) 99999-9999',
-      openingHours: t('restaurant.mock_data.opening_hours'),
+      openingHours: 'Segunda a Domingo: 18:00 - 23:00',
       deliveryFee: 5,
       minOrderValue: 15,
       categories: [
-        t('restaurant.mock_data.default_categories.hamburgers'),
-        t('restaurant.mock_data.default_categories.sides'),
-        t('restaurant.mock_data.default_categories.drinks'),
-        t('restaurant.mock_data.default_categories.desserts')
-      ],
+      'Hambúrgueres',
+      'Acompanhamentos',
+      'Bebidas',
+      'Sobremesas'
+    ],
       paymentMethods: {
         creditCard: true,
         debitCard: true,
@@ -89,7 +89,7 @@ export default function RestaurantSettings() {
         pix: true,
       },
     });
-  }, [t, user]);
+  }, [user]);
 
   const [newCategory, setNewCategory] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -99,17 +99,17 @@ export default function RestaurantSettings() {
     try {
       // Validações básicas
       if (!settings.name.trim()) {
-        showWarningAlert(t('restaurant.settings.required_field'), t('restaurant.settings.restaurant_name_required'));
+        showWarningAlert('Campo obrigatório', 'O nome do restaurante é obrigatório');
         return;
       }
       
       if (!settings.phone.trim()) {
-        showWarningAlert(t('restaurant.settings.required_field'), t('restaurant.settings.phone_required'));
+        showWarningAlert('Campo obrigatório', 'O telefone é obrigatório');
         return;
       }
       
       if (settings.deliveryFee < 0) {
-        showWarningAlert(t('restaurant.settings.invalid_value'), t('restaurant.settings.delivery_fee_negative'));
+        showWarningAlert('Valor inválido', 'A taxa de entrega não pode ser negativa');
         return;
       }
       
@@ -129,14 +129,14 @@ export default function RestaurantSettings() {
       }
       
       showSuccessAlert(
-        t('restaurant.settings.settings_saved'),
-        t('restaurant.settings.settings_saved_message')
-      );
+          'Configurações salvas',
+          'As configurações do restaurante foram atualizadas com sucesso'
+        );
     } catch (error) {
       showErrorAlert(
-        t('restaurant.settings.save_error'),
-        t('restaurant.settings.save_error_message')
-      );
+          'Erro ao salvar',
+          'Ocorreu um erro ao salvar as configurações. Tente novamente.'
+        );
     } finally {
       setIsSaving(false);
     }
@@ -181,12 +181,12 @@ export default function RestaurantSettings() {
                 <MdSettings size={32} className="text-white hidden lg:block" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold">{t('restaurant.settings.title')}</h1>
-                <p className="text-red-100 mt-1 text-sm lg:text-base hidden sm:block">{t('restaurant.settings.subtitle')}</p>
+                <h1 className="text-2xl lg:text-3xl font-bold">Configurações do Restaurante</h1>
+                <p className="text-red-100 mt-1 text-sm lg:text-base hidden sm:block">Gerencie as informações e configurações do seu restaurante</p>
               </div>
             </div>
             <div className="text-left sm:text-right w-full sm:w-auto">
-              <p className="text-red-100 text-xs lg:text-sm">{t('restaurant.settings.last_update')}</p>
+              <p className="text-red-100 text-xs lg:text-sm">Última atualização: {new Date().toLocaleDateString('pt-BR')}</p>
               <p className="text-white font-semibold text-sm lg:text-base">{new Date().toLocaleString()}</p>
             </div>
           </div>
@@ -202,28 +202,28 @@ export default function RestaurantSettings() {
                 <MdStore size={20} className="text-red-600 lg:hidden" />
                 <MdStore size={24} className="text-red-600 hidden lg:block" />
               </div>
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">{t('restaurant.settings.basic_info')}</h2>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Informações Básicas</h2>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <CustomInput
-                label={t('restaurant.settings.restaurant_name')}
-                placeholder={t('restaurant.settings.restaurant_name_placeholder')}
+                label="Nome do Restaurante"
+                placeholder="Ex: Burger House"
                 value={settings.name}
                 onChangeText={(text) => setSettings({ ...settings, name: text })}
 
               />
               <CustomInput
-                label={t('restaurant.settings.phone')}
-                placeholder={t('restaurant.settings.phone_placeholder')}
+                label="Telefone"
+                placeholder="(11) 99999-9999"
                 value={settings.phone}
                 onChangeText={(text) => setSettings({ ...settings, phone: text })}
 
               />
               <div className="lg:col-span-2">
                 <CustomInput
-                  label={t('restaurant.settings.address')}
-                  placeholder={t('restaurant.settings.address_placeholder')}
+                  label="Endereço"
+                  placeholder="Rua, número, bairro, cidade"
                   value={settings.address}
                   onChangeText={(text) => setSettings({ ...settings, address: text })}
   
@@ -232,20 +232,20 @@ export default function RestaurantSettings() {
               <div className="lg:col-span-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('restaurant.settings.description')}
+                    Descrição
                   </label>
                   <textarea
-                    placeholder={t('restaurant.settings.description_placeholder')}
+                    placeholder="Descreva seu restaurante..."
                     value={settings.description}
                     onChange={(e) => setSettings({ ...settings, description: e.target.value })}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none text-black"
                   />
                 </div>
               </div>
               <CustomInput
-                label={t('restaurant.settings.opening_hours')}
-                placeholder={t('restaurant.settings.opening_hours_placeholder')}
+                label="Horário de Funcionamento"
+                placeholder="Ex: Segunda a Domingo: 18:00 - 23:00"
                 value={settings.openingHours}
                 onChangeText={(text) => setSettings({ ...settings, openingHours: text })}
 
@@ -262,21 +262,21 @@ export default function RestaurantSettings() {
                 <MdDeliveryDining size={20} className="text-blue-600 lg:hidden" />
                 <MdDeliveryDining size={24} className="text-blue-600 hidden lg:block" />
               </div>
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">{t('restaurant.settings.delivery_settings')}</h2>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Configurações de Entrega</h2>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <CustomInput
-                label={t('restaurant.settings.delivery_fee')}
-                placeholder={t('restaurant.mock_data.placeholder_zero')}
+                label="Taxa de Entrega (R$)"
+                placeholder="0.00"
                 value={settings.deliveryFee.toString()}
                 onChangeText={(text) => setSettings({ ...settings, deliveryFee: parseFloat(text) || 0 })}
                 keyboardType="numeric"
 
               />
               <CustomInput
-                label={t('restaurant.settings.min_order_value')}
-                placeholder={t('restaurant.mock_data.placeholder_zero')}
+                label="Valor Mínimo do Pedido (R$)"
+                placeholder="0.00"
                 value={settings.minOrderValue.toString()}
                 onChangeText={(text) => setSettings({ ...settings, minOrderValue: parseFloat(text) || 0 })}
                 keyboardType="numeric"
@@ -294,7 +294,7 @@ export default function RestaurantSettings() {
                 <MdCategory size={20} className="text-green-600 lg:hidden" />
                 <MdCategory size={24} className="text-green-600 hidden lg:block" />
               </div>
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">{t('restaurant.settings.menu_categories')}</h2>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Categorias do Menu</h2>
             </div>
             
             <div className="flex flex-wrap gap-2 lg:gap-3 mb-4 lg:mb-6">
@@ -314,8 +314,8 @@ export default function RestaurantSettings() {
             <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
               <div className="flex-1">
                 <CustomInput
-                  label={t('restaurant.settings.new_category')}
-                  placeholder={t('restaurant.settings.new_category')}
+                  label="Nova Categoria"
+                  placeholder="Ex: Sobremesas"
                   value={newCategory}
                   onChangeText={setNewCategory}
   
@@ -326,7 +326,7 @@ export default function RestaurantSettings() {
                 className="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 lg:px-6 py-2 lg:py-3 rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center space-x-2 shadow-lg text-sm lg:text-base"
               >
                 <MdAdd size={18} />
-                <span>{t('restaurant.settings.add')}</span>
+                <span>Adicionar</span>
               </button>
             </div>
           </div>
@@ -340,7 +340,7 @@ export default function RestaurantSettings() {
                 <MdPayment size={20} className="text-purple-600 lg:hidden" />
                 <MdPayment size={24} className="text-purple-600 hidden lg:block" />
               </div>
-              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">{t('restaurant.settings.payment_methods')}</h2>
+              <h2 className="text-xl lg:text-2xl font-bold text-gray-900">Métodos de Pagamento</h2>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
@@ -355,7 +355,7 @@ export default function RestaurantSettings() {
                   <div className="flex items-center space-x-2">
                     <MdCreditCard size={18} className="text-gray-600 lg:hidden" />
                     <MdCreditCard size={20} className="text-gray-600 hidden lg:block" />
-                    <span className="font-medium text-gray-700 text-sm lg:text-base">{t('restaurant.settings.credit_card')}</span>
+                    <span className="font-medium text-gray-700 text-sm lg:text-base">Cartão de Crédito</span>
                   </div>
                 </label>
               </div>
@@ -371,7 +371,7 @@ export default function RestaurantSettings() {
                   <div className="flex items-center space-x-2">
                     <MdAccountBalance size={18} className="text-gray-600 lg:hidden" />
                     <MdAccountBalance size={20} className="text-gray-600 hidden lg:block" />
-                    <span className="font-medium text-gray-700 text-sm lg:text-base">{t('restaurant.settings.debit_card')}</span>
+                    <span className="font-medium text-gray-700 text-sm lg:text-base">Cartão de Débito</span>
                   </div>
                 </label>
               </div>
@@ -387,7 +387,7 @@ export default function RestaurantSettings() {
                   <div className="flex items-center space-x-2">
                     <MdMoney size={18} className="text-gray-600 lg:hidden" />
                     <MdMoney size={20} className="text-gray-600 hidden lg:block" />
-                    <span className="font-medium text-gray-700 text-sm lg:text-base">{t('restaurant.settings.cash')}</span>
+                    <span className="font-medium text-gray-700 text-sm lg:text-base">Dinheiro</span>
                   </div>
                 </label>
               </div>
@@ -403,7 +403,7 @@ export default function RestaurantSettings() {
                   <div className="flex items-center space-x-2">
                     <MdQrCode size={18} className="text-gray-600 lg:hidden" />
                     <MdQrCode size={20} className="text-gray-600 hidden lg:block" />
-                    <span className="font-medium text-gray-700 text-sm lg:text-base">{t('restaurant.settings.pix')}</span>
+                    <span className="font-medium text-gray-700 text-sm lg:text-base">PIX</span>
                   </div>
                 </label>
               </div>
@@ -424,13 +424,13 @@ export default function RestaurantSettings() {
               {isSaving ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 lg:h-5 lg:w-5 border-b-2 border-white"></div>
-                  <span>{t('restaurant.settings.saving')}</span>
+                  <span>Salvando...</span>
                 </>
               ) : (
                 <>
                   <MdSave size={20} className="lg:hidden" />
                   <MdSave size={24} className="hidden lg:block" />
-                  <span>{t('restaurant.settings.save_settings')}</span>
+                  <span>Salvar Configurações</span>
                 </>
               )}
             </button>

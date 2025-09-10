@@ -4,7 +4,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { MdPerson, MdShoppingCart, MdFavorite, MdLocationOn } from 'react-icons/md';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import Link from 'next/link';
 
 export default function CustomerLayout({
@@ -13,7 +13,7 @@ export default function CustomerLayout({
   children: React.ReactNode;
 }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const { t } = useTranslation();
+
 
   return (
     <ProtectedRoute>
@@ -36,21 +36,21 @@ export default function CustomerLayout({
                     href="/customer"
                     className="text-black hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    {t('customer.layout.home')}
+                    Início
                   </Link>
                   <Link
                     href="/customer/orders"
                     className="text-gray-600 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
                   >
                     <MdShoppingCart className="mr-1" size={18} />
-                    {t('customer.layout.orders')}
+                    Pedidos
                   </Link>
                   <Link
                     href="/customer/favorites"
                     className="text-gray-600 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
                   >
                     <MdFavorite className="mr-1" size={18} />
-                    {t('customer.layout.favorites')}
+                    Favoritos
                   </Link>
                 </div>
               </div>
@@ -62,7 +62,7 @@ export default function CustomerLayout({
                   className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors"
                 >
                   <MdPerson size={24} />
-                  <span className="hidden md:block text-sm font-medium">{t('customer.layout.my_account')}</span>
+                  <span className="hidden md:block text-sm font-medium">Minha Conta</span>
                 </button>
                 
                 {showUserMenu && (
@@ -72,7 +72,7 @@ export default function CustomerLayout({
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       <MdPerson className="inline mr-2" size={16} />
-                      {t('customer.layout.my_profile')}
+                      Meu Perfil
                     </Link>
                     <div className="border-t border-gray-100 my-1"></div>
                     <div className="px-4 py-2">

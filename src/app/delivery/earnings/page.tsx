@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import { useTranslation } from 'react-i18next';
 import { 
   MdAttachMoney, 
   MdTrendingUp, 
@@ -16,7 +15,6 @@ import {
   MdDateRange,
   MdCheckCircle
 } from 'react-icons/md';
-import '@/i18n';
 
 type Period = 'day' | 'week' | 'month';
 
@@ -37,7 +35,6 @@ interface EarningsSummary {
 }
 
 export default function DeliveryEarnings() {
-  const { t } = useTranslation();
   const [activePeriod, setActivePeriod] = useState<Period>('week');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -195,11 +192,11 @@ export default function DeliveryEarnings() {
   const getPeriodTitle = (): string => {
     switch (activePeriod) {
       case 'day':
-        return t('delivery.earnings.today');
+        return 'Hoje';
       case 'week':
-        return t('delivery.earnings.this_week');
+        return 'Esta Semana';
       case 'month':
-        return t('delivery.earnings.this_month');
+        return 'Este Mês';
       default:
         return '';
     }
@@ -217,13 +214,13 @@ export default function DeliveryEarnings() {
                 <MdAttachMoney size={32} className="text-white hidden lg:block" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold">{t('delivery.earnings.title')}</h1>
-            <p className="text-blue-100 mt-1 text-sm lg:text-base hidden sm:block">{t('delivery.earnings.subtitle')}</p>
+                <h1 className="text-2xl lg:text-3xl font-bold">Ganhos</h1>
+            <p className="text-blue-100 mt-1 text-sm lg:text-base hidden sm:block">Acompanhe seus ganhos e estatísticas</p>
               </div>
             </div>
             <div className="text-left sm:text-right">
-              <p className="text-blue-100 text-xs lg:text-sm">{t('delivery.earnings.total_accumulated')}</p>
-              <p className="text-white font-bold text-lg lg:text-xl">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {summary.totalEarnings.toFixed(2)}</p>
+              <p className="text-blue-100 text-xs lg:text-sm">Total Acumulado</p>
+              <p className="text-white font-bold text-lg lg:text-xl">R$ {summary.totalEarnings.toFixed(2)}</p>
             </div>
           </div>
         </div>
@@ -237,13 +234,13 @@ export default function DeliveryEarnings() {
               <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                 <MdDateRange size={18} className="text-green-600" />
               </div>
-              <h2 className="text-lg font-bold text-gray-900">{t('delivery.earnings.analysis_period')}</h2>
+              <h2 className="text-lg font-bold text-gray-900">Período de Análise</h2>
             </div>
             <div className="flex flex-wrap gap-3">
               {[
-                { key: 'day', label: t('delivery.earnings.today'), icon: MdCalendarToday },
-                { key: 'week', label: t('delivery.earnings.week'), icon: MdBarChart },
-                { key: 'month', label: t('delivery.earnings.month'), icon: MdShowChart }
+                { key: 'day', label: 'Hoje', icon: MdCalendarToday },
+                { key: 'week', label: 'Semana', icon: MdBarChart },
+                { key: 'month', label: 'Mês', icon: MdShowChart }
               ].map(({ key, label, icon: Icon }) => (
                 <button
                   key={key}
@@ -276,8 +273,8 @@ export default function DeliveryEarnings() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.earnings.total_earnings')}</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {summary.totalEarnings.toFixed(2)}</p>
+                <p className="text-sm text-gray-600 mb-1">Total de Ganhos</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900">R$ {summary.totalEarnings.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-1">{getPeriodTitle()}</p>
               </div>
             </div>
@@ -295,7 +292,7 @@ export default function DeliveryEarnings() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.earnings.total_deliveries')}</p>
+                <p className="text-sm text-gray-600 mb-1">Total de Entregas</p>
                 <p className="text-2xl lg:text-3xl font-bold text-gray-900">{summary.totalDeliveries}</p>
                 <p className="text-xs text-gray-500 mt-1">{getPeriodTitle()}</p>
               </div>
@@ -310,12 +307,12 @@ export default function DeliveryEarnings() {
                 </div>
                 <div className="flex items-center text-sm text-purple-600">
                   <MdTrendingUp size={16} />
-                  <span className="ml-1">+{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} 2</span>
+                  <span className="ml-1">+R$ 2</span>
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.earnings.average_per_delivery')}</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {summary.averagePerDelivery.toFixed(2)}</p>
+                <p className="text-sm text-gray-600 mb-1">Média por Entrega</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900">R$ {summary.averagePerDelivery.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-1">{getPeriodTitle()}</p>
               </div>
             </div>
@@ -333,8 +330,8 @@ export default function DeliveryEarnings() {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.earnings.best_day')}</p>
-                <p className="text-2xl lg:text-3xl font-bold text-gray-900">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {summary.bestDay.amount.toFixed(2)}</p>
+                <p className="text-sm text-gray-600 mb-1">Melhor Dia</p>
+                <p className="text-2xl lg:text-3xl font-bold text-gray-900">R$ {summary.bestDay.amount.toFixed(2)}</p>
                 <p className="text-xs text-gray-500 mt-1">{formatDate(summary.bestDay.date)}</p>
               </div>
             </div>
@@ -348,7 +345,7 @@ export default function DeliveryEarnings() {
               <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                 <MdShowChart size={20} className="text-blue-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">{t('delivery.earnings.earnings_by_day')}</h2>
+              <h2 className="text-xl font-bold text-gray-900">Ganhos por Dia</h2>
             </div>
             
             {filteredData.length > 0 ? (
@@ -361,11 +358,11 @@ export default function DeliveryEarnings() {
                         style={{ height: getBarHeight(day.amount) }}
                       >
                         <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
-                          {t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {day.amount.toFixed(2)}
+                          R$ {day.amount.toFixed(2)}
                         </div>
                       </div>
                     </div>
-                    <p className="text-xs font-medium text-green-600">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {day.amount.toFixed(0)}</p>
+                    <p className="text-xs font-medium text-green-600">R$ {day.amount.toFixed(0)}</p>
                     <p className="text-xs text-gray-500 text-center">{formatDate(day.date)}</p>
                     <p className="text-xs text-gray-400">{day.deliveries} entregas</p>
                   </div>
@@ -374,7 +371,7 @@ export default function DeliveryEarnings() {
             ) : (
               <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                 <MdBarChart size={48} className="text-gray-300 mb-4" />
-                <p>{t('delivery.earnings.no_data_available')}</p>
+                <p>Nenhum dado disponível</p>
               </div>
             )}
           </div>
@@ -387,7 +384,7 @@ export default function DeliveryEarnings() {
               <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
                 <MdAttachMoney size={20} className="text-green-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">{t('delivery.earnings.earnings_history')}</h2>
+              <h2 className="text-xl font-bold text-gray-900">Histórico de Ganhos</h2>
             </div>
             
             {filteredData.length > 0 ? (
@@ -398,25 +395,25 @@ export default function DeliveryEarnings() {
                       <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         <div className="flex items-center space-x-2">
                           <MdCalendarToday size={16} />
-                          <span>{t('delivery.earnings.date')}</span>
+                          <span>Data</span>
                         </div>
                       </th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         <div className="flex items-center space-x-2">
                           <MdDeliveryDining size={16} />
-                          <span>{t('delivery.earnings.deliveries')}</span>
+                          <span>Entregas</span>
                         </div>
                       </th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         <div className="flex items-center space-x-2">
                           <MdAttachMoney size={16} />
-                          <span>{t('delivery.earnings.earnings')}</span>
+                          <span>Ganhos</span>
                         </div>
                       </th>
                       <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
                         <div className="flex items-center space-x-2">
                           <MdBarChart size={16} />
-                          <span>{t('delivery.earnings.average')}</span>
+                          <span>Média</span>
                         </div>
                       </th>
                     </tr>
@@ -441,12 +438,12 @@ export default function DeliveryEarnings() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-lg font-bold text-green-600">
-                            {t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {day.amount.toFixed(2)}
+                            R$ {day.amount.toFixed(2)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="text-sm font-semibold text-purple-600">
-                            {t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {(day.amount / day.deliveries).toFixed(2)}
+                            R$ {(day.amount / day.deliveries).toFixed(2)}
                           </span>
                         </td>
                       </tr>
@@ -457,7 +454,7 @@ export default function DeliveryEarnings() {
             ) : (
               <div className="p-8 text-center">
                 <MdBarChart size={48} className="text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">{t('delivery.earnings.no_data_available')}</p>
+                <p className="text-gray-500">Nenhum dado disponível</p>
               </div>
             )}
           </div>

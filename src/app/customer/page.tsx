@@ -1,129 +1,64 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { MdSearch, MdLocationOn, MdLocalOffer, MdStar, MdAccessTime, MdFastfood, MdLocalPizza, MdIcecream, MdRestaurant, MdBrunchDining } from 'react-icons/md';
 import { FaPizzaSlice, FaHamburger, FaWineGlassAlt, FaIceCream, FaCoffee, FaFish, FaCarrot, FaUtensils, FaBirthdayCake, FaDrumstickBite, FaHotdog, FaStarOfDavid } from 'react-icons/fa';
 import { GiNoodles, GiSushis, GiTacos, GiCupcake, GiDonerKebab, GiChopsticks, GiFrenchFries, GiSandwich, GiSlicedBread, GiCakeSlice } from 'react-icons/gi';
 import { BiSolidDrink, BiSolidCoffee } from 'react-icons/bi';
 import RestaurantCarousel from '@/components/RestaurantCarousel';
-import { useTranslation } from 'react-i18next';
-import Link from 'next/link';
+import { Restaurant, RestaurantCategory, categoryDisplayNames } from '@/types/restaurant';
+import restaurantService from '@/services/restaurant.service';
 
-// Mock data para restaurantes
-const mockRestaurants = [
-  {
-    id: '1',
-    name: 'Burger King',
-    image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=400&h=300&fit=crop',
-    rating: 4.5,
-    deliveryTime: '25-35 min',
-    deliveryFee: 5.99,
-    category: 'Fast Food',
-    isPromoted: true
-  },
-  {
-    id: '2',
-    name: 'Pizza Hut',
-    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
-    rating: 4.3,
-    deliveryTime: '30-40 min',
-    deliveryFee: 0,
-    category: 'Pizza'
-  },
-  {
-    id: '3',
-    name: 'Sushi Express',
-    image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop',
-    rating: 4.7,
-    deliveryTime: '20-30 min',
-    deliveryFee: 8.50,
-    category: 'Japonesa'
-  },
-  {
-    id: '4',
-    name: 'Taco Bell',
-    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
-    rating: 4.2,
-    deliveryTime: '15-25 min',
-    deliveryFee: 4.99,
-    category: 'Mexicana'
-  },
-  {
-    id: '5',
-    name: 'Subway',
-    image: 'https://images.unsplash.com/photo-1555072956-7758afb20e8f?w=400&h=300&fit=crop',
-    rating: 4.1,
-    deliveryTime: '20-30 min',
-    deliveryFee: 3.99,
-    category: 'Sanduíches'
-  },
-  {
-    id: '6',
-    name: 'McDonald\'s',
-    image: 'https://images.unsplash.com/photo-1552566090-a4c64d6b6b2d?w=400&h=300&fit=crop',
-    rating: 4.0,
-    deliveryTime: '15-25 min',
-    deliveryFee: 0,
-    category: 'Fast Food',
-    isPromoted: true
-  },
-  {
-    id: '7',
-    name: 'KFC',
-    image: 'https://images.unsplash.com/photo-1626645738196-c2a7c87a8f58?w=400&h=300&fit=crop',
-    rating: 4.4,
-    deliveryTime: '20-30 min',
-    deliveryFee: 4.50,
-    category: 'Fast Food'
-  },
-  {
-    id: '8',
-    name: 'Domino\'s Pizza',
-    image: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&h=300&fit=crop',
-    rating: 4.6,
-    deliveryTime: '25-35 min',
-    deliveryFee: 0,
-    category: 'Pizza',
-    isPromoted: true
-  }
-];
 
-// Mock data para categorias - agora usando chaves de tradução
-const getCategoriesWithTranslation = (t: any) => [
-  { id: '1', name: t('customer.dashboard.categories.snacks'), icon: <FaHamburger size={24} />, color: 'bg-amber-100 text-amber-600' },
-  { id: '2', name: t('customer.dashboard.categories.promotions'), icon: <MdLocalOffer size={24} />, color: 'bg-red-100 text-red-600' },
-  { id: '3', name: t('customer.dashboard.categories.pizza'), icon: <FaPizzaSlice size={24} />, color: 'bg-orange-100 text-orange-600' },
-  { id: '4', name: t('customer.dashboard.categories.japanese'), icon: <GiSushis size={24} />, color: 'bg-red-100 text-red-500' },
-  { id: '5', name: t('customer.dashboard.categories.sweets_cakes'), icon: <GiCakeSlice size={24} />, color: 'bg-pink-100 text-pink-600' },
-  { id: '6', name: t('customer.dashboard.categories.brazilian'), icon: <FaDrumstickBite size={24} />, color: 'bg-yellow-100 text-yellow-600' },
-  { id: '7', name: t('customer.dashboard.categories.acai'), icon: <FaIceCream size={24} />, color: 'bg-purple-100 text-purple-600' },
-  { id: '8', name: t('customer.dashboard.categories.arabic'), icon: <GiDonerKebab size={24} />, color: 'bg-amber-100 text-amber-700' },
-  { id: '9', name: t('customer.dashboard.categories.chinese'), icon: <GiChopsticks size={24} />, color: 'bg-red-100 text-red-700' },
-  { id: '10', name: t('customer.dashboard.categories.ice_cream'), icon: <MdIcecream size={24} />, color: 'bg-blue-100 text-blue-500' },
-  { id: '11', name: t('customer.dashboard.categories.italian'), icon: <GiNoodles size={24} />, color: 'bg-green-100 text-green-700' },
-  { id: '12', name: t('customer.dashboard.categories.bakery'), icon: <GiSlicedBread size={24} />, color: 'bg-amber-100 text-amber-800' },
-  { id: '13', name: t('customer.dashboard.categories.meat'), icon: <MdBrunchDining size={24} />, color: 'bg-red-100 text-red-800' },
-  { id: '14', name: t('customer.dashboard.categories.vegetarian'), icon: <FaCarrot size={24} />, color: 'bg-green-100 text-green-600' },
-  { id: '15', name: t('customer.dashboard.categories.gourmet'), icon: <FaUtensils size={24} />, color: 'bg-gray-100 text-gray-700' },
-  { id: '16', name: t('customer.dashboard.categories.pastry'), icon: <GiSandwich size={24} />, color: 'bg-yellow-100 text-yellow-700' },
-  { id: '17', name: t('customer.dashboard.categories.lunch_box'), icon: <MdRestaurant size={24} />, color: 'bg-orange-100 text-orange-700' },
-  { id: '18', name: t('customer.dashboard.categories.snacks'), icon: <GiFrenchFries size={24} />, color: 'bg-amber-100 text-amber-600' },
-  { id: '19', name: t('customer.dashboard.categories.kosher'), icon: <FaStarOfDavid size={24} />, color: 'bg-blue-100 text-blue-700' }
-];
+
+// Configuração das categorias com ícones e cores
+const categoryConfig: Record<RestaurantCategory, { icon: React.ReactElement; color: string }> = {
+  pizza: { icon: <FaPizzaSlice size={24} />, color: 'bg-orange-100 text-orange-600' },
+  hamburger: { icon: <FaHamburger size={24} />, color: 'bg-amber-100 text-amber-600' },
+  japonesa: { icon: <GiSushis size={24} />, color: 'bg-red-100 text-red-500' },
+  italiana: { icon: <GiNoodles size={24} />, color: 'bg-green-100 text-green-700' },
+  saudavel: { icon: <FaCarrot size={24} />, color: 'bg-green-100 text-green-600' },
+  falafel: { icon: <GiDonerKebab size={24} />, color: 'bg-amber-100 text-amber-700' },
+  hummus: { icon: <FaUtensils size={24} />, color: 'bg-yellow-100 text-yellow-600' },
+  shawarma: { icon: <GiDonerKebab size={24} />, color: 'bg-orange-100 text-orange-700' },
+  sabich: { icon: <GiSandwich size={24} />, color: 'bg-purple-100 text-purple-600' },
+  shakshuka: { icon: <MdBrunchDining size={24} />, color: 'bg-red-100 text-red-700' },
+  kosher: { icon: <FaStarOfDavid size={24} />, color: 'bg-blue-100 text-blue-700' },
+  bourekas: { icon: <GiSlicedBread size={24} />, color: 'bg-amber-100 text-amber-800' }
+};
 
 export default function CustomerDashboard() {
-  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentAddress] = useState('Rua das Flores, 123 - Centro');
-  
-  // Obter categorias com traduções
-  const mockCategories = getCategoriesWithTranslation(t);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Carregar restaurantes
+  useEffect(() => {
+    const loadRestaurants = async () => {
+      try {
+        setLoading(true);
+        const data = await restaurantService.getAll();
+        setRestaurants(data);
+      } catch (error) {
+        console.error('Erro ao carregar restaurantes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadRestaurants();
+  }, []);
 
   // Separar restaurantes por categoria
-  const promotedRestaurants = mockRestaurants.filter(r => r.isPromoted);
-  const fastFoodRestaurants = mockRestaurants.filter(r => r.category === 'Fast Food');
-  const pizzaRestaurants = mockRestaurants.filter(r => r.category === 'Pizza');
-  const allRestaurants = mockRestaurants;
+  const promotedRestaurants = restaurants.filter(r => r.isPromoted);
+  const fastFoodRestaurants = restaurants.filter(r => r.category === 'hamburger');
+  const pizzaRestaurants = restaurants.filter(r => r.category === 'pizza');
+  const allRestaurants = restaurants;
+
+  // Gerar lista de categorias disponíveis
+  const availableCategories = Object.keys(categoryDisplayNames) as RestaurantCategory[];
 
   return (
     <div className="min-h-screen bg-white">
@@ -134,7 +69,7 @@ export default function CustomerDashboard() {
           {/* Localização e Saudação */}
           <div className="flex items-center justify-between mb-4 lg:mb-6">
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-black mb-1 lg:mb-2">{t('customer.dashboard.greeting')} 👋</h1>
+              <h1 className="text-xl lg:text-2xl font-bold text-black mb-1 lg:mb-2">Olá! 👋</h1>
               <div className="flex items-center text-gray-600">
                 <MdLocationOn className="mr-1 lg:mr-2 text-red-600" size={16} />
                 <span className="text-xs lg:text-sm font-medium truncate max-w-48 lg:max-w-none">{currentAddress}</span>
@@ -149,39 +84,47 @@ export default function CustomerDashboard() {
           </div>
           
           {/* Search Bar */}
-          <div className="relative mb-6 lg:mb-8">
-            <MdSearch className="absolute left-3 lg:left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder={t('customer.dashboard.search_placeholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 lg:pl-12 pr-3 lg:pr-4 py-3 lg:py-4 border-2 border-gray-100 rounded-2xl focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-all duration-200 placeholder-gray-500 text-black bg-gray-50 hover:bg-white text-sm lg:text-base"
-            />
+          <div className="card mb-6 lg:mb-8">
+            <div className="flex items-center space-x-4">
+              <MdSearch className="text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Buscar restaurantes, pratos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="flex-1 outline-none text-lg border-none focus:ring-0"
+              />
+            </div>
           </div>
 
           {/* Categories */}
           <div className="mb-6 lg:mb-8">
-            <h2 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6">{t('customer.dashboard.categories_title')}</h2>
+            <h2 className="text-lg lg:text-xl font-bold text-black mb-4 lg:mb-6">Categorias</h2>
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-3 lg:gap-4">
-              {mockCategories.map((category) => (
-                <button
-                  key={category.id}
-                  className="flex flex-col items-center group hover:scale-105 transition-transform duration-200"
-                >
-                  <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-2 lg:mb-3 shadow-sm group-hover:shadow-md group-hover:bg-red-100 transition-all duration-200">
-                    <div className="text-red-600 group-hover:text-red-700 text-lg lg:text-xl">
-                      {category.icon}
+              {availableCategories.map((category) => {
+                const config = categoryConfig[category];
+                return (
+                  <Link
+                    key={category}
+                    href={`/customer/category/${category}`}
+                    className="flex flex-col items-center group hover:scale-105 transition-transform duration-200"
+                  >
+                    <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-red-50 flex items-center justify-center mb-2 lg:mb-3 shadow-sm group-hover:shadow-md group-hover:bg-red-100 transition-all duration-200">
+                      <div className="text-red-600 group-hover:text-red-700 text-lg lg:text-xl">
+                        {config.icon}
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-xs font-medium text-black text-center leading-tight">{category.name}</span>
-                </button>
-              ))}
+                    <span className="text-xs font-medium text-black text-center leading-tight">
+                      {categoryDisplayNames[category]}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
 
           {/* Promotional Banner */}
-          <div className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-2xl lg:rounded-3xl p-4 lg:p-6 mb-6 lg:mb-8 text-white relative overflow-hidden shadow-lg">
+          <div className="card bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white relative overflow-hidden mb-6 lg:mb-8">
             <div className="absolute inset-0 bg-black/10 rounded-2xl lg:rounded-3xl"></div>
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3 lg:mb-4">
@@ -189,15 +132,15 @@ export default function CustomerDashboard() {
                   <div className="bg-white/20 rounded-full p-1.5 lg:p-2 mr-2 lg:mr-3">
                     <MdLocalOffer className="text-white" size={20} />
                   </div>
-                  <span className="font-bold text-base lg:text-lg">{t('customer.dashboard.special_offer')}</span>
+                  <span className="font-bold text-base lg:text-lg">Oferta Especial</span>
                 </div>
                 <div className="text-2xl lg:text-4xl animate-bounce">🎉</div>
               </div>
-              <h2 className="text-lg lg:text-2xl font-bold mb-2 leading-tight">{t('customer.dashboard.free_delivery_banner')} 🚀</h2>
-              <p className="text-red-100 font-medium text-sm lg:text-base">{t('customer.dashboard.banner_validity')}</p>
+              <h2 className="text-lg lg:text-2xl font-bold mb-2 leading-tight">Entrega Grátis em Pedidos Acima de R$ 30! 🚀</h2>
+              <p className="text-red-100 font-medium text-sm lg:text-base">Válido até o final do mês</p>
               <div className="mt-3 lg:mt-4">
                 <button className="bg-white text-red-600 px-4 lg:px-6 py-2 rounded-full font-bold text-xs lg:text-sm hover:bg-red-50 transition-colors duration-200">
-                  {t('customer.dashboard.view_offers')}
+                  Ver Ofertas
                 </button>
               </div>
             </div>
@@ -216,42 +159,54 @@ export default function CustomerDashboard() {
               <div className="bg-red-100 rounded-full p-1.5 lg:p-2 mr-2 lg:mr-3">
                 <span className="text-red-600 text-lg lg:text-xl">🏪</span>
               </div>
-              <h2 className="text-lg lg:text-2xl font-bold text-black">{t('customer.dashboard.latest_stores')}</h2>
+              <h2 className="text-lg lg:text-2xl font-bold text-black">Últimas Lojas</h2>
             </div>
             <button className="bg-red-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium hover:bg-red-700 transition-colors duration-200">
-              {t('customer.dashboard.see_more')}
+              Ver Mais
             </button>
           </div>
           
-          <div className="flex overflow-x-auto space-x-3 lg:space-x-4 pb-2 -mx-4 px-4">
-            {allRestaurants.slice(0, 5).map((restaurant) => (
-              <div key={restaurant.id} className="flex-shrink-0 w-32 lg:w-36">
-                <div className="bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all cursor-pointer">
-                  <div className="relative">
-                    <img
-                      src={restaurant.image}
-                      alt={restaurant.name}
-                      className="w-full h-20 lg:h-24 object-cover rounded-t-lg"
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 lg:p-2">
-                      <div className="flex items-center">
-                        <MdStar className="text-yellow-400" size={10} />
-                        <span className="text-xs font-medium text-white ml-0.5">
-                          {restaurant.rating.toFixed(1)}
-                        </span>
+          {loading ? (
+            <div className="flex space-x-3 lg:space-x-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex-shrink-0 w-32 lg:w-36">
+                  <div className="bg-gray-200 animate-pulse rounded-lg h-20 lg:h-24 mb-2"></div>
+                  <div className="bg-gray-200 animate-pulse rounded h-4 mb-1"></div>
+                  <div className="bg-gray-200 animate-pulse rounded h-3"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex overflow-x-auto space-x-3 lg:space-x-4 pb-2 -mx-4 px-4">
+              {allRestaurants.slice(0, 5).map((restaurant) => (
+                <div key={restaurant.id} className="flex-shrink-0 w-32 lg:w-36">
+                  <div className="card-hover cursor-pointer">
+                    <div className="relative">
+                      <img
+                        src={restaurant.image}
+                        alt={restaurant.name}
+                        className="w-full h-20 lg:h-24 object-cover rounded-t-lg"
+                      />
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 lg:p-2">
+                        <div className="flex items-center">
+                          <MdStar className="text-yellow-400" size={10} />
+                          <span className="text-xs font-medium text-white ml-0.5">
+                            {restaurant.rating.toFixed(1)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="p-1.5 lg:p-2">
-                    <h3 className="font-medium text-xs lg:text-sm text-black truncate">
-                      {restaurant.name}
-                    </h3>
-                    <p className="text-gray-500 text-xs">{restaurant.category}</p>
+                    <div className="p-1.5 lg:p-2">
+                      <h3 className="font-medium text-xs lg:text-sm text-black truncate">
+                        {restaurant.name}
+                      </h3>
+                      <p className="text-gray-500 text-xs">{categoryDisplayNames[restaurant.category]}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Promoted Restaurants */}
@@ -262,10 +217,10 @@ export default function CustomerDashboard() {
                 <div className="bg-red-100 rounded-full p-1.5 lg:p-2 mr-2 lg:mr-3">
                   <span className="text-red-600 text-lg lg:text-xl">🔥</span>
                 </div>
-                <h2 className="text-lg lg:text-2xl font-bold text-black">{t('customer.dashboard.unmissable_promotions')}</h2>
+                <h2 className="text-lg lg:text-2xl font-bold text-black">Promoções Imperdíveis</h2>
             </div>
             <button className="bg-red-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium hover:bg-red-700 transition-colors duration-200">
-              {t('customer.dashboard.see_more')}
+              Ver Mais
             </button>
             </div>
             <RestaurantCarousel
@@ -283,10 +238,10 @@ export default function CustomerDashboard() {
                 <div className="bg-red-100 rounded-full p-1.5 lg:p-2 mr-2 lg:mr-3">
                   <span className="text-red-600 text-lg lg:text-xl">🍔</span>
                 </div>
-                <h2 className="text-lg lg:text-2xl font-bold text-black">{t('customer.dashboard.fast_food')}</h2>
+                <h2 className="text-lg lg:text-2xl font-bold text-black">Fast Food</h2>
               </div>
               <button className="bg-red-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium hover:bg-red-700 transition-colors duration-200">
-                {t('customer.dashboard.see_more')}
+                Ver Mais
               </button>
             </div>
             <RestaurantCarousel
@@ -304,10 +259,10 @@ export default function CustomerDashboard() {
                 <div className="bg-red-100 rounded-full p-1.5 lg:p-2 mr-2 lg:mr-3">
                   <span className="text-red-600 text-lg lg:text-xl">🍕</span>
                 </div>
-                <h2 className="text-lg lg:text-2xl font-bold text-black">{t('customer.dashboard.pizzerias')}</h2>
+                <h2 className="text-lg lg:text-2xl font-bold text-black">Pizzarias</h2>
               </div>
               <button className="bg-red-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium hover:bg-red-700 transition-colors duration-200">
-                {t('customer.dashboard.see_more')}
+                Ver Mais
               </button>
             </div>
             <RestaurantCarousel
@@ -324,10 +279,10 @@ export default function CustomerDashboard() {
               <div className="bg-red-100 rounded-full p-1.5 lg:p-2 mr-2 lg:mr-3">
                 <span className="text-red-600 text-lg lg:text-xl">🍽️</span>
               </div>
-              <h2 className="text-lg lg:text-2xl font-bold text-black">{t('customer.dashboard.all_restaurants')}</h2>
+              <h2 className="text-lg lg:text-2xl font-bold text-black">Todos os Restaurantes</h2>
             </div>
             <button className="bg-red-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium hover:bg-red-700 transition-colors duration-200">
-              {t('customer.dashboard.see_more')}
+              Ver Mais
             </button>
           </div>
           <RestaurantCarousel
@@ -343,54 +298,72 @@ export default function CustomerDashboard() {
               <div className="bg-red-100 rounded-full p-1.5 lg:p-2 mr-2 lg:mr-3">
                 <span className="text-red-600 text-lg lg:text-xl">⭐</span>
               </div>
-              <h2 className="text-lg lg:text-2xl font-bold text-black">{t('customer.dashboard.famous_on_zip_food')}</h2>
+              <h2 className="text-lg lg:text-2xl font-bold text-black">Famosos no Zip Food</h2>
             </div>
             <button className="bg-red-600 text-white px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium hover:bg-red-700 transition-colors duration-200">
-              {t('customer.dashboard.see_more')}
+              Ver Mais
             </button>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-            {allRestaurants.slice(0, 4).map((restaurant) => (
-              <div key={restaurant.id} className="bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow duration-300 group cursor-pointer">
-                <div className="relative">
-                  <img
-                    src={restaurant.image}
-                    alt={restaurant.name}
-                    className="w-full h-24 lg:h-32 object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {restaurant.isPromoted && (
-                    <div className="absolute top-2 lg:top-3 left-2 lg:left-3 bg-red-600 text-white px-2 lg:px-3 py-0.5 lg:py-1 rounded-full text-xs font-bold shadow-lg">
-                      Promoção
-                    </div>
-                  )}
-                  <div className="absolute top-2 lg:top-3 right-2 lg:right-3 bg-white/90 backdrop-blur-sm rounded-full p-1">
-                    <div className="flex items-center">
-                      <MdStar className="text-yellow-400 mr-1" size={10} />
-                      <span className="text-xs font-bold text-black">
-                        {restaurant.rating.toFixed(1)}
-                      </span>
+          {loading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white rounded-xl lg:rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                  <div className="bg-gray-200 animate-pulse h-24 lg:h-32"></div>
+                  <div className="p-3 lg:p-4">
+                    <div className="bg-gray-200 animate-pulse rounded h-4 mb-2"></div>
+                    <div className="bg-gray-200 animate-pulse rounded h-3 mb-3"></div>
+                    <div className="flex justify-between">
+                      <div className="bg-gray-200 animate-pulse rounded h-3 w-16"></div>
+                      <div className="bg-gray-200 animate-pulse rounded h-3 w-12"></div>
                     </div>
                   </div>
                 </div>
-                <div className="p-3 lg:p-4">
-                  <h3 className="font-bold text-sm lg:text-base text-black mb-1 lg:mb-2 group-hover:text-red-600 transition-colors duration-200">
-                    {restaurant.name}
-                  </h3>
-                  <p className="text-xs lg:text-sm text-gray-600 mb-2 lg:mb-3">{restaurant.category}</p>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-gray-500">
-                      <MdAccessTime className="mr-1" size={12} />
-                      <span className="text-xs lg:text-sm">{restaurant.deliveryTime}</span>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+              {allRestaurants.slice(0, 4).map((restaurant) => (
+                <div key={restaurant.id} className="card card-hover overflow-hidden group cursor-pointer">
+                  <div className="relative">
+                    <img
+                      src={restaurant.image}
+                      alt={restaurant.name}
+                      className="w-full h-24 lg:h-32 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    {restaurant.isPromoted && (
+                      <div className="absolute top-2 lg:top-3 left-2 lg:left-3 bg-primary text-white px-2 lg:px-3 py-0.5 lg:py-1 rounded-full text-xs font-bold shadow-lg">
+                        Promoção
+                      </div>
+                    )}
+                    <div className="absolute top-2 lg:top-3 right-2 lg:right-3 bg-white/90 backdrop-blur-sm rounded-full p-1">
+                      <div className="flex items-center">
+                        <MdStar className="text-accent mr-1" size={10} />
+                        <span className="text-xs font-bold text-black">
+                          {restaurant.rating.toFixed(1)}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-red-600 font-bold text-xs lg:text-sm">
-                      {restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}
+                  </div>
+                  <div className="p-3 lg:p-4">
+                    <h3 className="font-bold text-sm lg:text-base text-black mb-1 lg:mb-2 group-hover:text-primary transition-colors duration-200">
+                      {restaurant.name}
+                    </h3>
+                    <p className="text-xs lg:text-sm text-gray-600 mb-2 lg:mb-3">{categoryDisplayNames[restaurant.category]}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-gray-500">
+                        <MdAccessTime className="mr-1" size={12} />
+                        <span className="text-xs lg:text-sm">{restaurant.deliveryTime}</span>
+                      </div>
+                      <div className="text-primary font-bold text-xs lg:text-sm">
+                        {restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

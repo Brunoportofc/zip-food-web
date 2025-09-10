@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import useAuthStore from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import { useTranslation } from 'react-i18next';
 import { 
   MdDeliveryDining, 
   MdAttachMoney, 
@@ -14,7 +13,6 @@ import {
   MdStar,
   MdNotifications
 } from 'react-icons/md';
-import '@/i18n';
 
 interface DeliveryStats {
   totalDeliveries: number;
@@ -26,7 +24,6 @@ interface DeliveryStats {
 
 export default function DeliveryDashboard() {
   const { user } = useAuthStore();
-  const { t } = useTranslation();
   const [stats, setStats] = useState<DeliveryStats>({
     totalDeliveries: 0,
     availableOrders: 0,
@@ -41,10 +38,10 @@ export default function DeliveryDashboard() {
     const timer = setTimeout(() => {
       // Dados simulados para demonstração
       setStats({
-        totalDeliveries: parseInt(t('delivery.dashboard.mock_data.total_deliveries', '128')),
-        availableOrders: parseInt(t('delivery.dashboard.mock_data.available_orders', '5')),
-        completedToday: parseInt(t('delivery.dashboard.mock_data.completed_today', '8')),
-        earnings: parseFloat(t('delivery.dashboard.mock_data.earnings', '320.50')),
+        totalDeliveries: 128,
+        availableOrders: 5,
+        completedToday: 8,
+        earnings: 320.50,
         status: 'offline',
       });
       setIsLoading(false);
@@ -127,16 +124,16 @@ export default function DeliveryDashboard() {
                 <MdDeliveryDining size={32} className="text-white hidden lg:block" />
               </div>
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold">{t('delivery.dashboard.title')}</h1>
-                <p className="text-blue-100 mt-1 text-sm lg:text-base hidden sm:block">{t('delivery.dashboard.welcome', { name: user?.name })}</p>
+                <h1 className="text-2xl lg:text-3xl font-bold">Dashboard do Entregador</h1>
+                <p className="text-blue-100 mt-1 text-sm lg:text-base hidden sm:block">Bem-vindo, {user?.name}!</p>
               </div>
             </div>
             <div className="text-left sm:text-right w-full sm:w-auto">
-              <p className="text-blue-100 text-xs lg:text-sm">{t('delivery.dashboard.current_status')}</p>
+              <p className="text-blue-100 text-xs lg:text-sm">Status Atual</p>
               <div className="flex items-center space-x-2 mt-1">
                 <div className={`w-3 h-3 rounded-full ${stats.status === 'online' ? 'bg-green-400' : 'bg-red-400'}`}></div>
                 <p className="text-white font-semibold text-sm lg:text-base">
-                  {stats.status === 'online' ? t('delivery.dashboard.online') : t('delivery.dashboard.offline')}
+                  {stats.status === 'online' ? 'Online' : 'Offline'}
                 </p>
               </div>
             </div>
@@ -158,8 +155,8 @@ export default function DeliveryDashboard() {
                   }`}></div>
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">{t('delivery.dashboard.delivery_status')}</h2>
-                  <p className="text-gray-600">{stats.status === 'online' ? t('delivery.dashboard.available_for_deliveries') : t('delivery.dashboard.unavailable')}</p>
+                  <h2 className="text-xl font-bold text-gray-900">Status de Entrega</h2>
+                  <p className="text-gray-600">{stats.status === 'online' ? 'Disponível para entregas' : 'Indisponível'}</p>
                 </div>
               </div>
               <button
@@ -170,7 +167,7 @@ export default function DeliveryDashboard() {
                     : 'bg-green-500 hover:bg-green-600 text-white shadow-lg'
                 }`}
               >
-                {stats.status === 'online' ? t('delivery.dashboard.go_offline') : t('delivery.dashboard.go_online')}
+                {stats.status === 'online' ? 'Ficar Offline' : 'Ficar Online'}
               </button>
             </div>
           </div>
@@ -179,7 +176,7 @@ export default function DeliveryDashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <StatCard
-            title={t('delivery.dashboard.total_deliveries')}
+            title="Total de Entregas"
             value={stats.totalDeliveries}
             icon={MdDeliveryDining}
             color="blue"
@@ -187,13 +184,13 @@ export default function DeliveryDashboard() {
             trendValue="+12%"
           />
           <StatCard
-            title={t('delivery.dashboard.available_orders')}
+            title="Pedidos Disponíveis"
             value={stats.availableOrders}
             icon={MdNotifications}
             color="yellow"
           />
           <StatCard
-            title={t('delivery.dashboard.deliveries_today')}
+            title="Entregas Hoje"
             value={stats.completedToday}
             icon={MdCheckCircle}
             color="green"
@@ -201,12 +198,12 @@ export default function DeliveryDashboard() {
             trendValue="+3"
           />
           <StatCard
-            title={t('delivery.dashboard.earnings_today')}
-            value={`${t('delivery.dashboard.mock_data.currency_symbol', 'R$')} ${stats.earnings.toFixed(2)}`}
+            title="Ganhos Hoje"
+            value={`R$ ${stats.earnings.toFixed(2)}`}
             icon={MdAttachMoney}
             color="purple"
             trend="up"
-            trendValue={`+${t('delivery.dashboard.mock_data.currency_symbol', 'R$')} 45`}
+            trendValue="+R$ 45"
           />
         </div>
 
@@ -218,10 +215,10 @@ export default function DeliveryDashboard() {
                 <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
                   <MdNotifications size={20} className="text-blue-600" />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900">{t('delivery.dashboard.available_orders')}</h2>
+                <h2 className="text-xl font-bold text-gray-900">Pedidos Disponíveis</h2>
               </div>
               <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
-                {stats.availableOrders} {t('delivery.dashboard.available')}
+                {stats.availableOrders} disponíveis
               </span>
             </div>
             
@@ -236,26 +233,26 @@ export default function DeliveryDashboard() {
                             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
                               <span className="text-white text-sm font-bold">#{1000 + index}</span>
                             </div>
-                            <h3 className="font-semibold text-gray-900">{t('delivery.dashboard.order')} #{1000 + index}</h3>
+                            <h3 className="font-semibold text-gray-900">Pedido #{1000 + index}</h3>
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                             <div className="flex items-center space-x-2">
                               <MdLocationOn size={16} className="text-gray-400" />
-                              <span className="text-gray-600">{t('delivery.dashboard.restaurant')}: {['Burger King', 'McDonalds', 'Pizza Hut', 'Subway', 'KFC'][index % 5]}</span>
+                              <span className="text-gray-600">Restaurante: {['Burger King', 'McDonalds', 'Pizza Hut', 'Subway', 'KFC'][index % 5]}</span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <MdAccessTime size={16} className="text-gray-400" />
-                              <span className="text-gray-600">{t('delivery.dashboard.distance')}: {(2 + index * 0.5).toFixed(1)} km</span>
+                              <span className="text-gray-600">Distância: {(2 + index * 0.5).toFixed(1)} km</span>
                             </div>
                           </div>
                         </div>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                           <div className="text-center sm:text-right">
-                            <p className="text-2xl font-bold text-green-600">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} {(15 + index * 2).toFixed(2)}</p>
-                            <p className="text-xs text-gray-500">{t('delivery.dashboard.estimated_earnings')}</p>
+                            <p className="text-2xl font-bold text-green-600">R$ {(15 + index * 2).toFixed(2)}</p>
+                            <p className="text-xs text-gray-500">Ganho estimado</p>
                           </div>
                           <button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg">
-                            {t('delivery.dashboard.accept_delivery')}
+                            Aceitar Entrega
                           </button>
                         </div>
                       </div>
@@ -268,8 +265,8 @@ export default function DeliveryDashboard() {
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <MdDeliveryDining size={32} className="text-gray-400" />
                 </div>
-                <p className="text-gray-500 text-lg font-medium">{t('delivery.dashboard.no_orders_available')}</p>
-                <p className="text-sm text-gray-400 mt-2">{t('delivery.dashboard.stay_online_message')}</p>
+                <p className="text-gray-500 text-lg font-medium">Nenhum pedido disponível</p>
+                <p className="text-sm text-gray-400 mt-2">Fique online para receber novos pedidos</p>
               </div>
             )}
           </div>
@@ -282,7 +279,7 @@ export default function DeliveryDashboard() {
               <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
                 <MdStar size={20} className="text-purple-600" />
               </div>
-              <h2 className="text-xl font-bold text-gray-900">{t('delivery.dashboard.week_summary')}</h2>
+              <h2 className="text-xl font-bold text-gray-900">Resumo da Semana</h2>
             </div>
             
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
@@ -290,7 +287,7 @@ export default function DeliveryDashboard() {
                 <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <MdDeliveryDining size={24} className="text-white" />
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.dashboard.total_deliveries')}</p>
+                <p className="text-sm text-gray-600 mb-1">Total de Entregas</p>
                 <p className="text-2xl font-bold text-gray-900">32</p>
               </div>
               
@@ -298,23 +295,23 @@ export default function DeliveryDashboard() {
                 <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <MdAttachMoney size={24} className="text-white" />
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.dashboard.weekly_earnings')}</p>
-                <p className="text-2xl font-bold text-gray-900">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} 640,00</p>
+                <p className="text-sm text-gray-600 mb-1">Ganhos da Semana</p>
+                <p className="text-2xl font-bold text-gray-900">R$ 640,00</p>
               </div>
               
               <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl">
                 <div className="w-12 h-12 bg-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <MdTrendingUp size={24} className="text-white" />
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.dashboard.average_per_delivery')}</p>
-                <p className="text-2xl font-bold text-gray-900">{t('delivery.dashboard.mock_data.currency_symbol', 'R$')} 20,00</p>
+                <p className="text-sm text-gray-600 mb-1">Média por Entrega</p>
+                <p className="text-2xl font-bold text-gray-900">R$ 20,00</p>
               </div>
               
               <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl">
                 <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3">
                   <MdAccessTime size={24} className="text-white" />
                 </div>
-                <p className="text-sm text-gray-600 mb-1">{t('delivery.dashboard.hours_online')}</p>
+                <p className="text-sm text-gray-600 mb-1">Horas Online</p>
                 <p className="text-2xl font-bold text-gray-900">24h</p>
               </div>
             </div>

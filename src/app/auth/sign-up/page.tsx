@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
+
 import { FiLock, FiMail, FiUser } from 'react-icons/fi';
 import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
 import LottieAnimation from '@/components/LottieAnimation';
@@ -13,15 +13,13 @@ import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomInput from '@/components/CustomInput';
 import CustomButton from '@/components/CustomButton';
-import I18nClientProvider from '@/components/I18nClientProvider';
+
 
 const SignUp = () => {
   return (
-    <I18nClientProvider>
-      <Suspense fallback={<div>Loading...</div>}>
-        <SignUpContent />
-      </Suspense>
-    </I18nClientProvider>
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignUpContent />
+    </Suspense>
   );
 };
 
@@ -42,7 +40,7 @@ const SignUpContent = () => {
   const { signUp, setUserType: storeSetUserType, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   
-  const { t } = useTranslation();
+
 
   useEffect(() => {
     if (type && (type === 'customer' || type === 'restaurant' || type === 'delivery')) {
@@ -72,11 +70,11 @@ const SignUpContent = () => {
     const { name, email, password, confirmPassword } = form;
 
     if (!name || !email || !password || !confirmPassword) {
-      return showAlert(t('auth.common.error_title'), t('auth.signup.alerts.fill_all_fields'));
+      return showAlert('Erro', 'Por favor, preencha todos os campos');
     }
 
     if (password !== confirmPassword) {
-      return showAlert(t('auth.common.error_title'), t('auth.signup.alerts.passwords_not_match'));
+      return showAlert('Erro', 'As senhas não coincidem');
     }
 
     setIsSubmitting(true);
@@ -100,7 +98,7 @@ const SignUpContent = () => {
           break;
       }
     } catch (error: any) {
-      showAlert(t('auth.common.error_title'), error.message || t('auth.signup.alerts.failed_sign_up'));
+      showAlert('Erro', error.message || 'Falha no cadastro');
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -125,7 +123,7 @@ const SignUpContent = () => {
         <AnimatedContainer animationType="fadeInUp" delay={300}>
           <div className="w-full max-w-md">
             <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-              {t('profile_selection.title')}
+              Selecione seu perfil
             </h2>
             
             <div className="grid grid-cols-3 gap-4">
@@ -138,7 +136,7 @@ const SignUpContent = () => {
                 }`}
               >
                 <MdPerson size={32} />
-                <span className="mt-2 font-medium text-sm">{t('profile_selection.customer')}</span>
+                <span className="mt-2 font-medium text-sm">Cliente</span>
               </button>
               
               <button
@@ -150,7 +148,7 @@ const SignUpContent = () => {
                 }`}
               >
                 <MdRestaurant size={32} />
-                <span className="mt-2 font-medium text-sm">{t('profile_selection.restaurant')}</span>
+                <span className="mt-2 font-medium text-sm">Restaurante</span>
               </button>
               
               <button
@@ -162,7 +160,7 @@ const SignUpContent = () => {
                 }`}
               >
                 <MdDeliveryDining size={32} />
-                <span className="mt-2 font-medium text-sm">{t('profile_selection.delivery')}</span>
+                <span className="mt-2 font-medium text-sm">Entregador</span>
               </button>
             </div>
           </div>
@@ -202,14 +200,14 @@ const SignUpContent = () => {
               {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('auth.fields.email_label')}
+                  Email
                 </label>
                 <div className="relative">
                   <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="email"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                    placeholder={t('auth.fields.email_placeholder')}
+                    placeholder="Digite seu email"
                     value={form.email}
                     onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                   />
@@ -219,14 +217,14 @@ const SignUpContent = () => {
               {/* Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('auth.fields.password_label')}
+                  Senha
                 </label>
                 <div className="relative">
                   <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="password"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                    placeholder={t('auth.fields.password_placeholder')}
+                    placeholder="Digite sua senha"
                     value={form.password}
                     onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
                   />
@@ -236,14 +234,14 @@ const SignUpContent = () => {
               {/* Confirm Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('auth.fields.confirm_password_label')}
+                  Confirmar Senha
                 </label>
                 <div className="relative">
                   <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="password"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                    placeholder={t('auth.fields.confirm_password_placeholder')}
+                    placeholder="Confirme sua senha"
                     value={form.confirmPassword}
                     onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                     onKeyDown={(e) => e.key === 'Enter' && submit()}
@@ -257,7 +255,7 @@ const SignUpContent = () => {
                 disabled={isSubmitting || isLoading}
                 className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting || isLoading ? t('auth.signup.button.creating_account') : t('auth.signup.button.sign_up')}
+                {isSubmitting || isLoading ? 'Criando conta...' : 'Criar conta'}
               </button>
             </div>
           </AnimatedContainer>
@@ -287,12 +285,12 @@ const SignUpContent = () => {
           <AnimatedContainer animationType="fadeInUp" delay={600}>
             <div className="text-center mt-6">
               <p className="text-gray-600">
-                {t('auth.signup.footer.has_account')}{' '}
+                Já tem uma conta?{' '}
                 <Link 
                   href={`/auth/sign-in?type=${userType}`} 
                   className="text-red-600 font-medium hover:text-red-700 hover:underline"
                 >
-                  {t('auth.signup.footer.sign_in')}
+                  Entrar
                 </Link>
               </p>
             </div>

@@ -1,13 +1,11 @@
 'use client';
 
-import '@/i18n';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
 import Link from 'next/link';
 import { 
   MdDashboard, 
@@ -31,7 +29,6 @@ export default function DeliveryLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { t } = useTranslation();
   const pathname = usePathname();
   const { notifications, unreadCount } = useRealTimeNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -41,26 +38,26 @@ export default function DeliveryLayout({
     {
       href: '/delivery',
       icon: MdDashboard,
-      label: t('delivery.layout.dashboard'),
+      label: 'Dashboard',
       active: pathname === '/delivery'
     },
     {
       href: '/delivery/orders',
       icon: MdDeliveryDining,
-      label: t('delivery.layout.orders'),
+      label: 'Pedidos',
       active: pathname === '/delivery/orders',
       badge: unreadCount
     },
     {
       href: '/delivery/earnings',
       icon: MdAttachMoney,
-      label: t('delivery.layout.earnings'),
+      label: 'Ganhos',
       active: pathname === '/delivery/earnings'
     },
     {
       href: '/delivery/profile',
       icon: MdPerson,
-      label: t('delivery.layout.profile'),
+      label: 'Perfil',
       active: pathname === '/delivery/profile'
     }
   ];
@@ -84,7 +81,7 @@ export default function DeliveryLayout({
           <AnimatedContainer animationType="fadeInDown" delay={100}>
             <div className="p-4 lg:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-600 to-blue-700">
               <h2 className="text-xl lg:text-2xl font-bold text-white mb-1">Zip Food</h2>
-              <p className="text-blue-100 text-xs lg:text-sm">{t('delivery.layout.delivery_area')}</p>
+              <p className="text-blue-100 text-xs lg:text-sm">Área de Entrega</p>
             </div>
           </AnimatedContainer>
 
@@ -134,7 +131,7 @@ export default function DeliveryLayout({
             {/* Status Toggle */}
             <AnimatedContainer animationType="fadeInUp" delay={600}>
               <div className="mt-6 lg:mt-8 p-3 lg:p-4 bg-gray-50 rounded-xl">
-                <h3 className="text-xs lg:text-sm font-semibold text-gray-600 mb-2 lg:mb-3">{t('delivery.layout.status')}</h3>
+                <h3 className="text-xs lg:text-sm font-semibold text-gray-600 mb-2 lg:mb-3">Status</h3>
                 <OfflineToggle />
               </div>
             </AnimatedContainer>
@@ -163,8 +160,8 @@ export default function DeliveryLayout({
 
               <div className="flex-1 md:flex md:items-center md:justify-between">
                 <div className="ml-4 md:ml-0">
-                  <h1 className="text-xl lg:text-2xl font-bold text-gray-900">{t('delivery.layout.delivery_panel')}</h1>
-                  <p className="text-gray-600 text-xs lg:text-sm hidden sm:block">{t('delivery.layout.manage_deliveries')}</p>
+                  <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Painel de Entregas</h1>
+                  <p className="text-gray-600 text-xs lg:text-sm hidden sm:block">Gerencie suas entregas</p>
                 </div>
                 <div className="flex items-center justify-between sm:justify-end space-x-4">
                   {/* Botão de notificações */}

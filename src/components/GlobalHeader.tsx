@@ -1,10 +1,9 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
 import { MdLogin, MdLogout, MdDeliveryDining } from 'react-icons/md';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
-import LanguageSelector from '@/components/LanguageSelector';
+
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -19,7 +18,6 @@ interface GlobalHeaderProps {
  */
 const GlobalHeader = ({ className, showBackground = true }: GlobalHeaderProps) => {
   const router = useRouter();
-  const { t } = useTranslation();
   const { isAuthenticated, user } = useAuthData();
   const { logout } = useAuthActions();
 
@@ -88,8 +86,7 @@ const GlobalHeader = ({ className, showBackground = true }: GlobalHeaderProps) =
 
           {/* User Info and Actions */}
           <div className="flex items-center space-x-4">
-            {/* Seletor de idioma */}
-            <LanguageSelector />
+
             
             {/* User Info (quando autenticado) */}
             {isAuthenticated && user && (

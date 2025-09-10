@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { MdToggleOn, MdToggleOff } from 'react-icons/md';
 
 /**
@@ -9,7 +8,6 @@ import { MdToggleOn, MdToggleOff } from 'react-icons/md';
  * Apenas para desenvolvimento
  */
 const AuthModeToggle: React.FC = () => {
-  const { t } = useTranslation();
 
   useEffect(() => {
     // Garantir que o modo Mock esteja definido

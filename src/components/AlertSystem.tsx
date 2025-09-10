@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import AnimatedContainer from './AnimatedContainer';
 import { 
   MdCheck, 
@@ -38,7 +38,6 @@ interface AlertSystemProps {
 }
 
 const AlertSystem: React.FC<AlertSystemProps> = ({ className }) => {
-  const { t } = useTranslation();
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   // Função para adicionar um novo alerta
@@ -311,11 +310,11 @@ export const showConfirmAlert = (
       duration: 0,
       actions: {
         primary: {
-          label: t ? t('components.alert_system.confirm') : 'Confirmar',
+          label: 'Confirmar',
           onClick: onConfirm
         },
         secondary: {
-          label: t ? t('components.alert_system.cancel') : 'Cancelar',
+          label: 'Cancelar',
           onClick: onCancel || (() => {})
         }
       }

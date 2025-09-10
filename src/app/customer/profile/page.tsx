@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaUserAlt, FaMapMarkerAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
+
 
 interface Address {
   id: string;
@@ -21,7 +21,6 @@ interface Address {
 
 
 export default function CustomerProfilePage() {
-  const { t } = useTranslation();
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuthData();
   const { logout } = useAuthActions();
@@ -83,13 +82,13 @@ export default function CustomerProfilePage() {
   
   const handleSavePersonalData = () => {
     // Em produção, aqui faria a chamada para a API
-    toast.success(t('customer.profile.personal_data_updated'));
+    toast.success('Dados pessoais atualizados com sucesso');
     setIsEditingPersonal(false);
   };
   
   const handleAddAddress = () => {
     if (!newAddress.label || !newAddress.street || !newAddress.city) {
-      toast.error(t('customer.profile.fill_required_fields'));
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     
@@ -108,17 +107,17 @@ export default function CustomerProfilePage() {
       zipCode: ''
     });
     setIsAddingAddress(false);
-    toast.success(t('customer.profile.address_added'));
+    toast.success('Endereço adicionado com sucesso');
   };
   
   const handleRemoveAddress = (id: string) => {
     setAddresses(addresses.filter(addr => addr.id !== id));
-    toast.success(t('customer.profile.address_removed'));
+    toast.success('Endereço removido com sucesso');
   };
   
   const handleAddPayment = () => {
     if (!newPayment.cardNumber || !newPayment.expiryDate || !newPayment.holderName) {
-      toast.error(t('customer.profile.fill_required_fields'));
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
     
@@ -136,21 +135,21 @@ export default function CustomerProfilePage() {
       holderName: ''
     });
     setIsAddingPayment(false);
-    toast.success(t('customer.profile.payment_method_added'));
+    toast.success('Método de pagamento adicionado com sucesso');
   };
 
   const handleRemovePayment = (id: string) => {
     setPaymentMethods(paymentMethods.filter(payment => payment.id !== id));
-    toast.success(t('customer.profile.payment_method_removed'));
+    toast.success('Método de pagamento removido com sucesso');
   };
   
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success(t('customer.profile.logout_success'));
+      toast.success('Logout realizado com sucesso');
       router.push('/auth/sign-in');
     } catch (error) {
-      toast.error(t('customer.profile.logout_error'));
+      toast.error('Erro ao fazer logout');
     }
   };
   
@@ -159,7 +158,7 @@ export default function CustomerProfilePage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
+          <p className="mt-4 text-gray-600">Carregando...</p>
         </div>
       </div>
     );
@@ -172,16 +171,16 @@ export default function CustomerProfilePage() {
           {/* Sidebar */}
           <div className="lg:w-1/4">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-bold mb-6 text-gray-900">{t('customer.profile.menu')}</h2>
+              <h2 className="text-xl font-bold mb-6 text-gray-900">Menu</h2>
               <nav className="space-y-2">
                 <div className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-red-50 cursor-pointer border-2 border-red-100">
                   <FaUserAlt className="text-red-600" size={18} />
-                  <span className="text-red-600 font-medium">{t('customer.profile.my_data')}</span>
+                  <span className="text-red-600 font-medium">Meus Dados</span>
                 </div>
                 
                 <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
                   <FaMapMarkerAlt className="text-gray-700" size={18} />
-                  <span className="text-gray-800">{t('customer.profile.addresses')}</span>
+                  <span className="text-gray-800">Endereços</span>
                 </div>
                 
                 <div 
@@ -189,7 +188,7 @@ export default function CustomerProfilePage() {
                   onClick={handleLogout}
                 >
                   <FaSignOutAlt className="text-red-600" size={18} />
-                  <span className="text-red-600 font-medium">{t('customer.profile.logout')}</span>
+                  <span className="text-red-600 font-medium">Sair</span>
                 </div>
               </nav>
             </div>
@@ -222,13 +221,13 @@ export default function CustomerProfilePage() {
               {/* Personal Information */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">{t('customer.profile.personal_data')}</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">Dados Pessoais</h2>
                   {!isEditingPersonal ? (
                     <button 
                       onClick={() => setIsEditingPersonal(true)}
                       className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                     >
-                      <FaEdit /> {t('customer.profile.edit')}
+                      <FaEdit /> Editar
                     </button>
                   ) : (
                     <div className="flex gap-3">
@@ -236,13 +235,13 @@ export default function CustomerProfilePage() {
                         onClick={handleSavePersonalData}
                         className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                       >
-                        <FaSave /> {t('customer.profile.save')}
+                        <FaSave /> Salvar
                       </button>
                       <button 
                         onClick={() => setIsEditingPersonal(false)}
                         className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                       >
-                        <FaTimes /> {t('customer.profile.cancel')}
+                        <FaTimes /> Cancelar
                       </button>
                     </div>
                   )}
@@ -251,7 +250,7 @@ export default function CustomerProfilePage() {
                 {isEditingPersonal ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.full_name')}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
                       <input
                         type="text"
                         value={personalData.name}
@@ -260,7 +259,7 @@ export default function CustomerProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.email')}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
                       <input
                         type="email"
                         value={personalData.email}
@@ -269,7 +268,7 @@ export default function CustomerProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.phone')}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
                       <input
                         type="tel"
                         value={personalData.phone}
@@ -283,16 +282,16 @@ export default function CustomerProfilePage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.full_name')}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
                       <p className="text-gray-900 py-3">{personalData.name}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.email')}</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
                       <p className="text-gray-900 py-3">{personalData.email}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('customer.profile.phone')}</label>
-                      <p className="text-gray-900 py-3">{personalData.phone || t('customer.profile.not_informed')}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                      <p className="text-gray-900 py-3">{personalData.phone || 'Não informado'}</p>
                     </div>
 
                   </div>
@@ -301,7 +300,7 @@ export default function CustomerProfilePage() {
 
               {/* Endereços */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('customer.profile.addresses')}</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Endereços</h3>
             
             {addresses.map((address) => (
               <div key={address.id} className="border border-gray-200 rounded-xl p-4 mb-4 bg-gray-50">
@@ -314,13 +313,13 @@ export default function CustomerProfilePage() {
                   </div>
                   <div className="flex gap-3">
                     <button className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1">
-                      <FaEdit size={16} /> {t('customer.profile.edit')}
+                      <FaEdit size={16} /> Editar
                     </button>
                     <button 
                       onClick={() => handleRemoveAddress(address.id)}
                       className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1"
                     >
-                      <FaTrash size={16} /> {t('customer.profile.remove')}
+                      <FaTrash size={16} /> Remover
                     </button>
                   </div>
                 </div>
@@ -332,42 +331,42 @@ export default function CustomerProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <input
                     type="text"
-                    placeholder={t('customer.profile.address_name_placeholder')}
+                    placeholder="Nome do endereço (ex: Casa, Trabalho)"
                     value={newAddress.label}
                     onChange={(e) => setNewAddress({...newAddress, label: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder={t('customer.profile.street_placeholder')}
+                    placeholder="Rua, número"
                     value={newAddress.street}
                     onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder={t('customer.profile.neighborhood_placeholder')}
+                    placeholder="Bairro"
                     value={newAddress.neighborhood}
                     onChange={(e) => setNewAddress({...newAddress, neighborhood: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder={t('customer.profile.city_placeholder')}
+                    placeholder="Cidade"
                     value={newAddress.city}
                     onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder={t('customer.profile.state_placeholder')}
+                    placeholder="Estado"
                     value={newAddress.state}
                     onChange={(e) => setNewAddress({...newAddress, state: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder={t('customer.profile.zipcode_placeholder')}
+                    placeholder="CEP"
                     value={newAddress.zipCode}
                     onChange={(e) => setNewAddress({...newAddress, zipCode: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
@@ -378,13 +377,13 @@ export default function CustomerProfilePage() {
                     onClick={handleAddAddress}
                     className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
                   >
-                    <FaSave /> {t('customer.profile.save')}
+                    <FaSave /> Salvar
                   </button>
                   <button 
                     onClick={() => setIsAddingAddress(false)}
                     className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
                   >
-                    <FaTimes /> {t('customer.profile.cancel')}
+                    <FaTimes /> Cancelar
                   </button>
                 </div>
               </div>
@@ -393,7 +392,7 @@ export default function CustomerProfilePage() {
                 onClick={() => setIsAddingAddress(true)}
                 className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-xl flex items-center gap-2 mt-4 font-medium focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
               >
-                <FaPlus /> {t('customer.profile.add_new_address')}
+                <FaPlus /> Adicionar Novo Endereço
               </button>
             )}
           </div>

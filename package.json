@@ -5,23 +5,20 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
-    "start": "next start",
-    "i18n:translate": "node scripts/auto-translate-mymemory.js --from=pt --to=he && node scripts/auto-translate-mymemory.js --from=pt --to=en"
+    "start": "next start"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.7",
     "clsx": "^2.1.1",
     "critters": "^0.0.23",
     "framer-motion": "^12.23.12",
-    "i18next": "^23.7.6",
-    "i18next-browser-languagedetector": "^7.2.0",
+
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hot-toast": "^2.6.0",
-    "react-i18next": "^13.5.0",
     "react-icons": "^5.5.0",
     "tailwind-merge": "^3.3.1",
     "unicornstudio-react": "^1.4.29-1",

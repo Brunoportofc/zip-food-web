@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { useConnectivity } from '@/hooks/useConnectivity';
 
 interface ConnectivityStatusProps {
@@ -7,7 +6,6 @@ interface ConnectivityStatusProps {
 }
 
 const ConnectivityStatus: React.FC<ConnectivityStatusProps> = ({ className }) => {
-  const { t } = useTranslation();
   const { isOnline } = useConnectivity();
 
   return (
@@ -30,7 +28,7 @@ const ConnectivityStatus: React.FC<ConnectivityStatusProps> = ({ className }) =>
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            {t('common.offlineMode') || 'Modo Offline'}
+            Modo Offline
           </span>
         </div>
       )}

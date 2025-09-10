@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { toast } from 'react-hot-toast';
 import { showSuccessAlert, showConfirmAlert } from '@/components/AlertSystem';
@@ -46,7 +46,7 @@ interface Order {
 }
 
 export default function RestaurantOrders() {
-  const { t } = useTranslation();
+
   const [activeTab, setActiveTab] = useState<OrderStatus | 'all'>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,13 +62,13 @@ export default function RestaurantOrders() {
       {
         id: '#1234',
         customer: {
-          name: t('restaurant.mock_data.orders_data.customer_names.joao_ferreira'),
-          address: t('restaurant.mock_data.orders_data.addresses.rua_das_flores_123'),
-          phone: t('restaurant.mock_data.orders_data.phones.phone_1'),
+          name: 'João Ferreira',
+          address: 'Rua das Flores, 123',
+          phone: '(11) 98765-4321',
         },
         items: [
-          { id: '1', name: t('mock_data.menu_items.big_burger'), quantity: 2, price: 29.9 },
-          { id: '2', name: t('mock_data.menu_items.french_fries'), quantity: 1, price: 15.9 },
+          { id: '1', name: 'Big Burger', quantity: 2, price: 29.9 },
+          { id: '2', name: 'Batata Frita', quantity: 1, price: 15.9 },
         ],
         total: 75.7,
         status: 'pending',
@@ -77,12 +77,12 @@ export default function RestaurantOrders() {
       {
         id: '#1233',
         customer: {
-          name: t('restaurant.mock_data.orders_data.customer_names.maria_oliveira'),
-          address: t('restaurant.mock_data.orders_data.addresses.av_paulista_456'),
-          phone: t('restaurant.mock_data.orders_data.phones.phone_2'),
+          name: 'Maria Oliveira',
+          address: 'Av. Paulista, 456',
+          phone: '(11) 91234-5678',
         },
         items: [
-            { id: '3', name: t('mock_data.menu_items.chicken_burger'), quantity: 1, price: 45.9 },
+            { id: '3', name: 'Chicken Burger', quantity: 1, price: 45.9 },
           ],
          total: 45.9,
          status: 'preparing',
@@ -90,7 +90,7 @@ export default function RestaurantOrders() {
        },
      ];
      setOrders(initialOrders);
-   }, [t]);
+   }, []);
 
   useEffect(() => {
     if (!isAutoRefresh) return;
@@ -102,12 +102,12 @@ export default function RestaurantOrders() {
           customer: {
             name: `Cliente ${Math.floor(Math.random() * 100)}`,
             address: `Endereço ${Math.floor(Math.random() * 100)}`,
-            phone: t('restaurant.orders.mock_data.customer_phone', '(11) 99999-9999'),
+            phone: '(11) 99999-9999',
           },
           items: [
             {
               id: Math.random().toString(),
-              name: t('restaurant.orders.mock_data.product_name', 'Produto Exemplo'),
+              name: 'Produto Exemplo',
               quantity: 1,
               price: 25.0,
             },
@@ -117,7 +117,7 @@ export default function RestaurantOrders() {
           createdAt: new Date(),
         };
         setOrders(prev => [newOrder, ...prev]);
-        toast.success(t('restaurant.orders.new_order', { id: newOrder.id }));
+        toast.success(`Novo pedido: ${newOrder.id}`);
       }
       setLastUpdate(new Date());
     }, 30000);
@@ -137,12 +137,12 @@ export default function RestaurantOrders() {
     }
 
     const statusMessages: Record<string, string> = {
-      pending: t('restaurant.orders.status_messages.pending'),
-      preparing: t('restaurant.orders.status_messages.preparing'),
-      ready: t('restaurant.orders.status_messages.ready'),
-      delivering: t('restaurant.orders.status_messages.delivering'),
-      delivered: t('restaurant.orders.status_messages.delivered'),
-      cancelled: t('restaurant.orders.status_messages.cancelled')
+      pending: 'Pedido recebido',
+      preparing: 'Preparando pedido',
+      ready: 'Pedido pronto',
+      delivering: 'Saiu para entrega',
+      delivered: 'Pedido entregue',
+      cancelled: 'Pedido cancelado'
     };
 
     if (statusMessages[newStatus]) {
@@ -153,12 +153,12 @@ export default function RestaurantOrders() {
 
   const handleCancelOrder = (orderId: string) => {
     showConfirmAlert(
-      t('restaurant.orders.cancel_order'),
-      t('restaurant.orders.confirm_cancel', { id: orderId }),
+      'Cancelar Pedido',
+      `Tem certeza que deseja cancelar o pedido ${orderId}?`,
       () => {
         setOrders(prev => prev.filter(order => order.id !== orderId));
         setSelectedOrder(null);
-        showSuccessAlert(t('restaurant.orders.order_cancelled'), t('restaurant.orders.order_cancelled_message', { id: orderId }));
+        showSuccessAlert('Pedido Cancelado', `O pedido ${orderId} foi cancelado com sucesso.`);
         notifyOrderStatusChange(orderId, 'cancelled');
       },
       () => {}
@@ -167,7 +167,7 @@ export default function RestaurantOrders() {
 
   const handleRefresh = () => {
     setLastUpdate(new Date());
-    toast.success(t('restaurant.orders.orders_updated'));
+    toast.success('Pedidos atualizados');
   };
 
   const filteredOrders = orders
@@ -215,12 +215,12 @@ export default function RestaurantOrders() {
 
   const getStatusText = (status: OrderStatus) => {
     switch (status) {
-      case 'pending': return t('restaurant.orders.status.pending');
-      case 'preparing': return t('restaurant.orders.status.preparing');
-      case 'ready': return t('restaurant.orders.status.ready');
-      case 'delivering': return t('restaurant.orders.status.delivering');
-      case 'delivered': return t('restaurant.orders.status.delivered');
-      case 'cancelled': return t('restaurant.orders.status.cancelled');
+      case 'pending': return 'Pendente';
+      case 'preparing': return 'Preparando';
+      case 'ready': return 'Pronto';
+      case 'delivering': return 'Em entrega';
+      case 'delivered': return 'Entregue';
+      case 'cancelled': return 'Cancelado';
       default: return status;
     }
   };
@@ -255,13 +255,13 @@ export default function RestaurantOrders() {
             <div className="mb-4 lg:mb-0">
               <h1 className="text-2xl lg:text-3xl font-bold flex items-center space-x-3 mb-2">
                 <MdShoppingCart size={32} />
-                <span>{t('restaurant.orders.title')}</span>
+                <span>Pedidos</span>
               </h1>
-              <p className="text-red-100">{t('restaurant.orders.subtitle')}</p>
+              <p className="text-red-100">Gerencie todos os pedidos do seu restaurante</p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm text-red-100">{t('restaurant.orders.last_update')}</p>
+                <p className="text-sm text-red-100">Última atualização</p>
                 <p className="font-semibold">{lastUpdate.toLocaleTimeString()}</p>
               </div>
               <button
@@ -277,49 +277,49 @@ export default function RestaurantOrders() {
             <div className="bg-white bg-opacity-10 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
                 <MdTrendingUp className="text-white" size={20} />
-                <span className="text-sm font-medium">{t('restaurant.orders.stats.total')}</span>
+                <span className="text-sm font-medium">Total</span>
               </div>
               <p className="text-2xl font-bold">{stats.total}</p>
             </div>
             <div className="bg-yellow-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
                 <MdAccessTime className="text-yellow-200" size={20} />
-                <span className="text-sm font-medium">{t('restaurant.orders.stats.pending')}</span>
+                <span className="text-sm font-medium">Pendentes</span>
               </div>
               <p className="text-2xl font-bold">{stats.pending}</p>
             </div>
             <div className="bg-blue-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
                 <MdRestaurant className="text-blue-200" size={20} />
-                <span className="text-sm font-medium">{t('restaurant.orders.stats.preparing')}</span>
+                <span className="text-sm font-medium">Preparando</span>
               </div>
               <p className="text-2xl font-bold">{stats.preparing}</p>
             </div>
             <div className="bg-green-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
                 <MdCheck className="text-green-200" size={20} />
-                <span className="text-sm font-medium">{t('restaurant.orders.stats.ready')}</span>
+                <span className="text-sm font-medium">Prontos</span>
               </div>
               <p className="text-2xl font-bold">{stats.ready}</p>
             </div>
             <div className="bg-purple-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
                 <MdDeliveryDining className="text-purple-200" size={20} />
-                <span className="text-sm font-medium">{t('restaurant.orders.stats.delivering')}</span>
+                <span className="text-sm font-medium">Em entrega</span>
               </div>
               <p className="text-2xl font-bold">{stats.delivering}</p>
             </div>
             <div className="bg-emerald-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
                 <MdCheck className="text-emerald-200" size={20} />
-                <span className="text-sm font-medium">{t('restaurant.orders.stats.delivered')}</span>
+                <span className="text-sm font-medium">Entregues</span>
               </div>
               <p className="text-2xl font-bold">{stats.delivered}</p>
             </div>
             <div className="bg-red-500 bg-opacity-20 rounded-xl p-4 backdrop-blur-sm">
               <div className="flex items-center space-x-2 mb-2">
                 <MdCancel className="text-red-200" size={20} />
-                <span className="text-sm font-medium">{t('restaurant.orders.stats.cancelled')}</span>
+                <span className="text-sm font-medium">Cancelados</span>
               </div>
               <p className="text-2xl font-bold">{stats.cancelled}</p>
             </div>
@@ -335,7 +335,7 @@ export default function RestaurantOrders() {
                 <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  placeholder={t('restaurant.orders.search_placeholder')}
+                  placeholder="Buscar por ID ou nome do cliente..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
@@ -345,7 +345,7 @@ export default function RestaurantOrders() {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <MdFilterList className="text-gray-500" size={20} />
-                <span className="text-sm font-medium text-gray-700">{t('restaurant.orders.filters')}:</span>
+                <span className="text-sm font-medium text-gray-700">Filtros:</span>
               </div>
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
@@ -354,7 +354,7 @@ export default function RestaurantOrders() {
                   onChange={(e) => setIsAutoRefresh(e.target.checked)}
                   className="rounded border-gray-300 text-red-600 focus:ring-red-500"
                 />
-                <span>{t('restaurant.orders.auto_refresh')}</span>
+                <span>Atualização automática</span>
               </label>
             </div>
           </div>
@@ -373,7 +373,7 @@ export default function RestaurantOrders() {
               }`}
             >
               <MdTrendingUp size={18} />
-              <span>{t('restaurant.orders.filter_all')} ({stats.total})</span>
+              <span>Todos ({stats.total})</span>
             </button>
             <button
               onClick={() => setActiveTab('pending')}
@@ -384,7 +384,7 @@ export default function RestaurantOrders() {
               }`}
             >
               <MdAccessTime size={18} />
-              <span>{t('restaurant.orders.filter_pending')} ({stats.pending})</span>
+              <span>Pendentes ({stats.pending})</span>
             </button>
             <button
               onClick={() => setActiveTab('preparing')}
@@ -395,7 +395,7 @@ export default function RestaurantOrders() {
               }`}
             >
               <MdRestaurant size={18} />
-              <span>{t('restaurant.orders.filter_preparing')} ({stats.preparing})</span>
+              <span>Preparando ({stats.preparing})</span>
             </button>
             <button
               onClick={() => setActiveTab('ready')}
@@ -406,7 +406,7 @@ export default function RestaurantOrders() {
               }`}
             >
               <MdCheck size={18} />
-              <span>{t('restaurant.orders.filter_ready')} ({stats.ready})</span>
+              <span>Prontos ({stats.ready})</span>
             </button>
             <button
               onClick={() => setActiveTab('delivering')}
@@ -417,7 +417,7 @@ export default function RestaurantOrders() {
               }`}
             >
               <MdDeliveryDining size={18} />
-              <span>{t('restaurant.orders.filter_delivering')} ({stats.delivering})</span>
+              <span>Em entrega ({stats.delivering})</span>
             </button>
             <button
               onClick={() => setActiveTab('delivered')}
@@ -428,7 +428,7 @@ export default function RestaurantOrders() {
               }`}
             >
               <MdCheck size={18} />
-              <span>{t('restaurant.orders.filter_delivered')} ({stats.delivered})</span>
+              <span>Entregues ({stats.delivered})</span>
             </button>
             <button
               onClick={() => setActiveTab('cancelled')}
@@ -439,7 +439,7 @@ export default function RestaurantOrders() {
               }`}
             >
               <MdCancel size={18} />
-              <span>{t('restaurant.orders.filter_cancelled')} ({stats.cancelled})</span>
+              <span>Cancelados ({stats.cancelled})</span>
             </button>
           </div>
         </div>
@@ -452,11 +452,11 @@ export default function RestaurantOrders() {
               {filteredOrders.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
                   <MdShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('restaurant.orders.no_orders_found')}</h3>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">Nenhum pedido encontrado</h3>
                   <p className="text-gray-500">
                     {activeTab === 'all' 
-                      ? t('restaurant.orders.no_orders_moment') 
-                      : t('restaurant.orders.no_orders_status', { status: getStatusText(activeTab as OrderStatus) })
+                      ? 'Não há pedidos no momento' 
+                      : `Não há pedidos com status ${getStatusText(activeTab as OrderStatus)}`
                     }
                   </p>
                 </div>
@@ -485,8 +485,8 @@ export default function RestaurantOrders() {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-lg lg:text-xl font-bold text-gray-900">{t('mock_data.currency_symbol')} {order.total.toFixed(2)}</div>
-                          <div className="text-xs lg:text-sm text-gray-500">{order.items.length} {order.items.length === 1 ? t('restaurant.orders.item') : t('restaurant.orders.items')}</div>
+                          <div className="text-lg lg:text-xl font-bold text-gray-900">R$ {order.total.toFixed(2)}</div>
+                          <div className="text-xs lg:text-sm text-gray-500">{order.items.length} {order.items.length === 1 ? 'item' : 'itens'}</div>
                         </div>
                       </div>
 
@@ -520,7 +520,7 @@ export default function RestaurantOrders() {
                             }}
                           >
                             <MdPlayArrow size={16} />
-                            <span>{t('restaurant.orders.advance')}</span>
+                            <span>Avançar</span>
                           </button>
                         )}
                         {order.status !== 'cancelled' && order.status !== 'delivered' && (
@@ -532,7 +532,7 @@ export default function RestaurantOrders() {
                             }}
                           >
                             <MdCancel size={16} />
-                            <span>{t('restaurant.orders.cancel')}</span>
+                            <span>Cancelar</span>
                           </button>
                         )}
                       </div>
@@ -553,7 +553,7 @@ export default function RestaurantOrders() {
                     <div>
                       <h3 className="text-xl font-bold flex items-center space-x-2">
                         <MdShoppingCart size={24} />
-                        <span>{t('restaurant.orders.order')} {selectedOrder.id}</span>
+                        <span>Pedido {selectedOrder.id}</span>
                       </h3>
                       <p className="text-red-100 mt-1">
                         {selectedOrder.createdAt.toLocaleString()}
@@ -579,7 +579,7 @@ export default function RestaurantOrders() {
                   <div className="bg-gray-50 rounded-2xl p-4">
                     <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
                       <MdPerson size={20} className="text-red-500" />
-                      <span>{t('restaurant.orders.customer')}</span>
+                      <span>Cliente</span>
                     </h4>
                     <div className="space-y-2">
                       <p className="text-gray-700 font-medium">{selectedOrder.customer.name}</p>
@@ -597,18 +597,18 @@ export default function RestaurantOrders() {
                   <div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center space-x-2">
                       <MdRestaurant size={20} className="text-red-500" />
-                      <span>{t('restaurant.orders.order_items')}</span>
+                      <span>Itens do Pedido</span>
                     </h4>
                     <div className="space-y-3">
                       {selectedOrder.items.map((item) => (
                         <div key={item.id} className="bg-gray-50 rounded-xl p-4 flex justify-between items-center">
                           <div>
                             <p className="font-medium text-gray-900">{item.name}</p>
-                            <p className="text-sm text-gray-500">{t('restaurant.orders.quantity')}: {item.quantity}</p>
+                            <p className="text-sm text-gray-500">Quantidade: {item.quantity}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-gray-900">{t('mock_data.currency_symbol')} {(item.price * item.quantity).toFixed(2)}</p>
-                <p className="text-sm text-gray-500">{t('mock_data.currency_symbol')} {item.price.toFixed(2)} {t('restaurant.orders.each')}</p>
+                            <p className="font-semibold text-gray-900">R$ {(item.price * item.quantity).toFixed(2)}</p>
+                <p className="text-sm text-gray-500">R$ {item.price.toFixed(2)} cada</p>
                           </div>
                         </div>
                       ))}
@@ -617,8 +617,8 @@ export default function RestaurantOrders() {
 
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl p-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-xl font-bold text-gray-900">{t('restaurant.orders.total')}</span>
-                      <span className="text-2xl font-bold text-red-600">{t('mock_data.currency_symbol')} {selectedOrder.total.toFixed(2)}</span>
+                      <span className="text-xl font-bold text-gray-900">Total</span>
+                      <span className="text-2xl font-bold text-red-600">R$ {selectedOrder.total.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -632,7 +632,7 @@ export default function RestaurantOrders() {
                         }}
                       >
                         <MdPlayArrow size={20} />
-                        <span>{t('restaurant.orders.advance_to')} {getStatusText(getNextStatus(selectedOrder.status)!)}</span>
+                        <span>Avançar para {getStatusText(getNextStatus(selectedOrder.status)!)}</span>
                       </button>
                     )}
                     {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
@@ -643,7 +643,7 @@ export default function RestaurantOrders() {
                         }}
                       >
                         <MdCancel size={20} />
-                        <span>{t('restaurant.orders.cancel_order')}</span>
+                        <span>Cancelar Pedido</span>
                       </button>
                     )}
                     <button
@@ -651,7 +651,7 @@ export default function RestaurantOrders() {
                       onClick={() => setSelectedOrder(null)}
                     >
                       <MdCancel size={20} />
-                      <span>{t('restaurant.orders.close')}</span>
+                      <span>Fechar</span>
                     </button>
                   </div>
                 </div>
@@ -661,8 +661,8 @@ export default function RestaurantOrders() {
             <AnimatedContainer animationType="fadeIn" delay={100}>
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
                 <MdShoppingCart size={64} className="mx-auto text-gray-300 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('restaurant.orders.order_details')}</h3>
-                <p className="text-gray-500">{t('restaurant.orders.select_order_details')}</p>
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">Detalhes do Pedido</h3>
+                <p className="text-gray-500">Selecione um pedido para ver os detalhes</p>
               </div>
             </AnimatedContainer>
           )}

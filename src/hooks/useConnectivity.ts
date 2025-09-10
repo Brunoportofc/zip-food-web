@@ -1,14 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
 import useAuthStore from '@/store/auth.store';
 import { useNotification } from './useNotification';
-import { useTranslation } from 'react-i18next';
+
 
 /**
  * Hook personalizado para gerenciar o estado de conectividade
  * Fornece informações sobre o estado online/offline básico
  */
 export function useConnectivity() {
-  const { t } = useTranslation();
+
   const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [isForceOffline, setIsForceOffline] = useState<boolean>(false);
   const { isAuthenticated, setOfflineMode, isOfflineMode } = useAuthStore();
@@ -21,14 +21,14 @@ export function useConnectivity() {
       setIsOnline(true);
       if (!isForceOffline) {
         setOfflineMode(false);
-        showNotification(t('common.backOnline') || 'Conectado', 'success');
+        showNotification('Conectado', 'success');
       }
     };
 
     const handleOffline = () => {
       setIsOnline(false);
       setOfflineMode(true);
-      showNotification(t('common.offline') || 'Desconectado', 'warning');
+      showNotification('Desconectado', 'warning');
     };
 
     window.addEventListener('online', handleOnline);
@@ -38,7 +38,7 @@ export function useConnectivity() {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [isForceOffline, setOfflineMode, showNotification, t]);
+  }, [isForceOffline, setOfflineMode, showNotification]);
 
   const toggleOfflineMode = useCallback(async () => {
     const newOfflineState = !isForceOffline;
@@ -46,11 +46,11 @@ export function useConnectivity() {
     setOfflineMode(newOfflineState);
     
     if (newOfflineState) {
-      showNotification(t('common.offlineModeEnabled') || 'Modo offline ativado', 'info');
+      showNotification('Modo offline ativado', 'info');
     } else {
-      showNotification(t('common.offlineModeDisabled') || 'Modo offline desativado', 'info');
+      showNotification('Modo offline desativado', 'info');
     }
-  }, [isForceOffline, setOfflineMode, showNotification, t]);
+  }, [isForceOffline, setOfflineMode, showNotification]);
 
   return {
     isOnline: isOnline && !isForceOffline,

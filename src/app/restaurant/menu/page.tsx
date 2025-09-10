@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomButton from '@/components/CustomButton';
 import CustomInput from '@/components/CustomInput';
-import { useTranslation } from 'react-i18next';
+
 import { 
   MdAdd, 
   MdEdit, 
@@ -31,7 +31,7 @@ interface MenuItem {
 }
 
 export default function RestaurantMenu() {
-  const { t } = useTranslation();
+
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
 
   // Initialize menu items after translations are ready
@@ -39,52 +39,52 @@ export default function RestaurantMenu() {
     const initialMenuItems: MenuItem[] = [
       {
         id: '1',
-        name: t('mock_data.menu_items.big_burger'),
-        description: t('mock_data.menu_items.big_burger_desc'),
+        name: 'Big Burger',
+        description: 'Hambúrguer artesanal com carne bovina, queijo, alface e tomate',
         price: 29.90,
-        category: t('restaurant.mock_data.default_categories.hamburgers'),
+        category: 'Hambúrgueres',
         image: '/images/big-burger.jpg',
         available: true,
       },
       {
         id: '2',
-        name: t('mock_data.menu_items.french_fries'),
-        description: t('mock_data.menu_items.french_fries_desc'),
-        price: 15.90,
-        category: t('restaurant.mock_data.default_categories.sides'),
+        name: 'Batata Frita',
+        description: 'Batatas fritas crocantes temperadas com sal',
+        price: 12.90,
+        category: 'Acompanhamentos',
         image: '/images/french-fries.jpg',
         available: true,
       },
       {
         id: '3',
-        name: t('mock_data.menu_items.chocolate_cake'),
-        description: t('mock_data.menu_items.chocolate_cake_desc'),
-        price: 18.90,
-        category: t('restaurant.mock_data.default_categories.desserts'),
+        name: 'Bolo de Chocolate',
+        description: 'Delicioso bolo de chocolate com cobertura cremosa',
+        price: 15.90,
+        category: 'Sobremesas',
         image: '/images/chocolate-cake.jpg',
         available: true,
       },
       {
         id: '4',
-        name: t('mock_data.menu_items.chicken_burger'),
-        description: t('mock_data.menu_items.chicken_burger_desc'),
-        price: 45.90,
-        category: t('restaurant.mock_data.default_categories.hamburgers'),
+        name: 'Chicken Burger',
+        description: 'Hambúrguer de frango grelhado com molho especial',
+        price: 26.90,
+        category: 'Hambúrgueres',
         image: '/images/chicken-burger.jpg',
         available: true,
       },
       {
         id: '5',
-        name: t('mock_data.menu_items.veggie_burger'),
-        description: t('mock_data.menu_items.veggie_burger_desc'),
-        price: 22.90,
-        category: t('restaurant.mock_data.default_categories.hamburgers'),
+        name: 'Veggie Burger',
+        description: 'Hambúrguer vegetariano com ingredientes frescos',
+        price: 24.90,
+        category: 'Hambúrgueres',
         image: '/images/veggie-burger.jpg',
         available: false,
       }
     ];
     setMenuItems(initialMenuItems);
-  }, [t]);
+  }, []);
 
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -102,7 +102,7 @@ export default function RestaurantMenu() {
 
   const handleAddItem = () => {
     if (!newItem.name || !newItem.description || !newItem.price || !newItem.category) {
-      toast.error(t('restaurant.menu.fill_required_fields'));
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
@@ -119,7 +119,7 @@ export default function RestaurantMenu() {
     setMenuItems([...menuItems, item]);
     resetForm();
     setIsAddingItem(false);
-    toast.success(t('restaurant.menu.item_added_success'));
+    toast.success('Item adicionado com sucesso!');
   };
 
   const handleEditItem = (item: MenuItem) => {
@@ -137,7 +137,7 @@ export default function RestaurantMenu() {
 
   const handleUpdateItem = () => {
     if (!editingItem || !newItem.name || !newItem.description || !newItem.price || !newItem.category) {
-      toast.error(t('restaurant.menu.fill_required_fields'));
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
@@ -157,7 +157,7 @@ export default function RestaurantMenu() {
     resetForm();
     setIsAddingItem(false);
     setEditingItem(null);
-    toast.success(t('restaurant.menu.item_updated_success'));
+    toast.success('Item atualizado com sucesso!');
   };
 
   const resetForm = () => {
@@ -184,14 +184,14 @@ export default function RestaurantMenu() {
       )
     );
     const item = menuItems.find(item => item.id === id);
-    toast.success(`${item?.name} ${item?.available ? t('restaurant.menu.item_deactivated') : t('restaurant.menu.item_activated')} ${t('restaurant.menu.success')}!`);
+    toast.success(`${item?.name} ${item?.available ? 'desativado' : 'ativado'} com sucesso!`);
   };
 
   const handleDeleteItem = (id: string) => {
     const item = menuItems.find(item => item.id === id);
-    if (confirm(t('restaurant.menu.confirm_delete', { name: item?.name }))) {
+    if (confirm(`Tem certeza que deseja excluir "${item?.name}"?`)) {
       setMenuItems(menuItems.filter((item) => item.id !== id));
-      toast.success(t('restaurant.menu.item_deleted_success'));
+      toast.success('Item excluído com sucesso!');
     }
   };
 
@@ -228,9 +228,9 @@ export default function RestaurantMenu() {
             <div>
               <h1 className="text-2xl lg:text-4xl font-bold mb-2 flex items-center">
                 <MdRestaurantMenu className="mr-2 lg:mr-3" size={24} />
-                {t('restaurant.menu.title')}
+                Gerenciar Menu
               </h1>
-              <p className="text-red-100 text-sm lg:text-lg hidden sm:block">{t('restaurant.menu.manage_items')}</p>
+              <p className="text-red-100 text-sm lg:text-lg hidden sm:block">Adicione, edite e organize os itens do seu cardápio</p>
             </div>
             <button
               onClick={() => setIsAddingItem(!isAddingItem)}
@@ -239,12 +239,12 @@ export default function RestaurantMenu() {
               {isAddingItem ? (
                 <>
                   <MdClose size={18} />
-                  <span>{t('restaurant.menu.cancel')}</span>
+                  <span>Cancelar</span>
                 </>
               ) : (
                 <>
                   <MdAdd size={18} />
-                  <span>{t('restaurant.menu.new_item')}</span>
+                  <span>Novo Item</span>
                 </>
               )}
             </button>
@@ -260,10 +260,10 @@ export default function RestaurantMenu() {
               <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="text"
-                placeholder={t('restaurant.menu.search_placeholder')}
+                placeholder="Buscar itens do menu..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 lg:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm lg:text-base"
+                className="w-full pl-10 pr-4 py-2 lg:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm lg:text-base text-black"
               />
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -276,17 +276,17 @@ export default function RestaurantMenu() {
                 >
                   {categories.map(category => (
                     <option key={category} value={category}>
-                      {category === 'Todos' ? t('restaurant.menu.all_categories') :
-                       category === 'Hambúrgueres' ? t('restaurant.menu.categories.burgers') :
-                       category === 'Pizzas' ? t('restaurant.menu.categories.pizzas') :
-                       category === 'Bebidas' ? t('restaurant.menu.categories.drinks') :
-                       category === 'Acompanhamentos' ? t('restaurant.menu.categories.sides') :
-                       category === 'Saladas' ? t('restaurant.menu.categories.salads') :
-                       category === 'Sobremesas' ? t('restaurant.menu.categories.desserts') :
-                       category === 'Pratos Principais' ? t('restaurant.menu.categories.main_dishes') :
-                       category === 'Entradas' ? t('restaurant.menu.categories.appetizers') :
-                       category === 'Lanches' ? t('restaurant.menu.categories.snacks') :
-                       category}
+                      {category === 'Todos' ? 'Todas as Categorias' :
+            category === 'Hambúrgueres' ? 'Hambúrgueres' :
+            category === 'Pizzas' ? 'Pizzas' :
+            category === 'Bebidas' ? 'Bebidas' :
+            category === 'Acompanhamentos' ? 'Acompanhamentos' :
+            category === 'Saladas' ? 'Saladas' :
+            category === 'Sobremesas' ? 'Sobremesas' :
+            category === 'Pratos Principais' ? 'Pratos Principais' :
+            category === 'Entradas' ? 'Entradas' :
+            category === 'Lanches' ? 'Lanches' :
+            category}
                     </option>
                   ))}
                 </select>
@@ -298,7 +298,7 @@ export default function RestaurantMenu() {
                     viewMode === 'grid' ? 'bg-white shadow-sm text-red-600' : 'text-gray-600'
                   }`}
                 >
-                  {t('restaurant.menu.grid_view')}
+                  Grade
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
@@ -306,7 +306,7 @@ export default function RestaurantMenu() {
                     viewMode === 'list' ? 'bg-white shadow-sm text-red-600' : 'text-gray-600'
                   }`}
                 >
-                  {t('restaurant.menu.list_view')}
+                  Lista
                 </button>
               </div>
             </div>
@@ -320,45 +320,45 @@ export default function RestaurantMenu() {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 lg:p-8">
             <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6 flex items-center">
               {editingItem ? <MdEdit className="mr-2" size={20} /> : <MdAdd className="mr-2" size={20} />}
-              {editingItem ? t('restaurant.menu.edit_item') : t('restaurant.menu.new_item')}
+              {editingItem ? 'Editar Item' : 'Novo Item'}
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <CustomInput
-                label={t('restaurant.menu.item_name')}
-                placeholder={t('restaurant.menu.placeholders.item_name')}
+                label="Nome do Item"
+                placeholder="Ex: Big Burger"
                 value={newItem.name || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, name: text })}
               />
               <CustomInput
-                label={t('restaurant.menu.category')}
-                placeholder={t('restaurant.menu.placeholders.category')}
+                label="Categoria"
+                placeholder="Selecione uma categoria"
                 value={newItem.category || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, category: text })}
               />
               <CustomInput
-                label={t('restaurant.menu.price')}
+                label="Preço"
                 placeholder="0.00"
                 value={newItem.price?.toString() || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, price: parseFloat(text) || 0 })}
                 keyboardType="numeric"
               />
               <CustomInput
-                label={t('restaurant.menu.image_url')}
-                placeholder={t('restaurant.menu.placeholders.image_url')}
+                label="URL da Imagem"
+                placeholder="https://exemplo.com/imagem.jpg"
                 value={newItem.image || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, image: text })}
               />
               <div className="md:col-span-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('restaurant.menu.description')}
+                    Descrição
                   </label>
                   <textarea
-                    placeholder={t('restaurant.menu.placeholders.description')}
+                    placeholder="Descreva o item do menu..."
                     value={newItem.description || ''}
                     onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none text-black"
                   />
                 </div>
               </div>
@@ -371,7 +371,7 @@ export default function RestaurantMenu() {
                   className="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
                 />
                 <label htmlFor="available" className="text-gray-700 font-medium">
-                  {t('restaurant.menu.available_for_orders')}
+                  Disponível para pedidos
                 </label>
               </div>
             </div>
@@ -381,14 +381,14 @@ export default function RestaurantMenu() {
                 className="px-4 lg:px-6 py-2 lg:py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2 text-sm lg:text-base"
               >
                 <MdCancel size={18} />
-                <span>{t('restaurant.menu.cancel')}</span>
+                <span>Cancelar</span>
               </button>
               <button
                 onClick={editingItem ? handleUpdateItem : handleAddItem}
                 className="px-4 lg:px-6 py-2 lg:py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors flex items-center justify-center space-x-2 text-sm lg:text-base"
               >
                 <MdSave size={18} />
-                <span>{editingItem ? t('restaurant.menu.update') : t('restaurant.menu.save')}</span>
+                <span>{editingItem ? 'Atualizar' : 'Salvar'}</span>
               </button>
             </div>
           </div>
@@ -401,12 +401,12 @@ export default function RestaurantMenu() {
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
             <MdRestaurantMenu className="mx-auto text-gray-300 mb-4" size={64} />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {searchTerm || selectedCategory !== 'Todos' ? t('restaurant.menu.no_items_found') : t('restaurant.menu.menu_empty')}
+              {searchTerm || selectedCategory !== 'Todos' ? 'Nenhum item encontrado' : 'Menu vazio'}
             </h3>
             <p className="text-gray-500 mb-6">
               {searchTerm || selectedCategory !== 'Todos' 
-                ? t('restaurant.menu.try_adjust_filters') 
-                : t('restaurant.menu.start_adding_items')
+                ? 'Tente ajustar os filtros de busca'
+          : 'Comece adicionando itens ao seu menu'
               }
             </p>
             {!searchTerm && selectedCategory === 'Todos' && (
@@ -415,7 +415,7 @@ export default function RestaurantMenu() {
                 className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-colors flex items-center space-x-2 mx-auto"
               >
                 <MdAdd size={20} />
-                <span>{t('restaurant.menu.add_first_item')}</span>
+                <span>Adicionar Primeiro Item</span>
               </button>
             )}
           </div>
@@ -455,7 +455,7 @@ export default function RestaurantMenu() {
                       <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                         item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {item.available ? t('restaurant.menu.available') : t('restaurant.menu.unavailable')}
+                        {item.available ? 'Disponível' : 'Indisponível'}
                       </span>
                     </div>
                   </div>
@@ -463,7 +463,7 @@ export default function RestaurantMenu() {
                     <h3 className="text-lg lg:text-xl font-bold text-gray-900 mb-2">{item.name}</h3>
                     <p className="text-gray-600 text-xs lg:text-sm mb-3 lg:mb-4 line-clamp-2">{item.description}</p>
                     <div className="flex items-center justify-between mb-3 lg:mb-4">
-                      <span className="text-xl lg:text-2xl font-bold text-red-600">{t('mock_data.currency_symbol')} {item.price.toFixed(2)}</span>
+                      <span className="text-xl lg:text-2xl font-bold text-red-600">R$ {item.price.toFixed(2)}</span>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <button
@@ -471,7 +471,7 @@ export default function RestaurantMenu() {
                         className="flex-1 bg-blue-50 text-blue-600 py-2 px-3 lg:px-4 rounded-xl hover:bg-blue-100 transition-colors flex items-center justify-center space-x-2 text-sm lg:text-base"
                       >
                         <MdEdit size={14} />
-                        <span>{t('restaurant.menu.edit')}</span>
+                        <span>Editar</span>
                       </button>
                       <button
                         onClick={() => handleToggleAvailability(item.id)}
@@ -482,14 +482,14 @@ export default function RestaurantMenu() {
                         }`}
                       >
                         {item.available ? <MdVisibilityOff size={14} /> : <MdVisibility size={14} />}
-                        <span className="hidden sm:inline">{item.available ? t('restaurant.menu.hide') : t('restaurant.menu.show')}</span>
+                        <span className="hidden sm:inline">{item.available ? 'Ocultar' : 'Mostrar'}</span>
                       </button>
                       <button
                         onClick={() => handleDeleteItem(item.id)}
                         className="bg-red-50 text-red-600 py-2 px-3 lg:px-4 rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center sm:w-auto w-full"
                       >
                         <MdDelete size={14} />
-                        <span className="sm:hidden ml-2">{t('restaurant.menu.delete')}</span>
+                        <span className="sm:hidden ml-2">Excluir</span>
                       </button>
                     </div>
                   </div>
@@ -502,11 +502,11 @@ export default function RestaurantMenu() {
                 <table className="min-w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('restaurant.menu.table.item')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('restaurant.menu.table.category')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('restaurant.menu.table.price')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('restaurant.menu.table.status')}</th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('restaurant.menu.table.actions')}</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Preço</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -543,13 +543,13 @@ export default function RestaurantMenu() {
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="font-semibold text-gray-900">{t('mock_data.currency_symbol')} {item.price.toFixed(2)}</div>
+                          <div className="font-semibold text-gray-900">R$ {item.price.toFixed(2)}</div>
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
                             item.available ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                           }`}>
-                            {item.available ? t('restaurant.menu.available') : t('restaurant.menu.unavailable')}
+                            {item.available ? 'Disponível' : 'Indisponível'}
                           </span>
                         </td>
                         <td className="px-6 py-4">
@@ -557,7 +557,7 @@ export default function RestaurantMenu() {
                             <button
                               onClick={() => handleEditItem(item)}
                               className="text-blue-600 hover:text-blue-800 p-2 hover:bg-blue-50 rounded-lg transition-colors"
-                              title={t('restaurant.menu.edit')}
+                              title="Editar"
                             >
                               <MdEdit size={16} />
                             </button>
@@ -568,14 +568,14 @@ export default function RestaurantMenu() {
                                   ? 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50' 
                                   : 'text-green-600 hover:text-green-800 hover:bg-green-50'
                               }`}
-                              title={item.available ? t('restaurant.menu.hide') : t('restaurant.menu.show')}
+                              title={item.available ? 'Ocultar' : 'Mostrar'}
                             >
                               {item.available ? <MdVisibilityOff size={16} /> : <MdVisibility size={16} />}
                             </button>
                             <button
                               onClick={() => handleDeleteItem(item.id)}
                               className="text-red-600 hover:text-red-800 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                              title={t('restaurant.menu.delete')}
+                              title="Excluir"
                             >
                               <MdDelete size={16} />
                             </button>

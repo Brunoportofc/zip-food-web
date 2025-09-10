@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
+
 import { FiLock, FiMail } from 'react-icons/fi';
 import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
 import LottieAnimation from '@/components/LottieAnimation';
@@ -14,15 +14,13 @@ import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomInput from '@/components/CustomInput';
 import CustomButton from '@/components/CustomButton';
-import I18nClientProvider from '@/components/I18nClientProvider';
+
 
 const SignIn = () => {
   return (
-    <I18nClientProvider>
-      <Suspense fallback={<div>Loading...</div>}>
-        <SignInContent />
-      </Suspense>
-    </I18nClientProvider>
+    <Suspense fallback={<div>Loading...</div>}>
+      <SignInContent />
+    </Suspense>
   );
 };
 
@@ -38,7 +36,7 @@ const SignInContent = () => {
   const { signIn, setUserType: storeSetUserType, isAuthenticated, logout } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   
-  const { t } = useTranslation();
+
 
   useEffect(() => {
     if (type && (type === 'customer' || type === 'restaurant' || type === 'delivery')) {
@@ -68,7 +66,7 @@ const SignInContent = () => {
     const { email, password } = form;
 
     if (!email || !password) {
-      return showErrorAlert(t('auth.common.error_title'), t('auth.signin.alerts.enter_valid_credentials'));
+      return showErrorAlert('Erro', 'Por favor, insira credenciais válidas');
     }
 
     setIsSubmitting(true);
@@ -92,7 +90,7 @@ const SignInContent = () => {
           break;
       }
     } catch (error: any) {
-      showErrorAlert(t('auth.common.error_title'), error.message || t('auth.signin.alerts.failed_sign_in'));
+      showErrorAlert('Erro', error.message || 'Falha no login');
       console.error(error);
     } finally {
       setIsSubmitting(false);
@@ -117,7 +115,7 @@ const SignInContent = () => {
         <AnimatedContainer animationType="fadeInUp" delay={300}>
           <div className="w-full max-w-md">
             <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-              {t('profile_selection.title')}
+              Selecione seu perfil
             </h2>
             
             <div className="space-y-4">
@@ -130,7 +128,7 @@ const SignInContent = () => {
                 }`}
               >
                 <MdPerson size={24} className="mr-3" />
-                <span className="font-medium text-lg">{t('profile_selection.customer')}</span>
+                <span className="font-medium text-lg">Cliente</span>
               </button>
               
               <button
@@ -142,7 +140,7 @@ const SignInContent = () => {
                 }`}
               >
                 <MdRestaurant size={24} className="mr-3" />
-                <span className="font-medium text-lg">{t('profile_selection.restaurant')}</span>
+                <span className="font-medium text-lg">Restaurante</span>
               </button>
               
               <button
@@ -154,7 +152,7 @@ const SignInContent = () => {
                 }`}
               >
                 <MdDeliveryDining size={24} className="mr-3" />
-                <span className="font-medium text-lg">{t('profile_selection.delivery')}</span>
+                <span className="font-medium text-lg">Entregador</span>
               </button>
             </div>
           </div>
@@ -177,14 +175,14 @@ const SignInContent = () => {
               {/* Email Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('auth.fields.email_label')}
+                  Email
                 </label>
                 <div className="relative">
                   <FiMail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="email"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                    placeholder={t('auth.fields.email_placeholder')}
+                    placeholder="Digite seu email"
                     value={form.email}
                     onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                   />
@@ -194,14 +192,14 @@ const SignInContent = () => {
               {/* Password Input */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('auth.fields.password_label')}
+                  Senha
                 </label>
                 <div className="relative">
                   <FiLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                   <input
                     type="password"
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
-                    placeholder={t('auth.fields.password_placeholder')}
+                    placeholder="Digite sua senha"
                     value={form.password}
                     onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
                     onKeyDown={(e) => e.key === 'Enter' && submit()}
@@ -215,7 +213,7 @@ const SignInContent = () => {
                 disabled={isSubmitting || isLoading}
                 className="w-full bg-red-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isSubmitting || isLoading ? t('auth.signin.button.signing_in') : t('auth.signin.button.sign_in')}
+                {isSubmitting || isLoading ? 'Entrando...' : 'Entrar'}
               </button>
             </div>
           </AnimatedContainer>
@@ -240,12 +238,12 @@ const SignInContent = () => {
                 </div>
               )}
               <p className="text-gray-600">
-                {t('auth.signin.footer.no_account')}{' '}
+                Não tem uma conta?{' '}
                 <Link 
                   href={`/auth/sign-up?type=${userType}`} 
                   className="text-red-600 font-medium hover:text-red-700 hover:underline"
                 >
-                  {t('auth.signin.footer.create_account')}
+                  Criar conta
                 </Link>
               </p>
               

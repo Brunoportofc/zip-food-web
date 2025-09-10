@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import I18nClientProvider from '@/components/I18nClientProvider';
+
 import GlobalHeader from '@/components/GlobalHeader';
 
 // Lazy loading para ClientComponents
@@ -69,7 +69,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
                              pathname.startsWith('/delivery');
 
   return (
-    <I18nClientProvider>
+    <>
       {/* Cabeçalho global - exibir apenas em páginas gerais (não home, auth, ou rotas específicas de usuário) */}
       {!isHomePage && !isUserSpecificRoute && !pathname.startsWith('/auth') && <GlobalHeader />}
       
@@ -80,6 +80,6 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
       
       <ClientComponents />
       <AuthModeToggle />
-    </I18nClientProvider>
+    </>
   );
 }

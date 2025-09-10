@@ -3,9 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from 'react-hot-toast';
 
-// Importar apenas a configuração básica do i18n
-import '@/i18n';
-
 // Componentes
 import AuthCheck from '@/components/AuthCheck';
 import ClientLayout from '@/components/ClientLayout';
@@ -31,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html lang="pt-BR" dir="ltr">
       <head>
         {/* Preload de recursos críticos */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />

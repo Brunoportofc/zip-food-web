@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
 import dynamic from 'next/dynamic';
-import { useTranslation } from 'react-i18next';
+
 
 // Importação dinâmica dos componentes client-side only
 const OfflineToggle = dynamic(() => import('@/components/OfflineToggle'), {
@@ -28,9 +28,7 @@ const AlertSystem = dynamic(() => import('@/components/AlertSystem'), {
   ssr: false
 });
 
-const LanguageSelector = dynamic(() => import('@/components/LanguageSelector'), {
-  ssr: false
-});
+
 
 export default function RestaurantLayout({
   children,
@@ -41,32 +39,32 @@ export default function RestaurantLayout({
   const { notifications, unreadCount } = useRealTimeNotifications();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const { t } = useTranslation();
+
 
   const menuItems = [
     {
       href: '/restaurant',
       icon: MdDashboard,
-      label: t('restaurant.layout.dashboard'),
+      label: 'Dashboard',
       active: pathname === '/restaurant'
     },
     {
       href: '/restaurant/menu',
       icon: MdRestaurantMenu,
-      label: t('restaurant.layout.menu'),
+      label: 'Menu',
       active: pathname === '/restaurant/menu'
     },
     {
       href: '/restaurant/orders',
       icon: MdListAlt,
-      label: t('restaurant.layout.orders'),
+      label: 'Pedidos',
       active: pathname === '/restaurant/orders',
       badge: unreadCount
     },
     {
       href: '/restaurant/settings',
       icon: MdSettings,
-      label: t('restaurant.layout.settings'),
+      label: 'Configurações',
       active: pathname === '/restaurant/settings'
     }
   ];
@@ -90,7 +88,7 @@ export default function RestaurantLayout({
           <AnimatedContainer animationType="fadeInDown" delay={100}>
             <div className="p-4 lg:p-6 border-b border-gray-200 bg-gradient-to-r from-red-600 to-red-700">
               <h2 className="text-xl lg:text-2xl font-bold text-white mb-1">Zip Food</h2>
-              <p className="text-red-100 text-xs lg:text-sm">{t('restaurant.layout.restaurant_area')}</p>
+              <p className="text-red-100 text-xs lg:text-sm">Área do Restaurante</p>
             </div>
           </AnimatedContainer>
 
@@ -163,12 +161,11 @@ export default function RestaurantLayout({
 
                 <div className="flex-1 md:flex md:items-center md:justify-between">
                   <div className="ml-4 md:ml-0">
-                    <h1 className="text-xl lg:text-2xl font-bold text-gray-900">{t('restaurant.layout.restaurant_panel')}</h1>
-                    <p className="text-gray-600 text-xs lg:text-sm hidden sm:block">{t('restaurant.layout.manage_establishment')}</p>
+                    <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Painel do Restaurante</h1>
+            <p className="text-gray-600 text-xs lg:text-sm hidden sm:block">Gerencie seu estabelecimento</p>
                   </div>
                   <div className="flex items-center justify-between sm:justify-end space-x-4">
-                    {/* Seletor de idioma */}
-                    <LanguageSelector className="hidden sm:block" />
+
                     
                     {/* Botão de notificações */}
                     <button

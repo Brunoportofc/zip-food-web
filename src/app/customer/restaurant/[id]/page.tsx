@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
+
 import { MdArrowBack, MdStar, MdAccessTime, MdAdd, MdRemove, MdShoppingCart } from 'react-icons/md';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomButton from '@/components/CustomButton';
@@ -38,7 +38,7 @@ interface CartItem extends MenuItem {
 export default function RestaurantPage() {
   const params = useParams();
   const router = useRouter();
-  const { t } = useTranslation();
+
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -55,18 +55,18 @@ export default function RestaurantPage() {
       // Simular carregamento
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mock restaurant data
+      // Mock restaurant data - será substituído por dados reais do sistema de cadastro
       const mockRestaurant: Restaurant = {
         id: restaurantId,
-        name: 'Pizzaria Bella Vista',
-        image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&h=600&fit=crop',
-        rating: 4.8,
-        deliveryTime: '25-35 min',
-        deliveryFee: 5.99,
-        category: 'Pizzaria',
-        description: 'Autêntica pizzaria italiana com ingredientes frescos e massa artesanal.',
-        address: 'Rua das Flores, 123 - Centro',
-        phone: '(11) 99999-9999'
+        name: 'Restaurante em Configuração',
+        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
+        rating: 0,
+        deliveryTime: 'A definir',
+        deliveryFee: 0,
+        category: 'Geral',
+        description: 'Este restaurante está sendo configurado. Em breve estará disponível com cardápio completo.',
+        address: 'Endereço a ser definido',
+        phone: 'Telefone a ser definido'
       };
       
       // Mock menu items
