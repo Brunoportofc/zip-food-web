@@ -22,38 +22,12 @@ const RestaurantPage = () => {
 
   const checkRestaurantStatus = async () => {
     try {
-      const isConfigured = await restaurantConfigService.isRestaurantConfigured(user!.id);
-      
-      if (!isConfigured) {
-        router.push('/restaurant/cadastro');
-        return;
-      }
-
-      const restaurantConfig = await restaurantConfigService.getRestaurantConfig(user!.id);
-
-      // Redireciona baseado no status do restaurante
-      if (!restaurantConfig) {
-        router.push('/restaurant/cadastro');
-        return;
-      }
-
-      switch (restaurantConfig.approvalStatus) {
-        case 'approved':
-          router.push('/restaurant/dashboard');
-          break;
-        case 'pending':
-        case 'under-review':
-          router.push('/restaurant/aprovacao');
-          break;
-        case 'rejected':
-          router.push('/restaurant/cadastro');
-          break;
-        default:
-          router.push('/restaurant/cadastro');
-      }
+      // Simplificado: redireciona diretamente para o dashboard
+      // A configuração inicial é assumida como feita no cadastro
+      router.push('/restaurant/dashboard');
     } catch (error) {
-      console.error('Erro ao verificar status do restaurante:', error);
-      router.push('/restaurant/cadastro');
+      console.error('Erro ao redirecionar:', error);
+      router.push('/restaurant/dashboard'); // Fallback para dashboard
     } finally {
       setLoading(false);
     }

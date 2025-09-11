@@ -2,35 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { MdSearch, MdLocationOn, MdLocalOffer, MdStar, MdAccessTime, MdFastfood, MdLocalPizza, MdIcecream, MdRestaurant, MdBrunchDining } from 'react-icons/md';
-import { FaPizzaSlice, FaHamburger, FaWineGlassAlt, FaIceCream, FaCoffee, FaFish, FaCarrot, FaUtensils, FaBirthdayCake, FaDrumstickBite, FaHotdog, FaStarOfDavid } from 'react-icons/fa';
-import { GiNoodles, GiSushis, GiTacos, GiCupcake, GiDonerKebab, GiChopsticks, GiFrenchFries, GiSandwich, GiSlicedBread, GiCakeSlice } from 'react-icons/gi';
-import { BiSolidDrink, BiSolidCoffee } from 'react-icons/bi';
+import { MdSearch, MdLocationOn, MdLocalOffer, MdStar, MdAccessTime } from 'react-icons/md';
 import RestaurantCarousel from '@/components/RestaurantCarousel';
-import { Restaurant, RestaurantCategory, categoryDisplayNames } from '@/types/restaurant';
+import { Restaurant, RestaurantCategory, categoryDisplayNames } from '@/types';
 import restaurantService from '@/services/restaurant.service';
-
-
-
-// Configuração das categorias com ícones e cores
-const categoryConfig: Record<RestaurantCategory, { icon: React.ReactElement; color: string }> = {
-  pizza: { icon: <FaPizzaSlice size={24} />, color: 'bg-orange-100 text-orange-600' },
-  hamburger: { icon: <FaHamburger size={24} />, color: 'bg-amber-100 text-amber-600' },
-  japonesa: { icon: <GiSushis size={24} />, color: 'bg-red-100 text-red-500' },
-  italiana: { icon: <GiNoodles size={24} />, color: 'bg-green-100 text-green-700' },
-  saudavel: { icon: <FaCarrot size={24} />, color: 'bg-green-100 text-green-600' },
-  falafel: { icon: <GiDonerKebab size={24} />, color: 'bg-amber-100 text-amber-700' },
-  hummus: { icon: <FaUtensils size={24} />, color: 'bg-yellow-100 text-yellow-600' },
-  shawarma: { icon: <GiDonerKebab size={24} />, color: 'bg-orange-100 text-orange-700' },
-  sabich: { icon: <GiSandwich size={24} />, color: 'bg-purple-100 text-purple-600' },
-  shakshuka: { icon: <MdBrunchDining size={24} />, color: 'bg-red-100 text-red-700' },
-  kosher: { icon: <FaStarOfDavid size={24} />, color: 'bg-blue-100 text-blue-700' },
-  bourekas: { icon: <GiSlicedBread size={24} />, color: 'bg-amber-100 text-amber-800' }
-};
+import { categoryConfig, deliveryConfig, uiConfig } from '@/constants';
 
 export default function CustomerDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentAddress] = useState('Rua das Flores, 123 - Centro');
+  const [currentAddress] = useState(uiConfig.defaultAddress);
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -78,7 +58,7 @@ export default function CustomerDashboard() {
             <div className="hidden md:flex items-center space-x-4">
               <div className="text-right">
                 <p className="text-xs text-gray-500">Entrega em</p>
-                <p className="text-sm font-semibold text-black">25-35 min</p>
+                <p className="text-sm font-semibold text-black">{deliveryConfig.defaultDeliveryTime}</p>
               </div>
             </div>
           </div>
@@ -136,8 +116,8 @@ export default function CustomerDashboard() {
                 </div>
                 <div className="text-2xl lg:text-4xl animate-bounce">🎉</div>
               </div>
-              <h2 className="text-lg lg:text-2xl font-bold mb-2 leading-tight">Entrega Grátis em Pedidos Acima de R$ 30! 🚀</h2>
-              <p className="text-red-100 font-medium text-sm lg:text-base">Válido até o final do mês</p>
+              <h2 className="text-lg lg:text-2xl font-bold mb-2 leading-tight">{deliveryConfig.promotionalMessage}</h2>
+              <p className="text-red-100 font-medium text-sm lg:text-base">{deliveryConfig.promotionalSubtext}</p>
               <div className="mt-3 lg:mt-4">
                 <button className="bg-white text-red-600 px-4 lg:px-6 py-2 rounded-full font-bold text-xs lg:text-sm hover:bg-red-50 transition-colors duration-200">
                   Ver Ofertas
@@ -168,7 +148,7 @@ export default function CustomerDashboard() {
           
           {loading ? (
             <div className="flex space-x-3 lg:space-x-4">
-              {[...Array(5)].map((_, i) => (
+              {[...Array(uiConfig.maxRestaurantsInCarousel)].map((_, i) => (
                 <div key={i} className="flex-shrink-0 w-32 lg:w-36">
                   <div className="bg-gray-200 animate-pulse rounded-lg h-20 lg:h-24 mb-2"></div>
                   <div className="bg-gray-200 animate-pulse rounded h-4 mb-1"></div>
@@ -178,7 +158,7 @@ export default function CustomerDashboard() {
             </div>
           ) : (
             <div className="flex overflow-x-auto space-x-3 lg:space-x-4 pb-2 -mx-4 px-4">
-              {allRestaurants.slice(0, 5).map((restaurant) => (
+              {allRestaurants.slice(0, uiConfig.maxRestaurantsInCarousel).map((restaurant) => (
                 <div key={restaurant.id} className="flex-shrink-0 w-32 lg:w-36">
                   <div className="card-hover cursor-pointer">
                     <div className="relative">

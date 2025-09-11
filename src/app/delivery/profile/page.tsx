@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import CustomInput from '@/components/CustomInput';
+import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
 
@@ -37,492 +37,439 @@ export default function DeliveryProfile() {
   const { user } = useAuthData();
   const { logout } = useAuthActions();
   
-  // Dados simulados do perfil do entregador
+  const [activeTab, setActiveTab] = useState<'personal' | 'vehicle' | 'bank' | 'address'>('personal');
+  const [isEditing, setIsEditing] = useState(false);
+  
   const [profile, setProfile] = useState<DeliveryProfile>({
-    name: user?.name || 'Carlos Oliveira',
-    email: user?.email || 'carlos.oliveira@email.com',
-    phone: '(11) 98765-4321',
+    name: user?.name || 'João Silva',
+    email: user?.email || 'joao.silva@email.com',
+    phone: '(11) 99999-9999',
     cpf: '123.456.789-00',
-    birthDate: '1990-05-15',
+    birthDate: '1990-01-01',
     vehicleType: 'motorcycle',
-    licensePlate: 'ABC1D23',
+    licensePlate: 'ABC-1234',
     bankInfo: {
-      bankName: 'Nubank',
+      bankName: 'Banco do Brasil',
       accountType: 'checking',
-      accountNumber: '12345678',
-      agency: '0001',
-      pixKey: 'carlos.oliveira@email.com',
+      accountNumber: '12345-6',
+      agency: '1234',
+      pixKey: 'joao.silva@email.com'
     },
     address: {
       street: 'Rua das Flores',
       number: '123',
       complement: 'Apto 45',
-      neighborhood: 'Jardim Primavera',
+      neighborhood: 'Centro',
       city: 'São Paulo',
       state: 'SP',
-      zipCode: '01234-567',
-    },
+      zipCode: '01234-567'
+    }
   });
 
-  const [activeTab, setActiveTab] = useState<'personal' | 'vehicle' | 'bank' | 'address'>('personal');
-  const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-
   const handleInputChange = (field: string, value: string) => {
-    const fieldParts = field.split('.');
-    
-    if (fieldParts.length === 1) {
-      setProfile({ ...profile, [field]: value });
-    } else if (fieldParts.length === 2) {
-      const [section, subfield] = fieldParts;
-      const currentSection = profile[section as keyof DeliveryProfile];
-      if (typeof currentSection === 'object' && currentSection !== null) {
-        setProfile({
-          ...profile,
-          [section]: {
-            ...currentSection,
-            [subfield]: value,
-          },
-        });
+    const keys = field.split('.');
+    setProfile(prev => {
+      const newProfile = { ...prev };
+      let current: any = newProfile;
+      
+      for (let i = 0; i < keys.length - 1; i++) {
+        current[keys[i]] = { ...current[keys[i]] };
+        current = current[keys[i]];
       }
-    }
+      
+      current[keys[keys.length - 1]] = value;
+      return newProfile;
+    });
   };
 
-  const handleSaveProfile = () => {
-    setIsSaving(true);
-    
-    // Simulação de salvamento no backend
-    setTimeout(() => {
-      setIsSaving(false);
-      setIsEditing(false);
-    }, 1500);
+  const handleSave = () => {
+    // Aqui você salvaria os dados no backend
+    console.log('Salvando perfil:', profile);
+    setIsEditing(false);
   };
 
-  const getVehicleTypeText = (type: string) => {
-    switch (type) {
-      case 'motorcycle':
-        return 'Moto';
-      case 'bicycle':
-        return 'Bicicleta';
-      case 'car':
-        return 'Carro';
-      case 'on_foot':
-        return 'A pé';
-      default:
-        return type;
-    }
+  const handleCancel = () => {
+    // Aqui você recarregaria os dados originais
+    setIsEditing(false);
   };
 
-  const getAccountTypeText = (type: string) => {
+  const getVehicleTypeLabel = (type: string) => {
+    const labels = {
+      motorcycle: 'Moto',
+      bicycle: 'Bicicleta',
+      car: 'Carro',
+      on_foot: 'A pé'
+    };
+    return labels[type as keyof typeof labels] || type;
+  };
+
+  const getAccountTypeLabel = (type: string) => {
     return type === 'checking' ? 'Conta Corrente' : 'Poupança';
   };
 
   return (
-    <AnimatedContainer animationType="fadeIn" className="h-full">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Perfil do Entregador</h1>
-          <p className="text-gray-600">Gerencie suas informações pessoais e de entrega</p>
-        </div>
-        <div className="flex space-x-2">
-          {!isEditing ? (
-            <Button
-              onClick={() => setIsEditing(true)}
-              variant="outline"
-              className="px-4 py-2"
-            >
-              Editar Perfil
-            </Button>
-          ) : (
-            <>
-              <Button 
-                onClick={() => setIsEditing(false)} 
-                variant="outline"
-                className="px-4 py-2"
-              >
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleSaveProfile} 
-                loading={isSaving}
-                className="px-4 py-2"
-              >
-                Salvar
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="flex border-b">
-          <button
-            className={`px-4 py-3 font-medium ${activeTab === 'personal' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('personal')}
-          >
-            Dados Pessoais
-          </button>
-          <button
-            className={`px-4 py-3 font-medium ${activeTab === 'vehicle' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('vehicle')}
-          >
-            Veículo
-          </button>
-          <button
-            className={`px-4 py-3 font-medium ${activeTab === 'bank' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('bank')}
-          >
-            Dados Bancários
-          </button>
-          <button
-            className={`px-4 py-3 font-medium ${activeTab === 'address' ? 'text-primary border-b-2 border-primary' : 'text-gray-600'}`}
-            onClick={() => setActiveTab('address')}
-          >
-            Endereço
-          </button>
-        </div>
-
-        <div className="p-6">
-          {activeTab === 'personal' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="Nome"
-                      value={profile.name}
-                      onChangeText={(text) => handleInputChange('name', text)}
-                      placeholder="Nome Completo"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.name}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="E-mail"
-                      value={profile.email}
-                      onChangeText={(text) => handleInputChange('email', text)}
-                      placeholder="E-mail"
-                      keyboardType="email-address"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.email}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="Telefone"
-                      value={profile.phone}
-                      onChangeText={(text) => handleInputChange('phone', text)}
-                      placeholder="Telefone"
-                      keyboardType="phone-pad"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.phone}</p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="CPF"
-                      value={profile.cpf}
-                      onChangeText={(text) => handleInputChange('cpf', text)}
-                      placeholder="CPF"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.cpf}</p>
-                  )}
-                </div>
-              </div>
-
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        <AnimatedContainer animationType="fadeIn">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 mb-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Meu Perfil</h1>
+                <p className="text-gray-600">Gerencie suas informações pessoais e de entrega</p>
+              </div>
+              <div className="flex gap-3 mt-4 sm:mt-0">
                 {isEditing ? (
-                  <CustomInput
-                    label="Data de Nascimento"
-                    value={profile.birthDate}
-                    onChangeText={(text) => handleInputChange('birthDate', text)}
-                    placeholder="Data de Nascimento"
-                  />
+                  <>
+                    <Button onClick={handleSave} variant="primary">
+                      Salvar
+                    </Button>
+                    <Button onClick={handleCancel} variant="outline">
+                      Cancelar
+                    </Button>
+                  </>
                 ) : (
-                  <p className="text-gray-900">{new Date(profile.birthDate).toLocaleDateString()}</p>
+                  <Button onClick={() => setIsEditing(true)} variant="primary">
+                    Editar Perfil
+                  </Button>
                 )}
               </div>
-
-              <div className="pt-4 mt-4 border-t">
-                <Button
-                  onClick={() => {}}
-                  variant="outline"
-                  className="px-4 py-2"
-                >
-                  Alterar Senha
-                </Button>
-              </div>
             </div>
-          )}
 
-          {activeTab === 'vehicle' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Veículo</label>
-                {isEditing ? (
-                  <select
-                    value={profile.vehicleType}
-                    onChange={(e) => handleInputChange('vehicleType', e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            {/* Tabs */}
+            <div className="border-b border-gray-200 mb-6">
+              <nav className="flex space-x-8">
+                {[
+                  { id: 'personal', label: 'Dados Pessoais' },
+                  { id: 'vehicle', label: 'Veículo' },
+                  { id: 'bank', label: 'Dados Bancários' },
+                  { id: 'address', label: 'Endereço' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id as any)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                      activeTab === tab.id
+                        ? 'border-red-500 text-red-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
                   >
-                    <option value="motorcycle">Moto</option>
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+            </div>
+
+            {/* Tab Content */}
+            {activeTab === 'personal' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                    {isEditing ? (
+                      <Input
+                        label="Nome"
+                        value={profile.name}
+                        onChangeText={(text) => handleInputChange('name', text)}
+                        placeholder="Nome completo"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.name}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+                    {isEditing ? (
+                      <Input
+                        label="E-mail"
+                        value={profile.email}
+                        onChangeText={(text) => handleInputChange('email', text)}
+                        placeholder="E-mail"
+                        keyboardType="email-address"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.email}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                    {isEditing ? (
+                      <Input
+                        label="Telefone"
+                        value={profile.phone}
+                        onChangeText={(text) => handleInputChange('phone', text)}
+                        placeholder="Telefone"
+                        keyboardType="phone-pad"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.phone}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                    {isEditing ? (
+                      <Input
+                        label="CPF"
+                        value={profile.cpf}
+                        onChangeText={(text) => handleInputChange('cpf', text)}
+                        placeholder="CPF"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.cpf}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                  {isEditing ? (
+                    <Input
+                      label="Data de Nascimento"
+                      value={profile.birthDate}
+                      onChangeText={(text) => handleInputChange('birthDate', text)}
+                      placeholder="Data de Nascimento"
+                    />
+                  ) : (
+                    <p className="text-gray-900">{new Date(profile.birthDate).toLocaleDateString()}</p>
+                  )}
+                </div>
+
+                <div className="pt-4 mt-4 border-t">
+                  <Button
+                    onClick={() => {}}
+                    variant="outline"
+                    className="text-red-600 border-red-600 hover:bg-red-50"
+                  >
+                    Sair da Conta
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'vehicle' && (
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Veículo</label>
+                  {isEditing ? (
+                    <select
+                      value={profile.vehicleType}
+                      onChange={(e) => handleInputChange('vehicleType', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
+                    >
+                      <option value="motorcycle">Moto</option>
                       <option value="bicycle">Bicicleta</option>
                       <option value="car">Carro</option>
                       <option value="on_foot">A pé</option>
-                  </select>
-                ) : (
-                  <p className="text-gray-900">{getVehicleTypeText(profile.vehicleType)}</p>
-                )}
-              </div>
-
-              {(profile.vehicleType === 'motorcycle' || profile.vehicleType === 'car') && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Placa do Veículo</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="Placa do Veículo"
-                      value={profile.licensePlate || ''}
-                      onChangeText={(text) => handleInputChange('licensePlate', text)}
-                      placeholder="Placa do Veículo"
-                    />
+                    </select>
                   ) : (
-                    <p className="text-gray-900">{profile.licensePlate}</p>
+                    <p className="text-gray-900">{getVehicleTypeLabel(profile.vehicleType)}</p>
                   )}
                 </div>
-              )}
 
-              <div className="pt-4 mt-4 border-t">
-                <h3 className="text-lg font-medium mb-2">Documentos</h3>
-                <p className="text-sm text-gray-600 mb-4">Faça upload dos seus documentos para verificação</p>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
-                    <p className="text-sm font-medium mb-2">Carteira de Habilitação</p>
-                    <button className="text-primary text-sm font-medium">
-                          {isEditing ? 'Fazer Upload' : 'Ver Documento'}
-                        </button>
+                {(profile.vehicleType === 'motorcycle' || profile.vehicleType === 'car') && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Placa do Veículo</label>
+                    {isEditing ? (
+                      <Input
+                        label="Placa do Veículo"
+                        value={profile.licensePlate || ''}
+                        onChangeText={(text) => handleInputChange('licensePlate', text)}
+                        placeholder="ABC-1234"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.licensePlate || 'Não informado'}</p>
+                    )}
                   </div>
-                  
-                  {(profile.vehicleType === 'motorcycle' || profile.vehicleType === 'car') && (
-                    <div className="border border-dashed border-gray-300 rounded-md p-4 text-center">
-                      <p className="text-sm font-medium mb-2">Documento do Veículo</p>
-                      <button className="text-primary text-sm font-medium">
-                        {isEditing ? 'Fazer Upload' : 'Ver Documento'}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'bank' && (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Banco</label>
-                {isEditing ? (
-                  <CustomInput
-                    label="Banco"
-                    value={profile.bankInfo.bankName}
-                    onChangeText={(text) => handleInputChange('bankInfo.bankName', text)}
-                    placeholder="Nome do Banco"
-                  />
-                ) : (
-                  <p className="text-gray-900">{profile.bankInfo.bankName}</p>
                 )}
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Conta</label>
-                {isEditing ? (
-                  <select
-                    value={profile.bankInfo.accountType}
-                    onChange={(e) => handleInputChange('bankInfo.accountType', e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="checking">Conta Corrente</option>
-                    <option value="savings">Conta Poupança</option>
-                  </select>
-                ) : (
-                  <p className="text-gray-900">{getAccountTypeText(profile.bankInfo.accountType)}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeTab === 'bank' && (
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Agência</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Banco</label>
                   {isEditing ? (
-                    <CustomInput
-                      label="Agência"
-                      value={profile.bankInfo.agency}
-                      onChangeText={(text) => handleInputChange('bankInfo.agency', text)}
-                      placeholder="Agência"
+                    <Input
+                      label="Banco"
+                      value={profile.bankInfo.bankName}
+                      onChangeText={(text) => handleInputChange('bankInfo.bankName', text)}
+                      placeholder="Nome do Banco"
                     />
                   ) : (
-                    <p className="text-gray-900">{profile.bankInfo.agency}</p>
+                    <p className="text-gray-900">{profile.bankInfo.bankName}</p>
                   )}
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Número da Conta</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Conta</label>
                   {isEditing ? (
-                    <CustomInput
-                      label="Número da Conta"
-                      value={profile.bankInfo.accountNumber}
-                      onChangeText={(text) => handleInputChange('bankInfo.accountNumber', text)}
-                      placeholder="Número da Conta"
-                    />
+                    <select
+                      value={profile.bankInfo.accountType}
+                      onChange={(e) => handleInputChange('bankInfo.accountType', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
+                    >
+                      <option value="checking">Conta Corrente</option>
+                      <option value="savings">Poupança</option>
+                    </select>
                   ) : (
-                    <p className="text-gray-900">{profile.bankInfo.accountNumber}</p>
+                    <p className="text-gray-900">{getAccountTypeLabel(profile.bankInfo.accountType)}</p>
                   )}
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Chave PIX</label>
-                {isEditing ? (
-                  <CustomInput
-                    label="Chave PIX"
-                    value={profile.bankInfo.pixKey || ''}
-                    onChangeText={(text) => handleInputChange('bankInfo.pixKey', text)}
-                    placeholder="Chave PIX"
-                  />
-                ) : (
-                  <p className="text-gray-900">{profile.bankInfo.pixKey || '-'}</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'address' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rua</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="Rua"
-                      value={profile.address.street}
-                      onChangeText={(text) => handleInputChange('address.street', text)}
-                      placeholder="Rua"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.address.street}</p>
-                  )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Agência</label>
+                    {isEditing ? (
+                      <Input
+                        label="Agência"
+                        value={profile.bankInfo.agency}
+                        onChangeText={(text) => handleInputChange('bankInfo.agency', text)}
+                        placeholder="Agência"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.bankInfo.agency}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Número da Conta</label>
+                    {isEditing ? (
+                      <Input
+                        label="Número da Conta"
+                        value={profile.bankInfo.accountNumber}
+                        onChangeText={(text) => handleInputChange('bankInfo.accountNumber', text)}
+                        placeholder="Número da Conta"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.bankInfo.accountNumber}</p>
+                    )}
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Chave PIX</label>
                   {isEditing ? (
-                    <CustomInput
-                      label="Número"
-                      value={profile.address.number}
-                      onChangeText={(text) => handleInputChange('address.number', text)}
-                      placeholder="Número"
+                    <Input
+                      label="Chave PIX"
+                      value={profile.bankInfo.pixKey || ''}
+                      onChangeText={(text) => handleInputChange('bankInfo.pixKey', text)}
+                      placeholder="Chave PIX (opcional)"
                     />
                   ) : (
-                    <p className="text-gray-900">{profile.address.number}</p>
+                    <p className="text-gray-900">{profile.bankInfo.pixKey || 'Não informado'}</p>
                   )}
                 </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
-                {isEditing ? (
-                  <CustomInput
-                    label="Complemento"
-                    value={profile.address.complement || ''}
-                    onChangeText={(text) => handleInputChange('address.complement', text)}
-                    placeholder="Complemento"
-                  />
-                ) : (
-                  <p className="text-gray-900">{profile.address.complement || '-'}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
-                {isEditing ? (
-                  <CustomInput
-                    label="Bairro"
-                    value={profile.address.neighborhood}
-                    onChangeText={(text) => handleInputChange('address.neighborhood', text)}
-                    placeholder="Bairro"
-                  />
-                ) : (
-                  <p className="text-gray-900">{profile.address.neighborhood}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="CEP"
-                      value={profile.address.zipCode}
-                      onChangeText={(text) => handleInputChange('address.zipCode', text)}
-                      placeholder="CEP"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.address.zipCode}</p>
-                  )}
+            {activeTab === 'address' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Rua</label>
+                    {isEditing ? (
+                      <Input
+                        label="Rua"
+                        value={profile.address.street}
+                        onChangeText={(text) => handleInputChange('address.street', text)}
+                        placeholder="Rua"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.address.street}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Número</label>
+                    {isEditing ? (
+                      <Input
+                        label="Número"
+                        value={profile.address.number}
+                        onChangeText={(text) => handleInputChange('address.number', text)}
+                        placeholder="Número"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.address.number}</p>
+                    )}
+                  </div>
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Complemento</label>
                   {isEditing ? (
-                    <CustomInput
-                      label="Cidade"
-                      value={profile.address.city}
-                      onChangeText={(text) => handleInputChange('address.city', text)}
-                      placeholder="Cidade"
+                    <Input
+                      label="Complemento"
+                      value={profile.address.complement || ''}
+                      onChangeText={(text) => handleInputChange('address.complement', text)}
+                      placeholder="Complemento (opcional)"
                     />
                   ) : (
-                    <p className="text-gray-900">{profile.address.city}</p>
+                    <p className="text-gray-900">{profile.address.complement || 'Não informado'}</p>
                   )}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                  {isEditing ? (
-                    <CustomInput
-                      label="Estado"
-                      value={profile.address.state}
-                      onChangeText={(text) => handleInputChange('address.state', text)}
-                      placeholder="Estado"
-                    />
-                  ) : (
-                    <p className="text-gray-900">{profile.address.state}</p>
-                  )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bairro</label>
+                    {isEditing ? (
+                      <Input
+                        label="Bairro"
+                        value={profile.address.neighborhood}
+                        onChangeText={(text) => handleInputChange('address.neighborhood', text)}
+                        placeholder="Bairro"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.address.neighborhood}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                    {isEditing ? (
+                      <Input
+                        label="Cidade"
+                        value={profile.address.city}
+                        onChangeText={(text) => handleInputChange('address.city', text)}
+                        placeholder="Cidade"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.address.city}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    {isEditing ? (
+                      <Input
+                        label="Estado"
+                        value={profile.address.state}
+                        onChangeText={(text) => handleInputChange('address.state', text)}
+                        placeholder="Estado"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.address.state}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                    {isEditing ? (
+                      <Input
+                        label="CEP"
+                        value={profile.address.zipCode}
+                        onChangeText={(text) => handleInputChange('address.zipCode', text)}
+                        placeholder="CEP"
+                      />
+                    ) : (
+                      <p className="text-gray-900">{profile.address.zipCode}</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        </AnimatedContainer>
       </div>
-
-      <div className="mt-6">
-        <Button
-          onClick={logout}
-          variant="outline"
-          className="px-4 py-2 text-red-500 border-red-500 hover:bg-red-50"
-        >
-          Sair
-        </Button>
-      </div>
-    </AnimatedContainer>
+    </div>
   );
 }

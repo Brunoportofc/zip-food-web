@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
-import CustomInput from '@/components/CustomInput';
+import Input from '@/components/ui/Input';
 import useAuthStore, { User } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import { showSuccessAlert, showErrorAlert, showWarningAlert } from '@/components/AlertSystem';
@@ -206,14 +206,14 @@ export default function RestaurantSettings() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <CustomInput
+              <Input
                 label="Nome do Restaurante"
                 placeholder="Ex: Burger House"
                 value={settings.name}
                 onChangeText={(text) => setSettings({ ...settings, name: text })}
 
               />
-              <CustomInput
+              <Input
                 label="Telefone"
                 placeholder="(11) 99999-9999"
                 value={settings.phone}
@@ -221,7 +221,7 @@ export default function RestaurantSettings() {
 
               />
               <div className="lg:col-span-2">
-                <CustomInput
+                <Input
                   label="Endereço"
                   placeholder="Rua, número, bairro, cidade"
                   value={settings.address}
@@ -243,7 +243,7 @@ export default function RestaurantSettings() {
                   />
                 </div>
               </div>
-              <CustomInput
+              <Input
                 label="Horário de Funcionamento"
                 placeholder="Ex: Segunda a Domingo: 18:00 - 23:00"
                 value={settings.openingHours}
@@ -266,7 +266,7 @@ export default function RestaurantSettings() {
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <CustomInput
+              <Input
                 label="Taxa de Entrega (R$)"
                 placeholder="0.00"
                 value={settings.deliveryFee.toString()}
@@ -274,7 +274,7 @@ export default function RestaurantSettings() {
                 keyboardType="numeric"
 
               />
-              <CustomInput
+              <Input
                 label="Valor Mínimo do Pedido (R$)"
                 placeholder="0.00"
                 value={settings.minOrderValue.toString()}
@@ -313,7 +313,7 @@ export default function RestaurantSettings() {
             
             <div className="flex flex-col sm:flex-row gap-3 lg:gap-4">
               <div className="flex-1">
-                <CustomInput
+                <Input
                   label="Nova Categoria"
                   placeholder="Ex: Sobremesas"
                   value={newCategory}

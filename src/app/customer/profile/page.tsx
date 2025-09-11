@@ -5,27 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaUserAlt, FaMapMarkerAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
-
-
-interface Address {
-  id: string;
-  label: string;
-  street: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  isDefault?: boolean;
-}
-
-interface PaymentMethod {
-  id: string;
-  type: 'credit' | 'debit';
-  cardNumber: string;
-  holderName: string;
-  expiryDate: string;
-  isDefault?: boolean;
-}
+import { profileService, Address, PaymentMethod, PersonalData } from '@/services/profile.service';
 
 export default function CustomerProfilePage() {
   const router = useRouter();
@@ -41,21 +21,10 @@ export default function CustomerProfilePage() {
   });
   
   // Estados para endereços
-  const [addresses, setAddresses] = useState<Address[]>([
-    {
-      id: '1',
-      label: 'Casa',
-      street: 'Rua Exemplo, 123',
-      neighborhood: 'Bairro',
-      city: 'Cidade',
-      state: 'Estado',
-      zipCode: '00000-000',
-      isDefault: true
-    }
-  ]);
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-  const [newAddress, setNewAddress] = useState<Omit<Address, 'id'>>({
+  const [newAddress, setNewAddress] = useState<Omit<Address, 'id' | 'userId'>>({
     label: '',
     street: '',
     neighborhood: '',
@@ -67,14 +36,35 @@ export default function CustomerProfilePage() {
   // Estados para métodos de pagamento
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [isAddingPayment, setIsAddingPayment] = useState(false);
-  const [newPayment, setNewPayment] = useState<Omit<PaymentMethod, 'id'>>({
+  const [newPayment, setNewPayment] = useState<Omit<PaymentMethod, 'id' | 'userId'>>({
     type: 'credit',
     cardNumber: '',
     holderName: '',
     expiryDate: ''
   });
+  const [loading, setLoading] = useState(true);
 
   
+  const loadProfileData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setLoading(true);
+      const [userAddresses, userPaymentMethods] = await Promise.all([
+        profileService.getUserAddresses(user.id),
+        profileService.getUserPaymentMethods(user.id)
+      ]);
+      
+      setAddresses(userAddresses);
+      setPaymentMethods(userPaymentMethods);
+    } catch (error) {
+      console.error('Erro ao carregar dados do perfil:', error);
+      toast.error('Erro ao carregar dados do perfil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     // Não redirecionar se ainda estiver carregando
     if (isLoading) {
@@ -93,71 +83,90 @@ export default function CustomerProfilePage() {
         email: user.email,
         phone: user.phone || ''
       });
+      loadProfileData();
     }
   }, [user, isAuthenticated, isLoading, router]);
   
-  const handleSavePersonalData = () => {
-    // Em produção, aqui faria a chamada para a API
-    toast.success('Dados pessoais atualizados com sucesso');
-    setIsEditingPersonal(false);
-  };
-  
-  const handleAddAddress = () => {
-    if (!newAddress.label || !newAddress.street || !newAddress.city) {
-      toast.error('Preencha todos os campos obrigatórios');
-      return;
+  const handleSavePersonalData = async () => {
+    if (!user?.id) return;
+    
+    try {
+      await profileService.updatePersonalData(user.id, personalData);
+      toast.success('Dados pessoais atualizados com sucesso');
+      setIsEditingPersonal(false);
+    } catch (error) {
+      console.error('Erro ao atualizar dados:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar dados');
     }
-    
-    const address: Address = {
-      ...newAddress,
-      id: Date.now().toString()
-    };
-    
-    setAddresses([...addresses, address]);
-    setNewAddress({
-      label: '',
-      street: '',
-      neighborhood: '',
-      city: '',
-      state: '',
-      zipCode: ''
-    });
-    setIsAddingAddress(false);
-    toast.success('Endereço adicionado com sucesso');
   };
   
-  const handleRemoveAddress = (id: string) => {
-    setAddresses(addresses.filter(addr => addr.id !== id));
-    toast.success('Endereço removido com sucesso');
-  };
-  
-  const handleAddPayment = () => {
-    if (!newPayment.cardNumber || !newPayment.expiryDate || !newPayment.holderName) {
-      toast.error('Preencha todos os campos obrigatórios');
-      return;
+  const handleAddAddress = async () => {
+    if (!user?.id) return;
+    
+    try {
+      await profileService.addAddress(user.id, newAddress);
+      await loadProfileData(); // Recarregar dados
+      setNewAddress({
+        label: '',
+        street: '',
+        neighborhood: '',
+        city: '',
+        state: '',
+        zipCode: ''
+      });
+      setIsAddingAddress(false);
+      toast.success('Endereço adicionado com sucesso');
+    } catch (error) {
+      console.error('Erro ao adicionar endereço:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar endereço');
     }
-    
-    const payment: PaymentMethod = {
-      ...newPayment,
-      id: Date.now().toString(),
-      cardNumber: `**** **** **** ${newPayment.cardNumber.slice(-4)}`
-    };
-    
-    setPaymentMethods([...paymentMethods, payment]);
-    setNewPayment({
-      type: 'credit',
-      cardNumber: '',
-      expiryDate: '',
-      holderName: ''
-    });
-    setIsAddingPayment(false);
-    toast.success('Método de pagamento adicionado com sucesso');
   };
+  
+  const handleRemoveAddress = async (id: string) => {
+    if (!user?.id) return;
+    
+    try {
+      await profileService.removeAddress(user.id, id);
+      await loadProfileData(); // Recarregar dados
+      toast.success('Endereço removido com sucesso');
+    } catch (error) {
+      console.error('Erro ao remover endereço:', error);
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover endereço');
+    }
+  };
+  
+  const handleAddPayment = async () => {
+    if (!user?.id) return;
+    
+    try {
+      await profileService.addPaymentMethod(user.id, newPayment);
+      await loadProfileData(); // Recarregar dados
+      setNewPayment({
+         type: 'credit',
+         cardNumber: '',
+         expiryDate: '',
+         holderName: ''
+       });
+       setIsAddingPayment(false);
+       toast.success('Método de pagamento adicionado com sucesso');
+     } catch (error) {
+       console.error('Erro ao adicionar método de pagamento:', error);
+       toast.error(error instanceof Error ? error.message : 'Erro ao adicionar método de pagamento');
+     }
+   };
 
-  const handleRemovePayment = (id: string) => {
-    setPaymentMethods(paymentMethods.filter(payment => payment.id !== id));
-    toast.success('Método de pagamento removido com sucesso');
-  };
+   const handleRemovePayment = async (id: string) => {
+     if (!user?.id) return;
+     
+     try {
+       await profileService.removePaymentMethod(user.id, id);
+       await loadProfileData(); // Recarregar dados
+       toast.success('Método de pagamento removido com sucesso');
+     } catch (error) {
+       console.error('Erro ao remover método de pagamento:', error);
+       toast.error(error instanceof Error ? error.message : 'Erro ao remover método de pagamento');
+     }
+   };
   
   const handleLogout = async () => {
     try {

@@ -7,6 +7,9 @@ import { MdArrowBack, MdStar, MdAccessTime, MdAdd, MdRemove, MdShoppingCart } fr
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
 import { showSuccessAlert, showErrorAlert } from '@/components/AlertSystem';
+import { orderService } from '@/services/order.service';
+import useAuthStore from '@/store/auth.store';
+import { toast } from 'react-hot-toast';
 
 interface MenuItem {
   id: string;
@@ -38,12 +41,14 @@ interface CartItem extends MenuItem {
 export default function RestaurantPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuthStore();
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const restaurantId = params.id as string;
 
@@ -166,6 +171,62 @@ export default function RestaurantPage() {
 
   const getTotalItems = () => {
     return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      toast.error('Você precisa estar logado para fazer um pedido');
+      router.push('/auth/sign-in');
+      return;
+    }
+
+    if (cart.length === 0) {
+      toast.error('Adicione itens ao carrinho antes de finalizar o pedido');
+      return;
+    }
+
+    setIsPlacingOrder(true);
+
+    try {
+      const orderData = {
+        restaurantId: restaurantId,
+        customerId: user.id,
+        customer: {
+          id: user.id,
+          name: user.name,
+          phone: user.phone || '(11) 99999-9999',
+          address: 'Endereço do cliente' // Em produção, viria do perfil do usuário
+        },
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        subtotal: cart.reduce((total, item) => total + (item.price * item.quantity), 0),
+        deliveryFee: restaurant?.deliveryFee || 0,
+        total: getTotalPrice(),
+        status: 'pending' as const,
+        estimatedDeliveryTime: restaurant?.deliveryTime || '30-45 min'
+      };
+
+      const newOrder = await orderService.createOrder(orderData);
+      
+      // Limpar carrinho
+      setCart([]);
+      
+      toast.success(`Pedido ${newOrder.id} realizado com sucesso!`);
+      showSuccessAlert('Pedido Confirmado', `Seu pedido ${newOrder.id} foi enviado para o restaurante. Acompanhe o status na página de pedidos.`);
+      
+      // Redirecionar para página de pedidos
+      router.push('/customer/orders');
+      
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      toast.error('Não foi possível finalizar o pedido. Tente novamente.');
+    } finally {
+      setIsPlacingOrder(false);
+    }
   };
 
   if (isLoading) {
@@ -346,11 +407,12 @@ export default function RestaurantPage() {
       {getTotalItems() > 0 && (
         <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
           <button
-            onClick={() => showSuccessAlert('Carrinho', 'Funcionalidade em desenvolvimento')}
-            className="w-full bg-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center"
+            onClick={handlePlaceOrder}
+            disabled={isPlacingOrder}
+            className="w-full bg-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <MdShoppingCart size={24} className="mr-2" />
-            {getTotalItems()} itens - R$ {getTotalPrice().toFixed(2)}
+            {isPlacingOrder ? 'Finalizando...' : `${getTotalItems()} itens - R$ ${getTotalPrice().toFixed(2)}`}
           </button>
         </div>
       )}

@@ -12,7 +12,7 @@ import LottieAnimation from '@/components/LottieAnimation';
 import { showErrorAlert, showSuccessAlert } from '@/components/AlertSystem';
 import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import CustomInput from '@/components/CustomInput';
+import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 
 

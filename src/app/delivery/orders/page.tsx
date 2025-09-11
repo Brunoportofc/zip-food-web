@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
+import { orderService, Order, OrderStatus } from '@/services/order.service';
+import useAuthStore from '@/store/auth.store';
+import { toast } from 'react-hot-toast';
 import { 
   MdDeliveryDining, 
   MdLocationOn, 
@@ -16,138 +19,87 @@ import {
   MdFilterList
 } from 'react-icons/md';
 
-type OrderStatus = 'available' | 'accepted' | 'picked_up' | 'delivered' | 'cancelled';
-
-interface DeliveryOrder {
-  id: string;
-  restaurant: {
-    name: string;
-    address: string;
-  };
-  customer: {
-    name: string;
-    address: string;
-    phone: string;
-  };
-  items: Array<{
-    name: string;
-    quantity: number;
-  }>;
-  total: number;
-  deliveryFee: number;
-  status: OrderStatus;
-  distance: number;
-  estimatedTime: number;
-  createdAt: Date;
-}
-
 export default function DeliveryOrders() {
   const [activeTab, setActiveTab] = useState<'current' | 'history'>('current');
-  const [selectedOrder, setSelectedOrder] = useState<DeliveryOrder | null>(null);
-  
-  // Dados simulados de pedidos
-  const [orders, setOrders] = useState<DeliveryOrder[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuthStore();
 
-  // Initialize orders after translations are ready
   useEffect(() => {
-    const initialOrders: DeliveryOrder[] = [
-    {
-      id: '#5678',
-      restaurant: {
-        name: 'Burger King',
-        address: 'Av. Paulista, 1000 - Bela Vista',
-      },
-      customer: {
-        name: 'João Silva',
-        address: 'Rua das Flores, 123 - Jardim Primavera',
-        phone: '(11) 98765-4321',
-      },
-      items: [
-        { name: 'Whopper', quantity: 2 },
-        { name: 'Batata Grande', quantity: 1 },
-        { name: 'Refrigerante 500ml', quantity: 2 },
-      ],
-      total: 89.70,
-      deliveryFee: 8.90,
-      status: 'accepted',
-      distance: 3.2,
-      estimatedTime: 25,
-      createdAt: new Date(),
-    },
-    {
-      id: '#5677',
-      restaurant: {
-        name: 'Pizza Hut',
-        address: 'Rua Augusta, 500 - Consolação',
-      },
-      customer: {
-        name: 'Maria Oliveira',
-        address: 'Av. Principal, 456 - Centro',
-        phone: '(11) 91234-5678',
-      },
-      items: [
-        { name: 'Pizza Grande Calabresa', quantity: 1 },
-        { name: 'Refrigerante 2L', quantity: 1 },
-      ],
-      total: 79.90,
-      deliveryFee: 7.50,
-      status: 'available',
-      distance: 2.5,
-      estimatedTime: 20,
-      createdAt: new Date(),
-    },
-    {
-      id: '#5676',
-      restaurant: {
-        name: 'McDonalds',
-        address: 'Av. Brigadeiro Faria Lima, 1500 - Pinheiros',
-      },
-      customer: {
-        name: 'Carlos Mendes',
-        address: 'Rua dos Pinheiros, 789 - Pinheiros',
-        phone: '(11) 97890-1234',
-      },
-      items: [
-        { name: 'Big Mac', quantity: 2 },
-        { name: 'McFritas Média', quantity: 2 },
-        { name: 'Coca-Cola 500ml', quantity: 2 },
-      ],
-      total: 65.80,
-      deliveryFee: 6.90,
-      status: 'delivered',
-      distance: 1.8,
-      estimatedTime: 15,
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 horas atrás
-    },
-    ];
-    setOrders(initialOrders);
+    loadAvailableOrders();
+    
+    // Listener para novos pedidos disponíveis
+    const orderCallback = (newOrder: Order) => {
+      if (newOrder.status === 'ready' && !newOrder.deliveryDriverId) {
+        setOrders(prev => [...prev, newOrder]);
+        toast.success(`Novo pedido disponível: ${newOrder.id}`);
+      }
+    };
+    
+    orderService.onNewOrder(orderCallback);
+    
+    return () => orderService.removeOrderListener(orderCallback);
   }, []);
 
-  const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-    
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
+  const loadAvailableOrders = async () => {
+    try {
+      setLoading(true);
+      const allOrders = await orderService.getAllOrders();
+      // Filtrar pedidos prontos para entrega ou já atribuídos ao entregador atual
+      const availableOrders = allOrders.filter(order => 
+        (order.status === 'ready' && !order.deliveryDriverId) ||
+        (order.deliveryDriverId === user?.id)
+      );
+      setOrders(availableOrders);
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      toast.error('Não foi possível carregar os pedidos');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const currentOrders = orders.filter(order => ['available', 'accepted', 'picked_up'].includes(order.status));
+  const handleAcceptOrder = async (orderId: string) => {
+    if (!user) return;
+    
+    try {
+      await orderService.assignDriverToOrder(orderId, user.id);
+      await orderService.updateOrderStatus(orderId, 'delivering', 'driver');
+      await loadAvailableOrders();
+      toast.success('Pedido aceito com sucesso!');
+    } catch (error) {
+      console.error('Erro ao aceitar pedido:', error);
+      toast.error('Não foi possível aceitar o pedido');
+    }
+  };
+
+  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      await orderService.updateOrderStatus(orderId, newStatus, 'driver');
+      await loadAvailableOrders();
+      toast.success('Status atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Não foi possível atualizar o status');
+    }
+  };
+
+  // Dados carregados via loadAvailableOrders no useEffect principal
+
+  // Função handleUpdateStatus já definida acima com integração ao serviço
+
+  const currentOrders = orders.filter(order => ['ready', 'delivering'].includes(order.status));
   const historyOrders = orders.filter(order => ['delivered', 'cancelled'].includes(order.status));
 
   const displayOrders = activeTab === 'current' ? currentOrders : historyOrders;
 
   const getStatusBadgeClass = (status: OrderStatus) => {
     switch (status) {
-      case 'available':
+      case 'ready':
         return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300';
-      case 'accepted':
+      case 'delivering':
         return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
-      case 'picked_up':
-        return 'bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-800 border-indigo-300';
       case 'delivered':
         return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
       case 'cancelled':
@@ -159,11 +111,9 @@ export default function DeliveryOrders() {
 
   const getStatusIcon = (status: OrderStatus) => {
     switch (status) {
-      case 'available':
+      case 'ready':
         return MdAccessTime;
-      case 'accepted':
-        return MdCheckCircle;
-      case 'picked_up':
+      case 'delivering':
         return MdDeliveryDining;
       case 'delivered':
         return MdCheckCircle;
@@ -176,12 +126,10 @@ export default function DeliveryOrders() {
 
   const getStatusText = (status: OrderStatus) => {
     switch (status) {
-      case 'available':
-        return 'Disponível';
-      case 'accepted':
-        return 'Aceito';
-      case 'picked_up':
-        return 'Coletado';
+      case 'ready':
+        return 'Pronto para Entrega';
+      case 'delivering':
+        return 'Em Entrega';
       case 'delivered':
         return 'Entregue';
       case 'cancelled':
@@ -193,11 +141,9 @@ export default function DeliveryOrders() {
 
   const getNextStatus = (currentStatus: OrderStatus): OrderStatus | null => {
     switch (currentStatus) {
-      case 'available':
-        return 'accepted';
-      case 'accepted':
-        return 'picked_up';
-      case 'picked_up':
+      case 'ready':
+        return 'delivering';
+      case 'delivering':
         return 'delivered';
       default:
         return null;
@@ -206,11 +152,9 @@ export default function DeliveryOrders() {
 
   const getNextStatusText = (currentStatus: OrderStatus): string => {
     switch (currentStatus) {
-      case 'available':
-        return 'Aceitar Pedido';
-      case 'accepted':
-        return 'Confirmar Coleta';
-      case 'picked_up':
+      case 'ready':
+        return 'Aceitar Entrega';
+      case 'delivering':
         return 'Confirmar Entrega';
       default:
         return '';
@@ -316,7 +260,7 @@ export default function DeliveryOrders() {
                               </div>
                               <div className="flex items-center space-x-2 mt-2">
                                 <MdRestaurant size={16} className="text-gray-400" />
-                                <p className="text-sm text-gray-600">{order.restaurant.name}</p>
+                                <p className="text-sm text-gray-600">Restaurante #{order.restaurantId}</p>
                               </div>
                               <div className="flex items-center space-x-2 mt-1">
                                 <MdPerson size={16} className="text-gray-400" />
@@ -332,7 +276,7 @@ export default function DeliveryOrders() {
                             <p className="text-xs text-gray-500 mb-2">Taxa de Entrega</p>
                             <div className="flex items-center justify-center space-x-1">
                               <MdDirections size={14} className="text-gray-400" />
-                              <p className="text-sm font-medium text-gray-700">{order.distance.toFixed(1)} km</p>
+                              <p className="text-sm font-medium text-gray-700">2.5 km</p>
                             </div>
                           </div>
                         </div>
@@ -373,8 +317,8 @@ export default function DeliveryOrders() {
 
               <div className="border-t border-b py-4 my-4">
                 <h3 className="font-medium mb-2">Restaurante</h3>
-                <p className="text-sm">{selectedOrder.restaurant.name}</p>
-                <p className="text-sm text-gray-600">{selectedOrder.restaurant.address}</p>
+                <p className="text-sm">Restaurante #{selectedOrder.restaurantId}</p>
+                <p className="text-sm text-gray-600">Endereço do restaurante</p>
               </div>
 
               <div className="border-b py-4 mb-4">
@@ -398,11 +342,11 @@ export default function DeliveryOrders() {
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <p className="text-sm">Distância</p>
-                  <p className="font-medium">{selectedOrder.distance.toFixed(1)} km</p>
+                  <p className="font-medium">2.5 km</p>
                 </div>
                 <div>
                   <p className="text-sm">Tempo Estimado</p>
-                  <p className="font-medium">{selectedOrder.estimatedTime} min</p>
+                  <p className="font-medium">{selectedOrder.estimatedDeliveryTime}</p>
                 </div>
                 <div>
                   <p className="text-sm">Taxa de Entrega</p>
@@ -420,7 +364,7 @@ export default function DeliveryOrders() {
                     <span>{getNextStatusText(selectedOrder.status)}</span>
                   </button>
                   
-                  {selectedOrder.status !== 'available' && (
+                  {selectedOrder.status !== 'ready' && (
                     <button
                       className="w-full mt-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white py-3 rounded-xl font-semibold transition-all duration-300 hover:scale-105 shadow-lg flex items-center justify-center space-x-2"
                       onClick={() => handleUpdateStatus(selectedOrder.id, 'cancelled')}

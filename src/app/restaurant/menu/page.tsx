@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
-import CustomInput from '@/components/CustomInput';
+import Input from '@/components/ui/Input';
 
 import { 
   MdAdd, 
@@ -89,55 +89,7 @@ export default function RestaurantMenu() {
       return () => unsubscribe();
     } catch (error) {
       console.error('Erro ao carregar menu:', error);
-      // Fallback para dados iniciais em caso de erro
-      const initialMenuItems: MenuItem[] = [
-        {
-          id: '1',
-          name: 'Big Burger',
-          description: 'Hambúrguer artesanal com carne bovina, queijo, alface e tomate',
-          price: 29.90,
-          category: 'Hambúrgueres',
-          image: '/images/big-burger.jpg',
-          available: true,
-        },
-        {
-          id: '2',
-          name: 'Batata Frita',
-          description: 'Batatas fritas crocantes temperadas com sal',
-          price: 12.90,
-          category: 'Acompanhamentos',
-          image: '/images/french-fries.jpg',
-          available: true,
-        },
-        {
-          id: '3',
-          name: 'Bolo de Chocolate',
-          description: 'Delicioso bolo de chocolate com cobertura cremosa',
-          price: 15.90,
-          category: 'Sobremesas',
-          image: '/images/chocolate-cake.jpg',
-          available: true,
-        },
-        {
-          id: '4',
-          name: 'Chicken Burger',
-          description: 'Hambúrguer de frango grelhado com molho especial',
-          price: 26.90,
-          category: 'Hambúrgueres',
-          image: '/images/chicken-burger.jpg',
-          available: true,
-        },
-        {
-          id: '5',
-          name: 'Veggie Burger',
-          description: 'Hambúrguer vegetariano com ingredientes frescos',
-          price: 24.90,
-          category: 'Hambúrgueres',
-          image: '/images/veggie-burger.jpg',
-          available: false,
-        }
-      ];
-      setMenuItems(initialMenuItems);
+      toast.error('Erro ao carregar menu');
     } finally {
       setLoading(false);
     }
@@ -158,30 +110,26 @@ export default function RestaurantMenu() {
   });
 
   const handleAddItem = async () => {
-    if (!newItem.name || !newItem.description || !newItem.price || !newItem.category) {
-      toast.error('Preencha todos os campos obrigatórios');
-      return;
-    }
-
     try {
       const menuServiceItem: Omit<MenuServiceItem, 'id'> = {
         restaurantId,
-        name: newItem.name,
-        description: newItem.description,
-        price: Number(newItem.price),
-        category: newItem.category,
+        name: newItem.name || '',
+        description: newItem.description || '',
+        price: Number(newItem.price) || 0,
+        category: newItem.category || '',
         available: newItem.available || true,
-        image: newItem.image || '/images/default-food.jpg',
-        preparationTime: 15 // tempo padrão de 15 minutos
+        image: newItem.image,
+        preparationTime: 15
       };
 
       await menuService.addMenuItem(menuServiceItem);
+      await loadMenuData(); // Recarregar dados
       resetForm();
       setIsAddingItem(false);
       toast.success('Item adicionado com sucesso!');
     } catch (error) {
       console.error('Erro ao adicionar item:', error);
-      toast.error('Erro ao adicionar item');
+      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar item');
     }
   };
 
@@ -199,10 +147,7 @@ export default function RestaurantMenu() {
   };
 
   const handleUpdateItem = async () => {
-    if (!editingItem || !newItem.name || !newItem.description || !newItem.price || !newItem.category) {
-      toast.error('Preencha todos os campos obrigatórios');
-      return;
-    }
+    if (!editingItem) return;
 
     try {
       const updatedData = {
@@ -211,17 +156,18 @@ export default function RestaurantMenu() {
         price: Number(newItem.price),
         category: newItem.category,
         available: newItem.available || true,
-        image: newItem.image || '/images/default-food.jpg'
+        image: newItem.image
       };
 
       await menuService.updateMenuItem(editingItem.id, updatedData);
+      await loadMenuData(); // Recarregar dados
       resetForm();
       setIsAddingItem(false);
       setEditingItem(null);
       toast.success('Item atualizado com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar item:', error);
-      toast.error('Erro ao atualizar item');
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar item');
     }
   };
 
@@ -248,10 +194,11 @@ export default function RestaurantMenu() {
       if (!item) return;
 
       await menuService.updateMenuItem(id, { available: !item.available });
+      await loadMenuData(); // Recarregar dados
       toast.success(`${item.name} ${item.available ? 'desativado' : 'ativado'} com sucesso!`);
     } catch (error) {
       console.error('Erro ao alterar disponibilidade:', error);
-      toast.error('Erro ao alterar disponibilidade');
+      toast.error(error instanceof Error ? error.message : 'Erro ao alterar disponibilidade');
     }
   };
 
@@ -260,10 +207,11 @@ export default function RestaurantMenu() {
     if (confirm(`Tem certeza que deseja excluir "${item?.name}"?`)) {
       try {
         await menuService.deleteMenuItem(id);
+        await loadMenuData(); // Recarregar dados
         toast.success('Item excluído com sucesso!');
       } catch (error) {
         console.error('Erro ao excluir item:', error);
-        toast.error('Erro ao excluir item');
+        toast.error(error instanceof Error ? error.message : 'Erro ao excluir item');
       }
     }
   };
@@ -396,26 +344,26 @@ export default function RestaurantMenu() {
               {editingItem ? 'Editar Item' : 'Novo Item'}
             </h2>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-              <CustomInput
+              <Input
                 label="Nome do Item"
                 placeholder="Ex: Big Burger"
                 value={newItem.name || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, name: text })}
               />
-              <CustomInput
+              <Input
                 label="Categoria"
                 placeholder="Selecione uma categoria"
                 value={newItem.category || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, category: text })}
               />
-              <CustomInput
+              <Input
                 label="Preço"
                 placeholder="0.00"
                 value={newItem.price?.toString() || ''}
                 onChangeText={(text) => setNewItem({ ...newItem, price: parseFloat(text) || 0 })}
                 keyboardType="numeric"
               />
-              <CustomInput
+              <Input
                 label="URL da Imagem"
                 placeholder="https://exemplo.com/imagem.jpg"
                 value={newItem.image || ''}

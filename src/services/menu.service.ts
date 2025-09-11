@@ -285,9 +285,25 @@ class MenuService {
   }
 
   async addMenuItem(item: Omit<MenuItem, 'id'>): Promise<MenuItem> {
+    // Validação centralizada
+    if (!item.name?.trim()) {
+      throw new Error('Nome do item é obrigatório');
+    }
+    if (!item.description?.trim()) {
+      throw new Error('Descrição do item é obrigatória');
+    }
+    if (!item.price || item.price <= 0) {
+      throw new Error('Preço deve ser maior que zero');
+    }
+    if (!item.category?.trim()) {
+      throw new Error('Categoria é obrigatória');
+    }
+
     const newItem: MenuItem = {
       ...item,
-      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+      id: `item-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      image: item.image || '/images/default-food.jpg',
+      preparationTime: item.preparationTime || 15
     };
     
     this.menuItems.push(newItem);
@@ -299,12 +315,29 @@ class MenuService {
 
   async updateMenuItem(itemId: string, updates: Partial<MenuItem>): Promise<MenuItem | null> {
     const itemIndex = this.menuItems.findIndex(item => item.id === itemId);
-    
     if (itemIndex === -1) {
-      return null;
+      throw new Error('Item não encontrado');
     }
     
-    this.menuItems[itemIndex] = { ...this.menuItems[itemIndex], ...updates };
+    // Validação centralizada para updates
+    if (updates.name !== undefined && !updates.name?.trim()) {
+      throw new Error('Nome do item é obrigatório');
+    }
+    if (updates.description !== undefined && !updates.description?.trim()) {
+      throw new Error('Descrição do item é obrigatória');
+    }
+    if (updates.price !== undefined && (!updates.price || updates.price <= 0)) {
+      throw new Error('Preço deve ser maior que zero');
+    }
+    if (updates.category !== undefined && !updates.category?.trim()) {
+      throw new Error('Categoria é obrigatória');
+    }
+    
+    this.menuItems[itemIndex] = {
+      ...this.menuItems[itemIndex],
+      ...updates
+    };
+    
     this.generateCategories();
     this.notifyListeners();
     
