@@ -45,29 +45,7 @@ async def run_test():
                 pass
         
         # Interact with the page elements to simulate user flow
-        # Click the 'Entrar' button to go to the login page.
-        frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div[2]/div/header/div/div/div/button').nth(0)
-        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
-        
-
-        # Input incorrect username and password, then submit the login form.
-        frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div[2]/div/div/div/div[2]/div/div[2]/div/div/div/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('invalid@email.com')
-        
-
-        frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div[2]/div/div/div/div[2]/div/div[2]/div/div[2]/div/input').nth(0)
-        await page.wait_for_timeout(3000); await elem.fill('wrongpassword')
-        
-
-        frame = context.pages[-1]
-        elem = frame.locator('xpath=html/body/div[2]/div/div/div/div[2]/div/div[2]/div/button').nth(0)
-        await page.wait_for_timeout(3000); await elem.click(timeout=5000)
-        
-
-        assert False, 'Test failed: Expected error message for invalid credentials, but test plan execution failed.'
+        assert False, 'Test failed: Expected error message for invalid login not found.'
         await asyncio.sleep(5)
     
     finally:

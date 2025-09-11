@@ -8,7 +8,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   helperText?: string;
   variant?: 'default' | 'filled' | 'outlined';
-  size?: 'sm' | 'md' | 'lg';
+  inputSize?: 'sm' | 'md' | 'lg';
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   fullWidth?: boolean;
@@ -20,7 +20,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>((
     error,
     helperText,
     variant = 'default',
-    size = 'md',
+    inputSize = 'md',
     leftIcon,
     rightIcon,
     fullWidth = false,
@@ -67,7 +67,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>((
           className={cn(
             baseClasses,
             variantClasses[variant],
-            sizeClasses[size],
+            sizeClasses[inputSize],
             errorClasses,
             widthClasses,
             iconPadding,

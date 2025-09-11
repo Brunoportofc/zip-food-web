@@ -2,7 +2,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { WebSafeKeyboardAvoidingView } from '@/components/WebSafeComponents';
 import useAuthStore from '@/store/auth.store';
 import dynamic from 'next/dynamic';
 
@@ -41,12 +40,12 @@ export default function AuthLayout({
   // if (isAuthenticated) return null;
 
   return (
-    <WebSafeKeyboardAvoidingView className="flex-1">
+    <div className="flex-1">
       <div className="bg-black min-h-screen overflow-auto">
         {children}
       </div>
       {/* Sistema de Alertas */}
       <AlertSystem />
-    </WebSafeKeyboardAvoidingView>
+    </div>
   );
 }

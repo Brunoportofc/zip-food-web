@@ -13,7 +13,7 @@ import { showErrorAlert, showSuccessAlert } from '@/components/AlertSystem';
 import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomInput from '@/components/CustomInput';
-import CustomButton from '@/components/CustomButton';
+import Button from '@/components/ui/Button';
 
 
 const SignIn = () => {
@@ -80,7 +80,15 @@ const SignInContent = () => {
       // Redirecionamentos baseados no tipo de usuário
       switch (userType) {
         case 'restaurant':
-          router.push('/restaurant');
+          // Verificar se o restaurante já tem configuração completa
+          const { restaurantConfigService } = await import('@/services/restaurant-config.service');
+          const hasConfig = await restaurantConfigService.isRestaurantConfigured('current_restaurant');
+          
+          if (hasConfig) {
+            router.push('/restaurant');
+          } else {
+            router.push('/restaurant/cadastro');
+          }
           break;
         case 'delivery':
           router.push('/delivery');

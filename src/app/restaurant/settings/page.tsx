@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import CustomButton from '@/components/CustomButton';
+import Button from '@/components/ui/Button';
 import CustomInput from '@/components/CustomInput';
 import useAuthStore, { User } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';

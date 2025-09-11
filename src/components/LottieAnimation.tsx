@@ -1,15 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Lottie from 'lottie-react';
 
 // Importar as animações JSON
-import foodBeverageAnimation from '@/app/Food & Beverage (1).json';
-import storeAnimation from '@/app/Store.json';
-import mainSceneAnimation from '@/app/Main Scene (1).json';
-
-// Tipagem para animações Lottie
-type LottieAnimationData = any;
+import foodBeverageAnimation from '@/animations/Food & Beverage.json';
+import storeAnimation from '@/animations/Store.json';
+import mainSceneAnimation from '@/animations/Main Scene.json';
 
 type UserType = 'customer' | 'restaurant' | 'delivery';
 
@@ -26,35 +23,53 @@ const LottieAnimation: React.FC<LottieAnimationProps> = ({
   height = 128,
   className = ''
 }) => {
-  const [animationData, setAnimationData] = useState<LottieAnimationData>(mainSceneAnimation as LottieAnimationData);
+  const [animationData, setAnimationData] = useState<any>(null);
 
   useEffect(() => {
     switch (userType) {
       case 'customer':
-        setAnimationData(foodBeverageAnimation as LottieAnimationData);
+        setAnimationData(foodBeverageAnimation);
         break;
       case 'restaurant':
-        setAnimationData(storeAnimation as LottieAnimationData);
+        setAnimationData(storeAnimation);
         break;
       case 'delivery':
-        setAnimationData(mainSceneAnimation as LottieAnimationData);
+        setAnimationData(mainSceneAnimation);
         break;
       default:
-        setAnimationData(mainSceneAnimation as LottieAnimationData);
+        setAnimationData(mainSceneAnimation);
         break;
     }
   }, [userType]);
+
+  if (!animationData) {
+    return (
+      <div className={`flex justify-center items-center ${className}`}>
+        <div 
+          style={{
+            width: `${width}px`,
+            height: `${height}px`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+        >
+          Carregando...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex justify-center items-center ${className}`}>
       <Lottie
         animationData={animationData}
-        loop
-        autoplay
         style={{
           width: `${width}px`,
           height: `${height}px`
         }}
+        loop
+        autoplay
       />
     </div>
   );

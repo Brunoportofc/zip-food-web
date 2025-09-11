@@ -1,5 +1,6 @@
 import { RestaurantConfiguration, validateRestaurantConfig, defaultOperatingHours, PaymentMethod } from '../types/restaurant-config';
 import { Menu, Product, MenuSection, validateProduct } from '../types/menu';
+import { RestaurantCategory } from '../types/restaurant';
 
 class RestaurantConfigService {
   private configs: RestaurantConfiguration[] = [];
@@ -31,6 +32,7 @@ class RestaurantConfigService {
     const newConfig: RestaurantConfiguration = {
       ...config,
       id: `config-${Date.now()}`,
+      approvalStatus: 'approved', // Aprovação automática durante desenvolvimento
       createdAt: new Date(),
       updatedAt: new Date()
     };
@@ -44,12 +46,12 @@ class RestaurantConfigService {
       const restaurantData = {
         name: config.businessName,
         description: config.displayName,
-        category: 'restaurant',
+        category: 'italiana' as RestaurantCategory,
         address: `${config.address?.street}, ${config.address?.number} - ${config.address?.neighborhood}`,
         phone: config.phone || '',
         email: config.email || '',
-        deliveryFee: config.deliveryFee || 5.99,
-        minimumOrder: config.minimumOrder || 20.00,
+        deliveryFee: config.deliveryAreas?.[0]?.deliveryFee || 5.99,
+        minimumOrder: config.deliveryAreas?.[0]?.minimumOrder || 20.00,
         estimatedDeliveryTime: '30-45 min',
         rating: 0,
         isPromoted: false
@@ -115,7 +117,8 @@ class RestaurantConfigService {
       // Se não existe menu, cria um novo
       const newMenu = await this.createMenu({
         restaurantId,
-        sections: menuData.sections || []
+        sections: menuData.sections || [],
+        isActive: true
       });
       return newMenu;
     }

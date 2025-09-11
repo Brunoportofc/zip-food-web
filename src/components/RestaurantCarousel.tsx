@@ -7,9 +7,9 @@ import { MdChevronLeft, MdChevronRight, MdStar, MdAccessTime } from 'react-icons
 interface Restaurant {
   id: string;
   name: string;
-  image: string;
+  image?: string;
   rating: number;
-  deliveryTime: string;
+  estimatedDeliveryTime: string;
   deliveryFee: number;
   category: string;
   isPromoted?: boolean;
@@ -89,7 +89,7 @@ export default function RestaurantCarousel({ restaurants, title }: RestaurantCar
               >
                 <div className="relative">
                   <img
-                    src={restaurant.image}
+                    src={restaurant.image || '/images/restaurant-placeholder.jpg'}
                     alt={restaurant.name}
                     className="w-full h-32 object-cover rounded-t-lg"
                   />
@@ -117,7 +117,7 @@ export default function RestaurantCarousel({ restaurants, title }: RestaurantCar
                   <div className="flex items-center justify-between text-xs">
                     <div className="flex items-center text-gray-500">
                       <MdAccessTime size={14} className="mr-0.5" />
-                      <span>{restaurant.deliveryTime}</span>
+                      <span>{restaurant.estimatedDeliveryTime}</span>
                     </div>
                     <div className="text-red-500 font-medium">
                       {restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}

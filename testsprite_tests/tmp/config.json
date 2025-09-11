@@ -1,0 +1,17 @@
+{
+  "status": "init",
+  "type": "backend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "backendAuthType": "public",
+  "executionArgs": {
+    "projectName": "zip-food",
+    "projectPath": "c:\\Users\\Porto\\Desktop\\zip-food",
+    "testIds": [],
+    "additionalInstruction": "Focar nos testes de API backend: autenticação, gerenciamento de pedidos, sistema de notificações, CRUD de menu e sincronização em tempo real. Validar códigos de status HTTP, estrutura de resposta JSON e tratamento de erros.",
+    "envs": {
+      "API_KEY": "sk-user-Wuc6O2uWs1lV_R89M673vx5lYqtYSMG5yob0hnxaPCq9FUX8KYSBf3SOY5386nsNNoTyhhImam-00MbHYccZ14eI1Mq2b-GhcXkgvXFyTksr2ljmZQjXI_x-MlmJR-M33gA"
+    }
+  },
+  "proxy": "http://daca9e7e-89fa-4514-adfc-303d75479e64:ioFGE9QMCWi8IpSMAdwwE5gqbkaPTlbm@tun.testsprite.com:8080"
+}

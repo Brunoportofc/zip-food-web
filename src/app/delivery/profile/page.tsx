@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomInput from '@/components/CustomInput';
-import CustomButton from '@/components/CustomButton';
+import Button from '@/components/ui/Button';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
 
 
@@ -126,26 +126,29 @@ export default function DeliveryProfile() {
         </div>
         <div className="flex space-x-2">
           {!isEditing ? (
-            <CustomButton
-              title="Editar Perfil"
-              onPress={() => setIsEditing(true)}
+            <Button
+              onClick={() => setIsEditing(true)}
               variant="outline"
               className="px-4 py-2"
-            />
+            >
+              Editar Perfil
+            </Button>
           ) : (
             <>
-              <CustomButton 
-                title="Cancelar" 
-                onPress={() => setIsEditing(false)} 
+              <Button 
+                onClick={() => setIsEditing(false)} 
                 variant="outline"
                 className="px-4 py-2"
-              />
-              <CustomButton 
-                title="Salvar" 
-                onPress={handleSaveProfile} 
-                isLoading={isSaving}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSaveProfile} 
+                loading={isSaving}
                 className="px-4 py-2"
-              />
+              >
+                Salvar
+              </Button>
             </>
           )}
         </div>
@@ -257,12 +260,13 @@ export default function DeliveryProfile() {
               </div>
 
               <div className="pt-4 mt-4 border-t">
-                <CustomButton
-                  title="Alterar Senha"
-                  onPress={() => {}}
+                <Button
+                  onClick={() => {}}
                   variant="outline"
                   className="px-4 py-2"
-                />
+                >
+                  Alterar Senha
+                </Button>
               </div>
             </div>
           )}
@@ -511,12 +515,13 @@ export default function DeliveryProfile() {
       </div>
 
       <div className="mt-6">
-        <CustomButton
-          title="Sair"
-          onPress={logout}
+        <Button
+          onClick={logout}
           variant="outline"
           className="px-4 py-2 text-red-500 border-red-500 hover:bg-red-50"
-        />
+        >
+          Sair
+        </Button>
       </div>
     </AnimatedContainer>
   );

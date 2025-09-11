@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import CustomButton from '@/components/CustomButton';
+import Button from '@/components/ui/Button';
 import CustomInput from '@/components/CustomInput';
 
 import { 
@@ -19,6 +19,8 @@ import {
   MdCancel
 } from 'react-icons/md';
 import toast from 'react-hot-toast';
+import { menuService, MenuItem as MenuServiceItem, MenuCategory } from '@/services/menu.service';
+import { restaurantConfigService } from '@/services/restaurant-config.service';
 
 interface MenuItem {
   id: string;
@@ -33,58 +35,113 @@ interface MenuItem {
 export default function RestaurantMenu() {
 
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<MenuCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [restaurantId] = useState('restaurant-1'); // Em produção, viria da autenticação
 
   // Initialize menu items after translations are ready
   useEffect(() => {
-    const initialMenuItems: MenuItem[] = [
-      {
-        id: '1',
-        name: 'Big Burger',
-        description: 'Hambúrguer artesanal com carne bovina, queijo, alface e tomate',
-        price: 29.90,
-        category: 'Hambúrgueres',
-        image: '/images/big-burger.jpg',
-        available: true,
-      },
-      {
-        id: '2',
-        name: 'Batata Frita',
-        description: 'Batatas fritas crocantes temperadas com sal',
-        price: 12.90,
-        category: 'Acompanhamentos',
-        image: '/images/french-fries.jpg',
-        available: true,
-      },
-      {
-        id: '3',
-        name: 'Bolo de Chocolate',
-        description: 'Delicioso bolo de chocolate com cobertura cremosa',
-        price: 15.90,
-        category: 'Sobremesas',
-        image: '/images/chocolate-cake.jpg',
-        available: true,
-      },
-      {
-        id: '4',
-        name: 'Chicken Burger',
-        description: 'Hambúrguer de frango grelhado com molho especial',
-        price: 26.90,
-        category: 'Hambúrgueres',
-        image: '/images/chicken-burger.jpg',
-        available: true,
-      },
-      {
-        id: '5',
-        name: 'Veggie Burger',
-        description: 'Hambúrguer vegetariano com ingredientes frescos',
-        price: 24.90,
-        category: 'Hambúrgueres',
-        image: '/images/veggie-burger.jpg',
-        available: false,
-      }
-    ];
-    setMenuItems(initialMenuItems);
+    loadMenuData();
   }, []);
+
+  const loadMenuData = async () => {
+    try {
+      setLoading(true);
+      
+      // Sincronizar menu com dados do restaurante
+      await menuService.syncWithRestaurantData(restaurantId);
+      
+      // Carregar itens e categorias
+      const [items, cats] = await Promise.all([
+        menuService.getMenuItems(restaurantId),
+        menuService.getMenuCategories(restaurantId)
+      ]);
+      
+      // Converter para o formato local
+      const convertedItems: MenuItem[] = items.map(item => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        category: item.category,
+        image: item.image,
+        available: item.available
+      }));
+      
+      setMenuItems(convertedItems);
+      setCategories(cats);
+      
+      // Configurar listener para atualizações em tempo real
+      const unsubscribe = menuService.addListener((updatedItems) => {
+        const filteredItems = updatedItems.filter(item => item.restaurantId === restaurantId);
+        const convertedUpdatedItems: MenuItem[] = filteredItems.map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          category: item.category,
+          image: item.image,
+          available: item.available
+        }));
+        setMenuItems(convertedUpdatedItems);
+      });
+      
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Erro ao carregar menu:', error);
+      // Fallback para dados iniciais em caso de erro
+      const initialMenuItems: MenuItem[] = [
+        {
+          id: '1',
+          name: 'Big Burger',
+          description: 'Hambúrguer artesanal com carne bovina, queijo, alface e tomate',
+          price: 29.90,
+          category: 'Hambúrgueres',
+          image: '/images/big-burger.jpg',
+          available: true,
+        },
+        {
+          id: '2',
+          name: 'Batata Frita',
+          description: 'Batatas fritas crocantes temperadas com sal',
+          price: 12.90,
+          category: 'Acompanhamentos',
+          image: '/images/french-fries.jpg',
+          available: true,
+        },
+        {
+          id: '3',
+          name: 'Bolo de Chocolate',
+          description: 'Delicioso bolo de chocolate com cobertura cremosa',
+          price: 15.90,
+          category: 'Sobremesas',
+          image: '/images/chocolate-cake.jpg',
+          available: true,
+        },
+        {
+          id: '4',
+          name: 'Chicken Burger',
+          description: 'Hambúrguer de frango grelhado com molho especial',
+          price: 26.90,
+          category: 'Hambúrgueres',
+          image: '/images/chicken-burger.jpg',
+          available: true,
+        },
+        {
+          id: '5',
+          name: 'Veggie Burger',
+          description: 'Hambúrguer vegetariano com ingredientes frescos',
+          price: 24.90,
+          category: 'Hambúrgueres',
+          image: '/images/veggie-burger.jpg',
+          available: false,
+        }
+      ];
+      setMenuItems(initialMenuItems);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -100,26 +157,32 @@ export default function RestaurantMenu() {
     image: ''
   });
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItem.name || !newItem.description || !newItem.price || !newItem.category) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    const item: MenuItem = {
-      id: Date.now().toString(),
-      name: newItem.name,
-      description: newItem.description,
-      price: Number(newItem.price),
-      category: newItem.category,
-      available: newItem.available || true,
-      image: newItem.image || '/images/default-food.jpg'
-    };
+    try {
+      const menuServiceItem: Omit<MenuServiceItem, 'id'> = {
+        restaurantId,
+        name: newItem.name,
+        description: newItem.description,
+        price: Number(newItem.price),
+        category: newItem.category,
+        available: newItem.available || true,
+        image: newItem.image || '/images/default-food.jpg',
+        preparationTime: 15 // tempo padrão de 15 minutos
+      };
 
-    setMenuItems([...menuItems, item]);
-    resetForm();
-    setIsAddingItem(false);
-    toast.success('Item adicionado com sucesso!');
+      await menuService.addMenuItem(menuServiceItem);
+      resetForm();
+      setIsAddingItem(false);
+      toast.success('Item adicionado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao adicionar item:', error);
+      toast.error('Erro ao adicionar item');
+    }
   };
 
   const handleEditItem = (item: MenuItem) => {
@@ -135,29 +198,31 @@ export default function RestaurantMenu() {
     setIsAddingItem(true);
   };
 
-  const handleUpdateItem = () => {
+  const handleUpdateItem = async () => {
     if (!editingItem || !newItem.name || !newItem.description || !newItem.price || !newItem.category) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    const updatedItem: MenuItem = {
-      ...editingItem,
-      name: newItem.name,
-      description: newItem.description,
-      price: Number(newItem.price),
-      category: newItem.category,
-      available: newItem.available || true,
-      image: newItem.image || '/images/default-food.jpg'
-    };
+    try {
+      const updatedData = {
+        name: newItem.name,
+        description: newItem.description,
+        price: Number(newItem.price),
+        category: newItem.category,
+        available: newItem.available || true,
+        image: newItem.image || '/images/default-food.jpg'
+      };
 
-    setMenuItems(menuItems.map(item => 
-      item.id === editingItem.id ? updatedItem : item
-    ));
-    resetForm();
-    setIsAddingItem(false);
-    setEditingItem(null);
-    toast.success('Item atualizado com sucesso!');
+      await menuService.updateMenuItem(editingItem.id, updatedData);
+      resetForm();
+      setIsAddingItem(false);
+      setEditingItem(null);
+      toast.success('Item atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar item:', error);
+      toast.error('Erro ao atualizar item');
+    }
   };
 
   const resetForm = () => {
@@ -177,25 +242,33 @@ export default function RestaurantMenu() {
     setEditingItem(null);
   };
 
-  const handleToggleAvailability = (id: string) => {
-    setMenuItems(
-      menuItems.map((item) =>
-        item.id === id ? { ...item, available: !item.available } : item
-      )
-    );
-    const item = menuItems.find(item => item.id === id);
-    toast.success(`${item?.name} ${item?.available ? 'desativado' : 'ativado'} com sucesso!`);
-  };
+  const handleToggleAvailability = async (id: string) => {
+    try {
+      const item = menuItems.find(item => item.id === id);
+      if (!item) return;
 
-  const handleDeleteItem = (id: string) => {
-    const item = menuItems.find(item => item.id === id);
-    if (confirm(`Tem certeza que deseja excluir "${item?.name}"?`)) {
-      setMenuItems(menuItems.filter((item) => item.id !== id));
-      toast.success('Item excluído com sucesso!');
+      await menuService.updateMenuItem(id, { available: !item.available });
+      toast.success(`${item.name} ${item.available ? 'desativado' : 'ativado'} com sucesso!`);
+    } catch (error) {
+      console.error('Erro ao alterar disponibilidade:', error);
+      toast.error('Erro ao alterar disponibilidade');
     }
   };
 
-  const categories = ['Todos', ...new Set(menuItems.map((item) => item.category))];
+  const handleDeleteItem = async (id: string) => {
+    const item = menuItems.find(item => item.id === id);
+    if (confirm(`Tem certeza que deseja excluir "${item?.name}"?`)) {
+      try {
+        await menuService.deleteMenuItem(id);
+        toast.success('Item excluído com sucesso!');
+      } catch (error) {
+        console.error('Erro ao excluir item:', error);
+        toast.error('Erro ao excluir item');
+      }
+    }
+  };
+
+  const filterCategories = ['Todos', ...new Set(menuItems.map((item) => item.category))];
   
   const filteredItems = menuItems.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -274,7 +347,7 @@ export default function RestaurantMenu() {
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full pl-10 pr-8 py-2 lg:py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white text-sm lg:text-base"
                 >
-                  {categories.map(category => (
+                  {filterCategories.map(category => (
                     <option key={category} value={category}>
                       {category === 'Todos' ? 'Todas as Categorias' :
             category === 'Hambúrgueres' ? 'Hambúrgueres' :

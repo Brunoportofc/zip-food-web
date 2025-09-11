@@ -43,7 +43,7 @@ export default function CategoryPage() {
     loadRestaurants();
   }, [category]);
 
-  const handleRestaurantClick = (restaurantId: number) => {
+  const handleRestaurantClick = (restaurantId: string) => {
     router.push(`/customer/restaurant/${restaurantId}`);
   };
 
@@ -173,12 +173,12 @@ export default function CategoryPage() {
                     
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      <span>{restaurant.deliveryTime}</span>
+                      <span>{restaurant.estimatedDeliveryTime}</span>
                     </div>
                     
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
-                      <span>{restaurant.distance}</span>
+                      <span>{restaurant.address}</span>
                     </div>
                   </div>
                   

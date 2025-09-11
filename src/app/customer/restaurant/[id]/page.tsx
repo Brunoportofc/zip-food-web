@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 
 import { MdArrowBack, MdStar, MdAccessTime, MdAdd, MdRemove, MdShoppingCart } from 'react-icons/md';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import CustomButton from '@/components/CustomButton';
+import Button from '@/components/ui/Button';
 import { showSuccessAlert, showErrorAlert } from '@/components/AlertSystem';
 
 interface MenuItem {
@@ -184,12 +184,12 @@ export default function RestaurantPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-600 mb-4">Restaurante não encontrado</p>
-          <CustomButton
+          <Button
             onClick={() => router.back()}
             variant="primary"
           >
             Voltar
-          </CustomButton>
+          </Button>
         </div>
       </div>
     );
@@ -302,15 +302,13 @@ export default function RestaurantPage() {
                     </span>
                     
                     {getItemQuantity(item.id) === 0 ? (
-                      <CustomButton
+                      <Button
                         onClick={() => addToCart(item)}
                         variant="primary"
-                        size="sm"
                         disabled={!item.available}
                       >
-                        <MdAdd size={16} className="mr-1" />
                         Adicionar
-                      </CustomButton>
+                      </Button>
                     ) : (
                       <div className="flex items-center gap-2">
                         <button

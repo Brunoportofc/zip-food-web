@@ -6,6 +6,8 @@ import AnimatedContainer from '@/components/AnimatedContainer';
 import { toast } from 'react-hot-toast';
 import { showSuccessAlert, showConfirmAlert } from '@/components/AlertSystem';
 import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
+import useAuthStore from '@/store/auth.store';
+import { orderService, Order, OrderStatus } from '@/services/order.service';
 import { 
   MdShoppingCart, 
   MdPerson, 
@@ -23,27 +25,7 @@ import {
   MdDeliveryDining
 } from 'react-icons/md';
 
-type OrderStatus = 'pending' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
 
-interface OrderItem {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-}
-
-interface Order {
-  id: string;
-  customer: {
-    name: string;
-    address: string;
-    phone: string;
-  };
-  items: OrderItem[];
-  total: number;
-  status: OrderStatus;
-  createdAt: Date;
-}
 
 export default function RestaurantOrders() {
 
@@ -52,54 +34,55 @@ export default function RestaurantOrders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isAutoRefresh, setIsAutoRefresh] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const { notifyOrderStatusChange } = useRealTimeNotifications();
+  const { user } = useAuthStore();
   
   const [orders, setOrders] = useState<Order[]>([]);
 
-  // Initialize orders after translations are ready
   useEffect(() => {
-    const initialOrders: Order[] = [
-      {
-        id: '#1234',
-        customer: {
-          name: 'João Ferreira',
-          address: 'Rua das Flores, 123',
-          phone: '(11) 98765-4321',
-        },
-        items: [
-          { id: '1', name: 'Big Burger', quantity: 2, price: 29.9 },
-          { id: '2', name: 'Batata Frita', quantity: 1, price: 15.9 },
-        ],
-        total: 75.7,
-        status: 'pending',
-        createdAt: new Date(),
-      },
-      {
-        id: '#1233',
-        customer: {
-          name: 'Maria Oliveira',
-          address: 'Av. Paulista, 456',
-          phone: '(11) 91234-5678',
-        },
-        items: [
-            { id: '3', name: 'Chicken Burger', quantity: 1, price: 45.9 },
-          ],
-         total: 45.9,
-         status: 'preparing',
-         createdAt: new Date(Date.now() - 30 * 60000),
-       },
-     ];
-     setOrders(initialOrders);
-   }, []);
+    loadOrders();
+    
+    // Configurar listener para novos pedidos
+    const orderCallback = (newOrder: Order) => {
+      if (newOrder.restaurantId === user?.id) {
+        setOrders(prevOrders => [...prevOrders, newOrder]);
+        // Mostrar notificação para novos pedidos
+        if (newOrder.status === 'pending') {
+          toast.success(`Novo pedido: ${newOrder.id}`);
+        }
+      }
+    };
+    
+    orderService.onNewOrder(orderCallback);
+    
+    return () => orderService.removeOrderListener(orderCallback);
+  }, [user]);
+  
+  const loadOrders = async () => {
+    if (!user) return;
+    
+    try {
+      const restaurantOrders = await orderService.getOrdersByRestaurant(user.id);
+      setOrders(restaurantOrders);
+    } catch (error) {
+      console.error('Erro ao carregar pedidos:', error);
+      toast.error('Não foi possível carregar os pedidos');
+    }
+  };
 
   useEffect(() => {
     if (!isAutoRefresh) return;
 
     const interval = setInterval(() => {
       if (Math.random() < 0.1) {
+        const customerId = `customer-${Math.random().toString(36).substr(2, 9)}`;
         const newOrder: Order = {
           id: `#${Math.floor(Math.random() * 9000) + 1000}`,
+          restaurantId: user?.id || '',
+          customerId,
           customer: {
+            id: customerId,
             name: `Cliente ${Math.floor(Math.random() * 100)}`,
             address: `Endereço ${Math.floor(Math.random() * 100)}`,
             phone: '(11) 99999-9999',
@@ -112,9 +95,18 @@ export default function RestaurantOrders() {
               price: 25.0,
             },
           ],
-          total: 25.0,
+          subtotal: 25.0,
+          deliveryFee: 5.0,
+          total: 30.0,
           status: 'pending',
+          estimatedDeliveryTime: '30-45 min',
           createdAt: new Date(),
+          updatedAt: new Date(),
+          statusHistory: [{
+            status: 'pending',
+            timestamp: new Date(),
+            updatedBy: 'system'
+          }]
         };
         setOrders(prev => [newOrder, ...prev]);
         toast.success(`Novo pedido: ${newOrder.id}`);
@@ -125,29 +117,41 @@ export default function RestaurantOrders() {
     return () => clearInterval(interval);
   }, [isAutoRefresh]);
 
-  const handleUpdateStatus = (orderId: string, newStatus: OrderStatus) => {
-    setOrders(
-      orders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
-    );
-    
-    if (selectedOrder?.id === orderId) {
-      setSelectedOrder({ ...selectedOrder, status: newStatus });
-    }
+  const handleUpdateStatus = async (orderId: string, newStatus: OrderStatus) => {
+    try {
+      setUpdatingStatus(orderId);
+      await orderService.updateOrderStatus(orderId, newStatus);
+      
+      if (selectedOrder?.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus });
+      }
 
-    const statusMessages: Record<string, string> = {
-      pending: 'Pedido recebido',
-      preparing: 'Preparando pedido',
-      ready: 'Pedido pronto',
-      delivering: 'Saiu para entrega',
-      delivered: 'Pedido entregue',
-      cancelled: 'Pedido cancelado'
-    };
+      const statusMessages: Record<string, string> = {
+        pending: 'Pedido recebido',
+        preparing: 'Preparando pedido',
+        ready: 'Pedido pronto',
+        delivering: 'Saiu para entrega',
+        delivered: 'Pedido entregue',
+        cancelled: 'Pedido cancelado'
+      };
 
-    if (statusMessages[newStatus]) {
-      toast.success(`${statusMessages[newStatus]}: ${orderId}`);
-      notifyOrderStatusChange(orderId, newStatus);
+      if (statusMessages[newStatus]) {
+        toast.success(`${statusMessages[newStatus]}: ${orderId}`);
+        notifyOrderStatusChange(orderId, newStatus);
+      }
+      
+      // Notificações específicas baseadas no status
+      if (newStatus === 'delivering') {
+        toast.success('Entregadores foram notificados e código de confirmação gerado');
+      } else if (newStatus === 'ready') {
+        toast('Aguardando entregador para coleta');
+      }
+      
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Não foi possível atualizar o status do pedido');
+    } finally {
+      setUpdatingStatus(null);
     }
   };
 
@@ -482,6 +486,12 @@ export default function RestaurantOrders() {
                               <MdPerson size={16} className="text-gray-500 lg:w-5 lg:h-5" />
                               <span className="truncate">{order.customer.name}</span>
                             </h3>
+                            {order.confirmationCode && order.status === 'delivering' && (
+                              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                                <p className="text-xs font-semibold text-yellow-800">Código de Confirmação:</p>
+                                <p className="text-lg font-mono font-bold text-yellow-900">{order.confirmationCode}</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
@@ -513,19 +523,21 @@ export default function RestaurantOrders() {
                       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         {order.status !== 'delivered' && order.status !== 'cancelled' && getNextStatus(order.status) && (
                           <button
-                            className="bg-green-100 text-green-700 px-3 lg:px-4 py-2 rounded-xl font-medium hover:bg-green-200 transition-all flex items-center justify-center space-x-2 text-sm lg:text-base"
+                            className="bg-green-100 text-green-700 px-3 lg:px-4 py-2 rounded-xl font-medium hover:bg-green-200 transition-all flex items-center justify-center space-x-2 text-sm lg:text-base disabled:opacity-50"
+                            disabled={updatingStatus === order.id}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleUpdateStatus(order.id, getNextStatus(order.status)!);
                             }}
                           >
                             <MdPlayArrow size={16} />
-                            <span>Avançar</span>
+                            <span>{updatingStatus === order.id ? 'Atualizando...' : 'Avançar'}</span>
                           </button>
                         )}
                         {order.status !== 'cancelled' && order.status !== 'delivered' && (
                           <button
-                            className="bg-red-100 text-red-700 px-3 lg:px-4 py-2 rounded-xl font-medium hover:bg-red-200 transition-all flex items-center justify-center space-x-2 text-sm lg:text-base"
+                            className="bg-red-100 text-red-700 px-3 lg:px-4 py-2 rounded-xl font-medium hover:bg-red-200 transition-all flex items-center justify-center space-x-2 text-sm lg:text-base disabled:opacity-50"
+                            disabled={updatingStatus === order.id}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleCancelOrder(order.id);
@@ -625,19 +637,21 @@ export default function RestaurantOrders() {
                   <div className="space-y-3">
                     {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && getNextStatus(selectedOrder.status) && (
                       <button
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center space-x-2 shadow-lg"
+                        className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-2xl font-semibold hover:from-green-600 hover:to-green-700 transition-all flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50"
+                        disabled={updatingStatus === selectedOrder.id}
                         onClick={() => {
                           handleUpdateStatus(selectedOrder.id, getNextStatus(selectedOrder.status)!);
                           setSelectedOrder(null);
                         }}
                       >
                         <MdPlayArrow size={20} />
-                        <span>Avançar para {getStatusText(getNextStatus(selectedOrder.status)!)}</span>
+                        <span>{updatingStatus === selectedOrder.id ? 'Atualizando...' : `Avançar para ${getStatusText(getNextStatus(selectedOrder.status)!)}`}</span>
                       </button>
                     )}
                     {selectedOrder.status !== 'cancelled' && selectedOrder.status !== 'delivered' && (
                       <button
-                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-2xl font-semibold hover:from-red-600 hover:to-red-700 transition-all flex items-center justify-center space-x-2 shadow-lg"
+                        className="w-full bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-4 rounded-2xl font-semibold hover:from-red-600 hover:to-red-700 transition-all flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50"
+                        disabled={updatingStatus === selectedOrder.id}
                         onClick={() => {
                           handleCancelOrder(selectedOrder.id);
                         }}

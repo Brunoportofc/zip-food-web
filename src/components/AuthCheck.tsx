@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
-import { preloadCriticalComponents } from './LazyComponents';
 
 interface AuthCheckProps {
   children: React.ReactNode;
@@ -26,8 +25,6 @@ const AuthCheck = ({ children }: AuthCheckProps) => {
   }, [checkAuth]);
   
   useEffect(() => {
-    // Preload componentes críticos
-    preloadCriticalComponents();
     
     // Sempre verifica autenticação na inicialização para restaurar sessão persistida
     if (!hasChecked) {

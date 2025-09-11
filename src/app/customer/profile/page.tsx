@@ -18,7 +18,14 @@ interface Address {
   isDefault?: boolean;
 }
 
-
+interface PaymentMethod {
+  id: string;
+  type: 'credit' | 'debit';
+  cardNumber: string;
+  holderName: string;
+  expiryDate: string;
+  isDefault?: boolean;
+}
 
 export default function CustomerProfilePage() {
   const router = useRouter();
@@ -57,6 +64,15 @@ export default function CustomerProfilePage() {
     zipCode: ''
   });
   
+  // Estados para métodos de pagamento
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [newPayment, setNewPayment] = useState<Omit<PaymentMethod, 'id'>>({
+    type: 'credit',
+    cardNumber: '',
+    holderName: '',
+    expiryDate: ''
+  });
 
   
   useEffect(() => {

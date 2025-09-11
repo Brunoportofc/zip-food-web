@@ -12,7 +12,8 @@ import { showAlert } from '@/lib/platform';
 import useAuthStore, { UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import CustomInput from '@/components/CustomInput';
-import CustomButton from '@/components/CustomButton';
+import Button from '@/components/ui/Button';
+import { restaurantConfigService } from '@/services/restaurant-config.service';
 
 
 const SignUp = () => {
@@ -85,10 +86,33 @@ const SignUpContent = () => {
       storeSetUserType(userType);
       await signUp(name, email, password);
       
+      // Obter o usuário do store após o signUp
+      const currentUser = useAuthStore.getState().user;
+      
       // Redirecionamentos baseados no tipo de usuário
       switch (userType) {
         case 'restaurant':
-          router.push('/restaurant');
+          // Verificar se o restaurante já tem configuração
+          try {
+            if (currentUser) {
+              const isConfigured = await restaurantConfigService.isRestaurantConfigured(currentUser.id);
+              if (isConfigured) {
+                const config = await restaurantConfigService.getRestaurantConfig(currentUser.id);
+                if (config && config.approvalStatus === 'approved') {
+                  router.push('/restaurant');
+                } else {
+                  router.push('/restaurant/aprovacao');
+                }
+              } else {
+                router.push('/restaurant/cadastro');
+              }
+            } else {
+              router.push('/restaurant/cadastro');
+            }
+          } catch (error) {
+            console.error('Erro ao verificar configuração:', error);
+            router.push('/restaurant/cadastro');
+          }
           break;
         case 'delivery':
           router.push('/delivery');

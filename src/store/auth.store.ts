@@ -65,7 +65,7 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
       signIn: async (email, password) => {
         try {
           const currentUserType = get().userType;
-          const { user, token } = await authService.signIn({ email, password }, currentUserType);
+          const { user, token } = await authService.signIn(email, password, currentUserType || undefined);
           
           // Usa o userType do usuário retornado pelo serviço (que já considera o tipo selecionado)
           const finalUserType = user.type;
@@ -81,8 +81,8 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
           const userType = get().userType;
           if (!userType) throw new Error('Tipo de usuário não selecionado');
           
-          const user = await authService.signUp({ name, email, password, userType });
-          const { token } = await authService.signIn({ email, password });
+          const user = await authService.signUp(name, email, password, userType);
+          const { token } = await authService.signIn(email, password);
           set({ isAuthenticated: true, user, token });
         } catch (error) {
           console.error('Erro ao registrar usuário:', error);

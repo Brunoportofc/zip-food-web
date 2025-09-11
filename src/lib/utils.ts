@@ -154,3 +154,64 @@ export function debounce<T extends (...args: any[]) => any>(
     timeout = setTimeout(() => func(...args), wait);
   };
 }
+
+// === VALIDAÇÕES ===
+
+/**
+ * Valida se um email é válido
+ */
+export function validateEmail(email: string): { isValid: boolean; error?: string } {
+  if (!email) {
+    return { isValid: false, error: 'Email é obrigatório' };
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { isValid: false, error: 'Email inválido' };
+  }
+  
+  return { isValid: true };
+}
+
+/**
+ * Valida se uma senha atende aos critérios
+ */
+export function validatePassword(password: string): { isValid: boolean; error?: string } {
+  if (!password) {
+    return { isValid: false, error: 'Senha é obrigatória' };
+  }
+  
+  if (password.length < 8) {
+    return { isValid: false, error: 'Senha deve ter pelo menos 8 caracteres' };
+  }
+  
+  return { isValid: true };
+}
+
+/**
+ * Valida se as senhas coincidem
+ */
+export function validatePasswordConfirmation(
+  password: string,
+  confirmPassword: string
+): { isValid: boolean; error?: string } {
+  if (!confirmPassword) {
+    return { isValid: false, error: 'Confirmação de senha é obrigatória' };
+  }
+  
+  if (password !== confirmPassword) {
+    return { isValid: false, error: 'Senhas não coincidem' };
+  }
+  
+  return { isValid: true };
+}
+
+/**
+ * Valida campo obrigatório
+ */
+export function validateRequired(value: string, fieldName: string): { isValid: boolean; error?: string } {
+  if (!value || value.trim() === '') {
+    return { isValid: false, error: `${fieldName} é obrigatório` };
+  }
+  return { isValid: true };
+}

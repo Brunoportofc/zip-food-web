@@ -353,7 +353,7 @@ export default function CustomerDashboard() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center text-gray-500">
                         <MdAccessTime className="mr-1" size={12} />
-                        <span className="text-xs lg:text-sm">{restaurant.deliveryTime}</span>
+                        <span className="text-xs lg:text-sm">{restaurant.estimatedDeliveryTime}</span>
                       </div>
                       <div className="text-primary font-bold text-xs lg:text-sm">
                         {restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}
