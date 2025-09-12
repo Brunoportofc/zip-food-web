@@ -1,6 +1,7 @@
 import { RestaurantConfiguration } from '../types/restaurant-config';
 import { Restaurant } from '../types/restaurant';
 import { notificationService } from './notification.service';
+import { authService } from './auth.service';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
 
@@ -56,264 +57,393 @@ export interface DeliveryDriver {
   };
 }
 
+/**
+ * Serviço de pedidos integrado com o backend Supabase
+ */
 class OrderService {
-  private orders: Order[] = [];
-  private drivers: DeliveryDriver[] = [];
+  private readonly API_BASE_URL = '/api/orders';
   private orderListeners: ((order: Order) => void)[] = [];
   private statusUpdateListeners: ((orderId: string, status: OrderStatus, updatedBy: string) => void)[] = [];
 
-  constructor() {
-    this.initializeMockData();
-  }
-
-  private initializeMockData() {
-    // Dados simulados de entregadores
-    this.drivers = [
-      {
-        id: 'driver-1',
-        name: 'Carlos Silva',
-        phone: '(11) 99999-1111',
-        isAvailable: true,
-        currentLocation: { lat: -23.5505, lng: -46.6333 }
-      },
-      {
-        id: 'driver-2', 
-        name: 'Ana Santos',
-        phone: '(11) 99999-2222',
-        isAvailable: true,
-        currentLocation: { lat: -23.5489, lng: -46.6388 }
-      }
-    ];
-
-    // Pedidos simulados
-    this.orders = [
-      {
-        id: '#12345',
-        restaurantId: 'rest-1',
-        customerId: 'customer-1',
-        customer: {
-          id: 'customer-1',
-          name: 'João Silva',
-          phone: '(11) 98765-4321',
-          address: 'Rua das Flores, 123 - Jardim Primavera'
-        },
-        items: [
-          { id: '1', name: 'Big Burger', quantity: 2, price: 29.90 },
-          { id: '2', name: 'Batata Frita Grande', quantity: 1, price: 15.90 }
-        ],
-        subtotal: 75.70,
-        deliveryFee: 8.90,
-        total: 84.60,
-        status: 'pending',
-        estimatedDeliveryTime: '35-45 min',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        statusHistory: [
-          {
-            status: 'pending',
-            timestamp: new Date(),
-            updatedBy: 'customer'
-          }
-        ]
-      }
-    ];
-  }
-
-  // === GESTÃO DE PEDIDOS ===
-  
+  /**
+   * Obtém pedidos por restaurante usando a API do backend
+   */
   async getOrdersByRestaurant(restaurantId: string): Promise<Order[]> {
-    return this.orders.filter(order => order.restaurantId === restaurantId);
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(`${this.API_BASE_URL}?restaurantId=${restaurantId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao buscar pedidos do restaurante');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na busca');
+      }
+
+      return data.data.map(this.transformOrderFromAPI);
+    } catch (error) {
+      console.error('Erro ao buscar pedidos do restaurante:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Obtém pedido por ID usando a API do backend
+   */
   async getOrderById(orderId: string): Promise<Order | null> {
-    return this.orders.find(order => order.id === orderId) || null;
-  }
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
 
-  async getAllOrders(): Promise<Order[]> {
-    return [...this.orders];
-  }
+      const response = await fetch(`${this.API_BASE_URL}/${orderId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
 
-  async createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'statusHistory' | 'confirmationCode'>): Promise<Order> {
-    const newOrder: Order = {
-      ...orderData,
-      id: `#${Date.now()}`,
-      status: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      statusHistory: [
-        {
-          status: 'pending',
-          timestamp: new Date(),
-          updatedBy: 'customer'
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null;
         }
-      ]
-    };
+        throw new Error(data.message || 'Erro ao buscar pedido');
+      }
 
-    this.orders.push(newOrder);
-    
-    // Notificar listeners sobre novo pedido
-    this.orderListeners.forEach(listener => listener(newOrder));
-    
-    return newOrder;
+      if (!data.success) {
+        return null;
+      }
+
+      return this.transformOrderFromAPI(data.data);
+    } catch (error) {
+      console.error('Erro ao buscar pedido:', error);
+      throw error;
+    }
   }
 
+  /**
+   * Obtém todos os pedidos usando a API do backend
+   */
+  async getAllOrders(): Promise<Order[]> {
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(this.API_BASE_URL, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao buscar pedidos');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na busca');
+      }
+
+      return data.data.map(this.transformOrderFromAPI);
+    } catch (error) {
+      console.error('Erro ao buscar todos os pedidos:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Cria novo pedido usando a API do backend
+   */
+  async createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'statusHistory' | 'confirmationCode'>): Promise<Order> {
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(this.API_BASE_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao criar pedido');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na criação do pedido');
+      }
+
+      const newOrder = this.transformOrderFromAPI(data.data);
+      
+      // Notificar listeners sobre novo pedido
+      this.orderListeners.forEach(callback => callback(newOrder));
+      
+      // Enviar notificação
+      await this.handleStatusChange(newOrder, 'pending', 'pending');
+      
+      return newOrder;
+    } catch (error) {
+      console.error('Erro ao criar pedido:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Atualiza status do pedido usando a API do backend
+   */
   async updateOrderStatus(
     orderId: string, 
     newStatus: OrderStatus, 
     updatedBy: 'customer' | 'restaurant' | 'driver' | 'system' = 'system'
   ): Promise<Order | null> {
-    const orderIndex = this.orders.findIndex(order => order.id === orderId);
-    
-    if (orderIndex === -1) {
-      throw new Error(`Pedido ${orderId} não encontrado`);
-    }
-
-    const order = this.orders[orderIndex];
-    const previousStatus = order.status;
-    
-    // Atualizar status e histórico
-    order.status = newStatus;
-    order.updatedAt = new Date();
-    order.statusHistory.push({
-      status: newStatus,
-      timestamp: new Date(),
-      updatedBy
-    });
-
-    // Gerar código de confirmação quando sair para entrega
-    if (newStatus === 'delivering' && !order.confirmationCode) {
-      order.confirmationCode = await notificationService.handleOrderOutForDelivery(order);
-    }
-
-    this.orders[orderIndex] = order;
-
-    // Notificar cliente sobre mudança de status
-    notificationService.notifyCustomer(order.customer.id, order, previousStatus);
-
-    // Notificar entregadores se pedido estiver pronto
-    if (newStatus === 'ready') {
-      notificationService.notifyDeliveryDrivers(order);
-    }
-
-    // Notificar listeners sobre mudança de status
-    this.statusUpdateListeners.forEach(listener => 
-      listener(orderId, newStatus, updatedBy)
-    );
-
-    // Lógica específica para cada status
-    await this.handleStatusChange(order, previousStatus, newStatus);
-    
-    return order;
-  }
-
-  private async handleStatusChange(order: Order, previousStatus: OrderStatus, newStatus: OrderStatus) {
-    switch (newStatus) {
-      case 'confirmed':
-        console.log(`Pedido ${order.id} confirmado pelo restaurante`);
-        break;
-        
-      case 'preparing':
-        console.log(`Pedido ${order.id} em preparo`);
-        break;
-        
-      case 'ready':
-        console.log(`Pedido ${order.id} pronto para entrega`);
-        break;
-        
-      case 'delivering':
-        // Notificar entregadores disponíveis
-        await this.notifyAvailableDrivers(order);
-        console.log(`Pedido ${order.id} saiu para entrega - Código: ${order.confirmationCode}`);
-        break;
-        
-      case 'delivered':
-        console.log(`Pedido ${order.id} entregue com sucesso`);
-        break;
-        
-      case 'cancelled':
-        console.log(`Pedido ${order.id} cancelado`);
-        break;
-    }
-  }
-
-  // === SISTEMA DE ENTREGA ===
-  
-  private async notifyAvailableDrivers(order: Order) {
-    const availableDrivers = this.drivers.filter(driver => driver.isAvailable);
-    
-    // Simular notificação para entregadores
-    availableDrivers.forEach(driver => {
-      console.log(`🚗 Notificando entregador ${driver.name} sobre pedido ${order.id}`);
-      // Aqui seria integrado com sistema de notificação push
-    });
-  }
-
-  async assignDriverToOrder(orderId: string, driverId: string): Promise<Order | null> {
-    const order = await this.getOrderById(orderId);
-    if (!order) return null;
-
-    order.deliveryDriverId = driverId;
-    order.updatedAt = new Date();
-    
-    // Marcar entregador como ocupado
-    const driver = this.drivers.find(d => d.id === driverId);
-    if (driver) {
-      driver.isAvailable = false;
-    }
-
-    return order;
-  }
-
-  async completeDelivery(orderId: string, confirmationCode: string, driverId?: string): Promise<boolean> {
-    const order = await this.getOrderById(orderId);
-    
-    if (!order || order.status !== 'delivering') {
-      throw new Error('Pedido não está em status de entrega');
-    }
-
-    if (!order.confirmationCode) {
-      throw new Error('Código de confirmação não encontrado para este pedido');
-    }
-
-    // Validar código de confirmação
-    if (!notificationService.validateConfirmationCode(orderId, confirmationCode, order.confirmationCode)) {
-      throw new Error('Código de confirmação inválido');
-    }
-
-    await this.updateOrderStatus(orderId, 'delivered', 'driver');
-    
-    // Notificar sobre confirmação de entrega
-    if (driverId) {
-      notificationService.notifyDeliveryConfirmation(order, driverId);
-    }
-    
-    // Liberar entregador
-    if (order.deliveryDriverId) {
-      const driver = this.drivers.find(d => d.id === order.deliveryDriverId);
-      if (driver) {
-        driver.isAvailable = true;
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
       }
+
+      const response = await fetch(`${this.API_BASE_URL}/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus, updatedBy }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao atualizar status do pedido');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na atualização');
+      }
+
+      const updatedOrder = this.transformOrderFromAPI(data.data);
+      
+      // Notificar listeners sobre mudança de status
+      this.statusUpdateListeners.forEach(callback => 
+        callback(orderId, newStatus, updatedBy)
+      );
+      
+      // Lidar com mudança de status
+      const previousStatus = updatedOrder.statusHistory.length > 1 
+        ? updatedOrder.statusHistory[updatedOrder.statusHistory.length - 2].status 
+        : 'pending';
+      
+      await this.handleStatusChange(updatedOrder, previousStatus, newStatus);
+      
+      return updatedOrder;
+    } catch (error) {
+      console.error('Erro ao atualizar status do pedido:', error);
+      throw error;
     }
-
-    return true;
   }
 
-  // === UTILITÁRIOS ===
-  
+  /**
+   * Lida com mudanças de status e envia notificações apropriadas
+   */
+  private async handleStatusChange(order: Order, previousStatus: OrderStatus, newStatus: OrderStatus) {
+    try {
+      const statusMessages = {
+        confirmed: 'Seu pedido foi confirmado pelo restaurante!',
+        preparing: 'Seu pedido está sendo preparado.',
+        ready: 'Seu pedido está pronto para retirada/entrega!',
+        delivering: 'Seu pedido saiu para entrega!',
+        delivered: 'Seu pedido foi entregue com sucesso!',
+        cancelled: 'Seu pedido foi cancelado.'
+      };
+
+      if (newStatus in statusMessages) {
+        await notificationService.sendNotification({
+          userId: order.customerId,
+          title: 'Atualização do Pedido',
+          message: statusMessages[newStatus as keyof typeof statusMessages],
+          type: 'order_update',
+          data: { orderId: order.id, status: newStatus }
+        });
+      }
+
+      // Lógica específica para cada status
+      if (newStatus === 'confirmed') {
+        await this.notifyAvailableDrivers(order);
+      }
+    } catch (error) {
+      console.error('Erro ao lidar com mudança de status:', error);
+    }
+  }
+
+  /**
+   * Notifica entregadores disponíveis sobre novo pedido
+   */
+  private async notifyAvailableDrivers(order: Order) {
+    try {
+      // Esta funcionalidade seria implementada com WebSockets ou push notifications
+      console.log(`Notificando entregadores sobre pedido ${order.id}`);
+    } catch (error) {
+      console.error('Erro ao notificar entregadores:', error);
+    }
+  }
+
+  /**
+   * Atribui entregador ao pedido
+   */
+  async assignDriverToOrder(orderId: string, driverId: string): Promise<Order | null> {
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(`${this.API_BASE_URL}/${orderId}/driver`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ driverId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao atribuir entregador');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na atribuição');
+      }
+
+      return this.transformOrderFromAPI(data.data);
+    } catch (error) {
+      console.error('Erro ao atribuir entregador:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Completa a entrega do pedido
+   */
+  async completeDelivery(orderId: string, confirmationCode: string, driverId?: string): Promise<boolean> {
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(`${this.API_BASE_URL}/${orderId}/complete`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ confirmationCode, driverId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao completar entrega');
+      }
+
+      return data.success;
+    } catch (error) {
+      console.error('Erro ao completar entrega:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Transforma dados da API para o formato esperado pelo frontend
+   */
+  private transformOrderFromAPI(apiOrder: any): Order {
+    return {
+      id: apiOrder.id,
+      restaurantId: apiOrder.restaurant_id,
+      customerId: apiOrder.customer_id,
+      customer: {
+        id: apiOrder.customer_id,
+        name: apiOrder.customer_name || 'Cliente',
+        phone: apiOrder.customer_phone || '',
+        address: apiOrder.delivery_address || '',
+        coordinates: apiOrder.customer_coordinates ? {
+          lat: apiOrder.customer_coordinates.lat,
+          lng: apiOrder.customer_coordinates.lng
+        } : undefined
+      },
+      items: Array.isArray(apiOrder.items) ? apiOrder.items : [],
+      subtotal: parseFloat(apiOrder.subtotal) || 0,
+      deliveryFee: parseFloat(apiOrder.delivery_fee) || 0,
+      total: parseFloat(apiOrder.total) || 0,
+      status: apiOrder.status || 'pending',
+      estimatedDeliveryTime: apiOrder.estimated_delivery_time || '',
+      confirmationCode: apiOrder.confirmation_code,
+      deliveryDriverId: apiOrder.delivery_driver_id,
+      createdAt: new Date(apiOrder.created_at),
+      updatedAt: new Date(apiOrder.updated_at),
+      statusHistory: Array.isArray(apiOrder.status_history) ? apiOrder.status_history.map((h: any) => ({
+        status: h.status,
+        timestamp: new Date(h.timestamp),
+        updatedBy: h.updated_by
+      })) : []
+    };
+  }
+
+  /**
+   * Gera código de confirmação
+   */
   private generateConfirmationCode(): string {
-    return Math.floor(1000 + Math.random() * 9000).toString();
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
   }
 
-  // === LISTENERS PARA TEMPO REAL ===
-  
+  /**
+   * Adiciona listener para novos pedidos
+   */
   onNewOrder(callback: (order: Order) => void) {
     this.orderListeners.push(callback);
   }
 
+  /**
+   * Adiciona listener para atualizações de status
+   */
   onStatusUpdate(callback: (orderId: string, status: OrderStatus, updatedBy: string) => void) {
     this.statusUpdateListeners.push(callback);
   }
 
+  /**
+   * Remove listener de pedidos
+   */
   removeOrderListener(callback: (order: Order) => void) {
     const index = this.orderListeners.indexOf(callback);
     if (index > -1) {
@@ -321,6 +451,9 @@ class OrderService {
     }
   }
 
+  /**
+   * Remove listener de status
+   */
   removeStatusListener(callback: (orderId: string, status: OrderStatus, updatedBy: string) => void) {
     const index = this.statusUpdateListeners.indexOf(callback);
     if (index > -1) {
@@ -328,26 +461,63 @@ class OrderService {
     }
   }
 
-  // === MÉTRICAS E RELATÓRIOS ===
-  
+  /**
+   * Obtém métricas do restaurante
+   */
   async getRestaurantMetrics(restaurantId: string) {
-    const restaurantOrders = await this.getOrdersByRestaurant(restaurantId);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const todayOrders = restaurantOrders.filter(order => 
-      order.createdAt >= today
-    );
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
 
+      const response = await fetch(`${this.API_BASE_URL}/metrics/${restaurantId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao buscar métricas');
+      }
+
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error('Erro ao buscar métricas do restaurante:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Método para desenvolvimento - obtém dados de teste
+   */
+  getDevOrderData(): Partial<Order> {
     return {
-      todayOrders: todayOrders.length,
-      todayRevenue: todayOrders.reduce((sum, order) => sum + order.total, 0),
-      activeDeliveries: restaurantOrders.filter(order => 
-        ['confirmed', 'preparing', 'ready', 'delivering'].includes(order.status)
-      ).length,
-      averageOrderValue: todayOrders.length > 0 
-        ? todayOrders.reduce((sum, order) => sum + order.total, 0) / todayOrders.length 
-        : 0
+      restaurantId: 'rest-1',
+      customerId: 'customer-1',
+      customer: {
+        id: 'customer-1',
+        name: 'João Silva',
+        phone: '(11) 98765-4321',
+        address: 'Rua das Flores, 123 - Jardim Primavera'
+      },
+      items: [
+        {
+          id: 'item-1',
+          name: 'Pizza Margherita',
+          quantity: 1,
+          price: 35.90
+        }
+      ],
+      subtotal: 35.90,
+      deliveryFee: 5.00,
+      total: 40.90,
+      status: 'pending',
+      estimatedDeliveryTime: '45 minutos'
     };
   }
 }

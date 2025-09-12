@@ -5,7 +5,7 @@ import { jwtVerify } from 'jose';
 type UserType = 'customer' | 'restaurant' | 'delivery';
 
 // Interface para o payload do JWT
-interface JWTPayload {
+interface CustomJWTPayload {
   userId: string;
   email: string;
   userType: UserType;
@@ -75,14 +75,14 @@ function extractToken(request: NextRequest): string | null {
 }
 
 // Função para verificar e decodificar o JWT
-async function verifyJWT(token: string): Promise<JWTPayload | null> {
+async function verifyJWT(token: string): Promise<CustomJWTPayload | null> {
   try {
     const secret = new TextEncoder().encode(
       process.env.JWT_SECRET || 'your-secret-key'
     );
     
     const { payload } = await jwtVerify(token, secret);
-    return payload as JWTPayload;
+    return payload as unknown as CustomJWTPayload;
   } catch (error) {
     console.error('Erro ao verificar JWT:', error);
     return null;

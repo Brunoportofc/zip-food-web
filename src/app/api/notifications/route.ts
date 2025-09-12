@@ -1,211 +1,225 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { NextRequest } from 'next/server';
+import { supabaseAdmin } from '@/lib/api/supabase';
+import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse } from '@/lib/api/response';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Interface para criação de notificação
+interface CreateNotificationRequest {
+  userId?: string; // Opcional, pode ser inferido do middleware
+  orderId?: string;
+  type: string;
+  title: string;
+  message: string;
+}
 
-// Função para verificar token JWT
-function verifyToken(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return null;
-  }
-
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
-  } catch {
-    return null;
-  }
+// Interface para atualização de notificação
+interface UpdateNotificationRequest {
+  isRead?: boolean;
 }
 
 // GET - Listar notificações do usuário
 export async function GET(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
+
+    if (!userId) {
+      return unauthorizedResponse('Usuário não autenticado');
     }
 
     const { searchParams } = new URL(request.url);
     const unreadOnly = searchParams.get('unreadOnly') === 'true';
     const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('notifications')
-      .select('*')
-      .eq('user_id', user.userId)
+      .select(`
+        id,
+        order_id,
+        type,
+        title,
+        message,
+        is_read,
+        created_at
+      `)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
 
     // Filtrar apenas não lidas se solicitado
     if (unreadOnly) {
-      query = query.eq('read', false);
+      query = query.eq('is_read', false);
     }
 
     const { data: notifications, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar notificações:', error);
-      return NextResponse.json({ error: 'Erro ao buscar notificações' }, { status: 500 });
+      return serverErrorResponse('Erro ao buscar notificações');
     }
 
-    // Contar notificações não lidas
-    const { count: unreadCount } = await supabase
+    // Contar total de notificações não lidas
+    const { count: unreadCount, error: countError } = await supabaseAdmin
       .from('notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.userId)
-      .eq('read', false);
+      .eq('user_id', userId)
+      .eq('is_read', false);
 
-    return NextResponse.json({ 
-      notifications,
-      unreadCount: unreadCount || 0
-    });
+    if (countError) {
+      console.error('Erro ao contar notificações não lidas:', countError);
+    }
+
+    return successResponse({
+      notifications: notifications || [],
+      unreadCount: unreadCount || 0,
+      hasMore: notifications && notifications.length === limit
+    }, 'Notificações listadas com sucesso');
 
   } catch (error) {
-    console.error('Erro na API de notificações:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error('Erro interno ao listar notificações:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }
 
 // POST - Criar nova notificação
 export async function POST(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    // Obter informações do usuário do middleware
+    const currentUserId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
+
+    if (!currentUserId) {
+      return unauthorizedResponse('Usuário não autenticado');
     }
 
-    const { userId, title, message, type, data } = await request.json();
+    const body: CreateNotificationRequest = await request.json();
 
-    // Validação básica
-    if (!userId || !title || !message) {
-      return NextResponse.json(
-        { error: 'userId, title e message são obrigatórios' },
-        { status: 400 }
-      );
+    // Validar dados obrigatórios
+    if (!body.type || !body.title || !body.message) {
+      return errorResponse('Tipo, título e mensagem são obrigatórios');
     }
 
-    // Verificar se o usuário tem permissão para enviar notificações
-    // Por enquanto, apenas admins ou o próprio sistema podem criar notificações
-    if (user.userType !== 'admin' && userId !== user.userId) {
-      return NextResponse.json(
-        { error: 'Sem permissão para criar notificações para outros usuários' },
-        { status: 403 }
-      );
+    // Determinar o usuário de destino
+    const targetUserId = body.userId || currentUserId;
+
+    // Verificar se o usuário tem permissão para criar notificação para outro usuário
+    if (body.userId && body.userId !== currentUserId) {
+      // Apenas o sistema ou administradores podem criar notificações para outros usuários
+      // Por enquanto, permitir apenas para o próprio usuário
+      return unauthorizedResponse('Não é possível criar notificação para outro usuário');
     }
 
     // Criar notificação
-    const { data: notification, error: notificationError } = await supabase
+    const { data: notification, error } = await supabaseAdmin
       .from('notifications')
       .insert({
-        user_id: userId,
-        title,
-        message,
-        type: type || 'general',
-        data: data ? JSON.stringify(data) : null
+        user_id: targetUserId,
+        order_id: body.orderId,
+        type: body.type,
+        title: body.title,
+        message: body.message,
+        is_read: false
       })
       .select()
       .single();
 
-    if (notificationError) {
-      console.error('Erro ao criar notificação:', notificationError);
-      return NextResponse.json(
-        { error: 'Erro ao criar notificação' },
-        { status: 500 }
-      );
+    if (error) {
+      console.error('Erro ao criar notificação:', error);
+      return serverErrorResponse('Erro ao criar notificação');
     }
 
-    return NextResponse.json({
-      message: 'Notificação criada com sucesso',
-      notification
-    }, { status: 201 });
+    return successResponse(notification, 'Notificação criada com sucesso', 201);
 
   } catch (error) {
-    console.error('Erro ao criar notificação:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('Erro interno ao criar notificação:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }
 
-// PATCH - Marcar notificações como lidas
+// PATCH - Atualizar notificação (marcar como lida/não lida)
 export async function PATCH(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+
+    if (!userId) {
+      return unauthorizedResponse('Usuário não autenticado');
     }
 
-    const { notificationIds, markAllAsRead } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const notificationId = searchParams.get('id');
+    const markAllAsRead = searchParams.get('markAllAsRead') === 'true';
+
+    const body: UpdateNotificationRequest = await request.json();
 
     if (markAllAsRead) {
-      // Marcar todas as notificações do usuário como lidas
-      const { error } = await supabase
+      // Marcar todas as notificações como lidas
+      const { error } = await supabaseAdmin
         .from('notifications')
-        .update({ read: true, read_at: new Date().toISOString() })
-        .eq('user_id', user.userId)
-        .eq('read', false);
+        .update({ is_read: true })
+        .eq('user_id', userId)
+        .eq('is_read', false);
 
       if (error) {
-        console.error('Erro ao marcar todas as notificações como lidas:', error);
-        return NextResponse.json(
-          { error: 'Erro ao marcar notificações como lidas' },
-          { status: 500 }
-        );
+        console.error('Erro ao marcar todas como lidas:', error);
+        return serverErrorResponse('Erro ao atualizar notificações');
       }
 
-      return NextResponse.json({
-        message: 'Todas as notificações foram marcadas como lidas'
-      });
+      return successResponse(null, 'Todas as notificações foram marcadas como lidas');
     }
 
-    if (!notificationIds || !Array.isArray(notificationIds)) {
-      return NextResponse.json(
-        { error: 'IDs das notificações são obrigatórios' },
-        { status: 400 }
-      );
+    if (!notificationId) {
+      return errorResponse('ID da notificação é obrigatório');
     }
 
-    // Marcar notificações específicas como lidas
-    const { error } = await supabase
+    // Verificar se a notificação pertence ao usuário
+    const { data: existingNotification, error: fetchError } = await supabaseAdmin
       .from('notifications')
-      .update({ read: true, read_at: new Date().toISOString() })
-      .in('id', notificationIds)
-      .eq('user_id', user.userId);
+      .select('id, user_id')
+      .eq('id', notificationId)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !existingNotification) {
+      return notFoundResponse('Notificação não encontrada');
+    }
+
+    // Atualizar notificação
+    const updateData: any = {};
+    if (body.isRead !== undefined) {
+      updateData.is_read = body.isRead;
+    }
+
+    const { data: updatedNotification, error } = await supabaseAdmin
+      .from('notifications')
+      .update(updateData)
+      .eq('id', notificationId)
+      .eq('user_id', userId)
+      .select()
+      .single();
 
     if (error) {
-      console.error('Erro ao marcar notificações como lidas:', error);
-      return NextResponse.json(
-        { error: 'Erro ao marcar notificações como lidas' },
-        { status: 500 }
-      );
+      console.error('Erro ao atualizar notificação:', error);
+      return serverErrorResponse('Erro ao atualizar notificação');
     }
 
-    return NextResponse.json({
-      message: 'Notificações marcadas como lidas'
-    });
+    return successResponse(updatedNotification, 'Notificação atualizada com sucesso');
 
   } catch (error) {
-    console.error('Erro ao atualizar notificações:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('Erro interno ao atualizar notificação:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }
 
-// DELETE - Deletar notificações
+// DELETE - Remover notificação
 export async function DELETE(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+
+    if (!userId) {
+      return unauthorizedResponse('Usuário não autenticado');
     }
 
     const { searchParams } = new URL(request.url);
@@ -213,56 +227,53 @@ export async function DELETE(request: NextRequest) {
     const deleteAll = searchParams.get('deleteAll') === 'true';
 
     if (deleteAll) {
-      // Deletar todas as notificações do usuário
-      const { error } = await supabase
+      // Deletar todas as notificações lidas do usuário
+      const { error } = await supabaseAdmin
         .from('notifications')
         .delete()
-        .eq('user_id', user.userId);
+        .eq('user_id', userId)
+        .eq('is_read', true);
 
       if (error) {
         console.error('Erro ao deletar todas as notificações:', error);
-        return NextResponse.json(
-          { error: 'Erro ao deletar notificações' },
-          { status: 500 }
-        );
+        return serverErrorResponse('Erro ao deletar notificações');
       }
 
-      return NextResponse.json({
-        message: 'Todas as notificações foram deletadas'
-      });
+      return successResponse(null, 'Todas as notificações lidas foram removidas');
     }
 
     if (!notificationId) {
-      return NextResponse.json(
-        { error: 'ID da notificação é obrigatório' },
-        { status: 400 }
-      );
+      return errorResponse('ID da notificação é obrigatório');
     }
 
-    // Deletar notificação específica
-    const { error } = await supabase
+    // Verificar se a notificação pertence ao usuário
+    const { data: existingNotification, error: fetchError } = await supabaseAdmin
+      .from('notifications')
+      .select('id, user_id')
+      .eq('id', notificationId)
+      .eq('user_id', userId)
+      .single();
+
+    if (fetchError || !existingNotification) {
+      return notFoundResponse('Notificação não encontrada');
+    }
+
+    // Deletar notificação
+    const { error } = await supabaseAdmin
       .from('notifications')
       .delete()
       .eq('id', notificationId)
-      .eq('user_id', user.userId);
+      .eq('user_id', userId);
 
     if (error) {
       console.error('Erro ao deletar notificação:', error);
-      return NextResponse.json(
-        { error: 'Erro ao deletar notificação' },
-        { status: 500 }
-      );
+      return serverErrorResponse('Erro ao deletar notificação');
     }
 
-    return NextResponse.json({
-      message: 'Notificação deletada com sucesso'
-    });
+    return successResponse(null, 'Notificação removida com sucesso');
 
   } catch (error) {
-    console.error('Erro ao deletar notificação:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('Erro interno ao deletar notificação:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }

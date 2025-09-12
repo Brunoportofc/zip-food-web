@@ -1,54 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
-
+import { orderService } from '@/services/order.service';
+import useAuthStore from '@/store/auth.store';
+import { toast } from 'react-hot-toast';
 import Link from 'next/link';
 
-// Mock data para pedidos
-const mockOrders = [
-  {
-    id: '1001',
-    date: '15/05/2023',
-    restaurant: 'Burger King',
-    items: [
-      { name: 'Whopper', quantity: 1, price: 29.90 },
-      { name: 'Batata Grande', quantity: 1, price: 12.90 },
-      { name: 'Refrigerante 500ml', quantity: 1, price: 8.90 }
-    ],
-    total: 51.70,
-    status: 'Entregue',
-    deliveryTime: '30 min',
-    address: 'Rua das Flores, 123 - Centro'
-  },
-  {
-    id: '1002',
-    date: '10/05/2023',
-    restaurant: 'Pizza Hut',
-    items: [
-      { name: 'Pizza Grande Pepperoni', quantity: 1, price: 59.90 },
-      { name: 'Refrigerante 2L', quantity: 1, price: 12.90 }
-    ],
-    total: 72.80,
-    status: 'Entregue',
-    deliveryTime: '45 min',
-    address: 'Rua das Flores, 123 - Centro'
-  },
-  {
-    id: '1003',
-    date: '05/05/2023',
-    restaurant: 'Sushi Express',
-    items: [
-      { name: 'Combo 30 peças', quantity: 1, price: 89.90 },
-      { name: 'Temaki Salmão', quantity: 2, price: 19.90 },
-      { name: 'Refrigerante 500ml', quantity: 2, price: 7.90 }
-    ],
-    total: 145.50,
-    status: 'Entregue',
-    deliveryTime: '50 min',
-    address: 'Rua das Flores, 123 - Centro'
-  }
-];
+
 
 interface OrderItem {
   name: string;
@@ -69,6 +28,70 @@ interface Order {
 
 export default function OrdersPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuthStore();
+
+  // Carregar pedidos do usuário
+  useEffect(() => {
+    const loadUserOrders = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const userOrders = await orderService.getOrdersByCustomer(user.id);
+        
+        // Mapear dados dos pedidos para o formato da interface
+        const mappedOrders: Order[] = userOrders.map(order => ({
+          id: order.id,
+          date: new Date(order.createdAt).toLocaleDateString('pt-BR'),
+          restaurant: order.restaurantName || 'Restaurante',
+          items: order.items.map(item => ({
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          total: order.total,
+          status: order.status === 'delivered' ? 'Entregue' : 
+                 order.status === 'preparing' ? 'Preparando' :
+                 order.status === 'in_delivery' ? 'Em entrega' :
+                 order.status === 'cancelled' ? 'Cancelado' : 'Pendente',
+          deliveryTime: order.estimatedDeliveryTime || '30-45 min',
+          address: order.deliveryAddress
+        }));
+        
+        setOrders(mappedOrders);
+      } catch (error) {
+        console.error('Erro ao carregar pedidos:', error);
+        toast.error('Erro ao carregar seus pedidos');
+        
+        // Fallback para dados de desenvolvimento
+        const fallbackOrders: Order[] = [
+          {
+            id: 'dev-1001',
+            date: new Date().toLocaleDateString('pt-BR'),
+            restaurant: 'Restaurante Demo',
+            items: [
+              { name: 'Item Demo 1', quantity: 1, price: 25.90 },
+              { name: 'Item Demo 2', quantity: 1, price: 15.90 }
+            ],
+            total: 41.80,
+            status: 'Entregue',
+            deliveryTime: '30 min',
+            address: 'Endereço de desenvolvimento'
+          }
+        ];
+        setOrders(fallbackOrders);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserOrders();
+  }, [user]);
 
   const toggleOrderDetails = (orderId: string) => {
     if (expandedOrder === orderId) {
@@ -83,7 +106,12 @@ export default function OrdersPage() {
       <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Meus Pedidos</h1>
       
-      {mockOrders.length === 0 ? (
+      {isLoading ? (
+        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando seus pedidos...</p>
+        </div>
+      ) : orders.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <MdReceipt className="mx-auto text-gray-400" size={64} />
           <h2 className="text-xl font-semibold mt-4 mb-2">Nenhum pedido encontrado</h2>
@@ -97,7 +125,7 @@ export default function OrdersPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {mockOrders.map((order) => (
+          {orders.map((order) => (
             <div key={order.id} className="bg-white rounded-lg shadow-md overflow-hidden">
               {/* Cabeçalho do pedido */}
               <div className="p-4 border-b border-gray-100">

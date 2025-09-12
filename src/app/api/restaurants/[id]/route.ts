@@ -5,10 +5,10 @@ import { successResponse, errorResponse, notFoundResponse, serverErrorResponse }
 // GET - Buscar detalhes de um restaurante específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const restaurantId = params.id;
+    const { id: restaurantId } = await params;
 
     if (!restaurantId) {
       return errorResponse('ID do restaurante é obrigatório');
@@ -85,7 +85,7 @@ export async function GET(
 
     // Buscar avaliações recentes (se existir tabela de reviews)
     // Por enquanto, usar dados mock
-    const recentReviews = [];
+    const recentReviews: any[] = [];
 
     const restaurantDetails = {
       ...restaurant,

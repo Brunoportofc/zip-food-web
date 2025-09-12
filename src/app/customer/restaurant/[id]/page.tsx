@@ -8,6 +8,8 @@ import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
 import { showSuccessAlert, showErrorAlert } from '@/components/AlertSystem';
 import { orderService } from '@/services/order.service';
+import { restaurantService } from '@/services/restaurant.service';
+import { menuService } from '@/services/menu.service';
 import useAuthStore from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 
@@ -52,71 +54,71 @@ export default function RestaurantPage() {
 
   const restaurantId = params.id as string;
 
-  // Mock data - em produção viria de uma API
+  // Carregar dados reais do restaurante e menu
   useEffect(() => {
     const loadRestaurantData = async () => {
       setIsLoading(true);
       
-      // Simular carregamento
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock restaurant data - será substituído por dados reais do sistema de cadastro
-      const mockRestaurant: Restaurant = {
-        id: restaurantId,
-        name: 'Restaurante em Configuração',
-        image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
-        rating: 0,
-        deliveryTime: 'A definir',
-        deliveryFee: 0,
-        category: 'Geral',
-        description: 'Este restaurante está sendo configurado. Em breve estará disponível com cardápio completo.',
-        address: 'Endereço a ser definido',
-        phone: 'Telefone a ser definido'
-      };
-      
-      // Mock menu items
-      const mockMenuItems: MenuItem[] = [
-        {
-          id: '1',
-          name: 'Pizza Margherita',
-          description: 'Molho de tomate, mussarela, manjericão fresco e azeite',
-          price: 32.90,
-          image: 'https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&h=300&fit=crop',
-          category: 'Pizzas',
-          available: true
-        },
-        {
-          id: '2',
-          name: 'Pizza Pepperoni',
-          description: 'Molho de tomate, mussarela e pepperoni',
-          price: 38.90,
-          image: 'https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&h=300&fit=crop',
-          category: 'Pizzas',
-          available: true
-        },
-        {
-          id: '3',
-          name: 'Lasanha Bolonhesa',
-          description: 'Massa fresca, molho bolonhesa, queijo e molho branco',
-          price: 28.90,
-          image: 'https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400&h=300&fit=crop',
-          category: 'Massas',
-          available: true
-        },
-        {
-          id: '4',
-          name: 'Refrigerante Lata',
-          description: 'Coca-Cola, Guaraná ou Fanta - 350ml',
-          price: 4.50,
-          image: 'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=400&h=300&fit=crop',
-          category: 'Bebidas',
-          available: true
+      try {
+        // Carregar dados do restaurante
+        const restaurantData = await restaurantService.getRestaurantById(restaurantId);
+        
+        if (restaurantData) {
+          // Mapear dados do restaurante para o formato da interface
+          const mappedRestaurant: Restaurant = {
+            id: restaurantData.id,
+            name: restaurantData.name,
+            image: restaurantData.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
+            rating: restaurantData.rating || 0,
+            deliveryTime: restaurantData.estimatedDeliveryTime || '30-45 min',
+            deliveryFee: restaurantData.deliveryFee || 0,
+            category: restaurantData.category,
+            description: restaurantData.description,
+            address: restaurantData.address,
+            phone: restaurantData.phone
+          };
+          
+          setRestaurant(mappedRestaurant);
+          
+          // Carregar itens do menu
+          const menuData = await menuService.getMenuItems(restaurantId);
+          
+          // Mapear dados do menu para o formato da interface
+          const mappedMenuItems: MenuItem[] = menuData.map(item => ({
+            id: item.id,
+            name: item.name,
+            description: item.description,
+            price: item.price,
+            image: item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
+            category: item.category,
+            available: item.available
+          }));
+          
+          setMenuItems(mappedMenuItems);
+        } else {
+          // Fallback para dados de desenvolvimento se restaurante não encontrado
+          const fallbackRestaurant: Restaurant = {
+            id: restaurantId,
+            name: 'Restaurante em Configuração',
+            image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
+            rating: 0,
+            deliveryTime: 'A definir',
+            deliveryFee: 0,
+            category: 'Geral',
+            description: 'Este restaurante está sendo configurado. Em breve estará disponível com cardápio completo.',
+            address: 'Endereço a ser definido',
+            phone: 'Telefone a ser definido'
+          };
+          
+          setRestaurant(fallbackRestaurant);
+          setMenuItems([]);
         }
-      ];
-      
-      setRestaurant(mockRestaurant);
-      setMenuItems(mockMenuItems);
-      setIsLoading(false);
+      } catch (error) {
+        console.error('Erro ao carregar dados do restaurante:', error);
+        toast.error('Erro ao carregar dados do restaurante');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadRestaurantData();

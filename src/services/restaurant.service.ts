@@ -1,4 +1,5 @@
 import { Restaurant, RestaurantStatus, RestaurantCategory } from '@/types/restaurant';
+import { authService } from './auth.service';
 
 // Interface para dados de criação de restaurante
 export interface CreateRestaurantData {
@@ -22,41 +23,76 @@ export interface UpdateRestaurantData extends Partial<CreateRestaurantData> {
 }
 
 class RestaurantService {
-  private restaurants: Restaurant[] = [];
-  private nextId = 1;
+  private baseUrl = '/api/restaurants';
+
+  // Método auxiliar para fazer requisições autenticadas
+  private async makeRequest(url: string, options: RequestInit = {}) {
+    const token = authService.getToken();
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...options.headers,
+    };
+
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Erro desconhecido' }));
+      throw new Error(errorData.message || `Erro ${response.status}`);
+    }
+
+    return response.json();
+  }
 
   // Criar novo restaurante
   async createRestaurant(data: CreateRestaurantData, ownerId: string): Promise<Restaurant> {
-    const restaurant: Restaurant = {
-      id: this.nextId.toString(),
-      ...data,
-      ownerId,
-      status: 'pending', // Novo restaurante sempre começa como pendente
-      rating: data.rating || 0,
-      isPromoted: data.isPromoted || false,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    this.restaurants.push(restaurant);
-    this.nextId++;
-
-    return restaurant;
+    try {
+      const response = await this.makeRequest(this.baseUrl, {
+        method: 'POST',
+        body: JSON.stringify({ ...data, ownerId }),
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao criar restaurante:', error);
+      throw error;
+    }
   }
 
   // Buscar restaurante por ID
   async getRestaurantById(id: string): Promise<Restaurant | null> {
-    return this.restaurants.find(r => r.id === id) || null;
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar restaurante:', error);
+      return null;
+    }
   }
 
   // Buscar restaurantes por proprietário
   async getRestaurantsByOwner(ownerId: string): Promise<Restaurant[]> {
-    return this.restaurants.filter(r => r.ownerId === ownerId);
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}?owner=${ownerId}`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar restaurantes do proprietário:', error);
+      return [];
+    }
   }
 
   // Buscar todos os restaurantes ativos (para área do cliente)
   async getActiveRestaurants(): Promise<Restaurant[]> {
-    return this.restaurants.filter(r => r.status === 'active');
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}?status=active`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar restaurantes ativos:', error);
+      return this.getDevRestaurantData();
+    }
   }
 
   // Buscar todos os restaurantes (alias para getActiveRestaurants)
@@ -66,9 +102,13 @@ class RestaurantService {
 
   // Buscar restaurantes ativos por categoria
   async getActiveRestaurantsByCategory(category: RestaurantCategory): Promise<Restaurant[]> {
-    return this.restaurants.filter(r => 
-      r.status === 'active' && r.category === category
-    );
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}?status=active&category=${category}`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar restaurantes por categoria:', error);
+      return [];
+    }
   }
 
   // Alias para getActiveRestaurantsByCategory
@@ -78,38 +118,41 @@ class RestaurantService {
 
   // Buscar restaurantes promovidos e ativos
   async getPromotedRestaurants(): Promise<Restaurant[]> {
-    return this.restaurants.filter(r => 
-      r.status === 'active' && r.isPromoted === true
-    );
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}?status=active&promoted=true`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar restaurantes promovidos:', error);
+      return [];
+    }
   }
 
   // Buscar restaurantes por termo de pesquisa
   async searchRestaurants(searchTerm: string): Promise<Restaurant[]> {
-    const term = searchTerm.toLowerCase();
-    return this.restaurants.filter(r => 
-      r.status === 'active' && (
-        r.name.toLowerCase().includes(term) ||
-        r.description.toLowerCase().includes(term) ||
-        r.category.toLowerCase().includes(term)
-      )
-    );
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}/search?q=${encodeURIComponent(searchTerm)}`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Erro ao pesquisar restaurantes:', error);
+      return [];
+    }
   }
 
   // Atualizar restaurante
   async updateRestaurant(id: string, data: UpdateRestaurantData): Promise<Restaurant | null> {
-    const index = this.restaurants.findIndex(r => r.id === id);
-    if (index === -1) return null;
-
-    this.restaurants[index] = {
-      ...this.restaurants[index],
-      ...data,
-      updatedAt: new Date()
-    };
-
-    return this.restaurants[index];
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao atualizar restaurante:', error);
+      throw error;
+    }
   }
 
-  // Aprovar restaurante (mudar status para ativo)
+  // Aprovar restaurante
   async approveRestaurant(id: string): Promise<Restaurant | null> {
     return this.updateRestaurant(id, { status: 'active' });
   }
@@ -126,55 +169,78 @@ class RestaurantService {
 
   // Deletar restaurante
   async deleteRestaurant(id: string): Promise<boolean> {
-    const index = this.restaurants.findIndex(r => r.id === id);
-    if (index === -1) return false;
-
-    this.restaurants.splice(index, 1);
-    return true;
+    try {
+      await this.makeRequest(`${this.baseUrl}/${id}`, {
+        method: 'DELETE',
+      });
+      return true;
+    } catch (error) {
+      console.error('Erro ao deletar restaurante:', error);
+      return false;
+    }
   }
 
-  // Buscar restaurantes pendentes de aprovação (para admin)
+  // Buscar restaurantes pendentes
   async getPendingRestaurants(): Promise<Restaurant[]> {
-    return this.restaurants.filter(r => r.status === 'pending');
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}?status=pending`);
+      return response.data || [];
+    } catch (error) {
+      console.error('Erro ao buscar restaurantes pendentes:', error);
+      return [];
+    }
   }
 
   // Verificar se restaurante está ativo
   async isRestaurantActive(id: string): Promise<boolean> {
     const restaurant = await this.getRestaurantById(id);
-    return restaurant?.status === 'active' || false;
+    return restaurant?.status === 'active';
   }
 
-  // Estatísticas de restaurantes
+  // Obter estatísticas de restaurantes
   async getRestaurantStats() {
-    const total = this.restaurants.length;
-    const active = this.restaurants.filter(r => r.status === 'active').length;
-    const pending = this.restaurants.filter(r => r.status === 'pending').length;
-    const suspended = this.restaurants.filter(r => r.status === 'suspended').length;
-    const rejected = this.restaurants.filter(r => r.status === 'rejected').length;
-
-    return {
-      total,
-      active,
-      pending,
-      suspended,
-      rejected
-    };
+    try {
+      const response = await this.makeRequest(`${this.baseUrl}/stats`);
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar estatísticas:', error);
+      return {
+        total: 0,
+        active: 0,
+        pending: 0,
+        suspended: 0,
+        rejected: 0
+      };
+    }
   }
 
-  // Inicializar sem dados de exemplo - sistema limpo para novos cadastros
-  initializeWithSampleData() {
-    // Sistema iniciado sem restaurantes pré-cadastrados
-    // Os restaurantes serão adicionados através do sistema de cadastro
-    console.log('Sistema de restaurantes inicializado - pronto para novos cadastros');
+  // Dados de desenvolvimento como fallback
+  private getDevRestaurantData(): Restaurant[] {
+    if (process.env.NODE_ENV !== 'development') return [];
+    
+    return [
+      {
+        id: '1',
+        name: 'Burger King',
+        description: 'Os melhores hambúrgueres da cidade',
+        category: 'fast-food' as RestaurantCategory,
+        address: 'Rua das Flores, 123',
+        phone: '(11) 99999-9999',
+        email: 'contato@burgerking.com',
+        image: '/images/restaurants/burger-king.jpg',
+        deliveryFee: 5.99,
+        minimumOrder: 20.00,
+        estimatedDeliveryTime: '30-45 min',
+        rating: 4.5,
+        isPromoted: true,
+        status: 'active' as RestaurantStatus,
+        ownerId: 'dev-owner-1',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
   }
 }
 
-// Instância singleton do serviço
 export const restaurantService = new RestaurantService();
-
-// Inicializar com dados de exemplo (apenas para desenvolvimento)
-if (typeof window !== 'undefined') {
-  restaurantService.initializeWithSampleData();
-}
-
 export default restaurantService;

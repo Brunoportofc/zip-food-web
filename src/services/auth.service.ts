@@ -1,115 +1,126 @@
 import { User, UserType } from '@/store/auth.store';
 
 /**
- * Serviço de autenticação para desenvolvimento
- * Credenciais fixas: admin@gmail.com / 12341234
+ * Serviço de autenticação integrado com o backend Supabase
  */
 class AuthService {
-  private readonly MOCK_EMAIL = 'admin@gmail.com';
-  private readonly MOCK_PASSWORD = '12341234';
-  private readonly MOCK_TOKEN = 'mock-jwt-token-dev-12345';
-  
-  private mockUser: User = {
-    id: 'mock-user-id-12345',
-    name: 'Usuário de Desenvolvimento',
-    email: this.MOCK_EMAIL,
-    type: 'customer',
-    phone: '(11) 99999-9999',
-    address: 'Rua de Desenvolvimento, 123 - São Paulo, SP'
-  };
+  private readonly API_BASE_URL = '/api/auth';
 
   /**
-   * Simula login com credenciais fixas
+   * Faz login usando as APIs do backend
    */
   async signIn(email: string, password: string, userType?: UserType): Promise<{ user: User; token: string }> {
-    // Simula delay de rede
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (email === this.MOCK_EMAIL && password === this.MOCK_PASSWORD) {
-      // Usa o userType fornecido ou tenta obter do store de autenticação
-      let finalUserType: UserType = userType || 'customer';
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao fazer login');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Credenciais inválidas');
+      }
+
+      // Armazenar token no localStorage para persistência
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('auth-token', data.data.token);
+      }
+
+      return {
+        user: data.data.user,
+        token: data.data.token
+      };
+    } catch (error) {
+      console.error('Erro no login:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Registra novo usuário usando as APIs do backend
+   */
+  async signUp(name: string, email: string, password: string, userType: UserType): Promise<User> {
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password, userType }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao registrar usuário');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro no registro');
+      }
+
+      return data.data.user;
+    } catch (error) {
+      console.error('Erro no registro:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Faz logout removendo o token
+   */
+  async signOut(): Promise<void> {
+    try {
+      // Remover token do localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth-token');
+      }
       
-      // Se não foi fornecido userType, tenta obter do localStorage (store persistido)
-      if (!userType && typeof window !== 'undefined') {
+      console.log('Logout realizado com sucesso');
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Obtém o usuário atual baseado no token armazenado
+   */
+  async getCurrentUser(): Promise<User | null> {
+    try {
+      const token = this.getCurrentToken();
+      if (!token) {
+        return null;
+      }
+
+      // Verificar se há dados de autenticação persistidos no store
+      if (typeof window !== 'undefined') {
         try {
           const authData = localStorage.getItem('auth-storage');
           if (authData) {
             const parsedData = JSON.parse(authData);
-            if (parsedData.state && parsedData.state.userType) {
-              finalUserType = parsedData.state.userType;
+            if (parsedData.state && parsedData.state.isAuthenticated && parsedData.state.user) {
+              return parsedData.state.user;
             }
           }
         } catch (error) {
-          console.warn('Erro ao obter userType do localStorage:', error);
+          console.error('Erro ao verificar dados de autenticação:', error);
         }
       }
-      
-      // Atualiza o tipo do usuário simulado
-      const userWithCorrectType = {
-        ...this.mockUser,
-        type: finalUserType
-      };
-      
-      console.log(`🎭 Login simulado realizado com sucesso para tipo: ${finalUserType}`);
-      return {
-        user: userWithCorrectType,
-        token: this.MOCK_TOKEN
-      };
+
+      return null;
+    } catch (error) {
+      console.error('Erro ao obter usuário atual:', error);
+      return null;
     }
-    
-    throw new Error('Credenciais inválidas. Use: admin@gmail.com / 12341234');
-  }
-
-  /**
-   * Simula registro de usuário
-   */
-  async signUp(name: string, email: string, password: string, userType: UserType): Promise<User> {
-    // Simula delay de rede
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const newUser: User = {
-      id: `mock-user-${Date.now()}`,
-      name,
-      email,
-      type: userType,
-      phone: '(11) 99999-9999'
-    };
-    
-    console.log('🎭 Registro simulado realizado com sucesso');
-    return newUser;
-  }
-
-  /**
-   * Simula logout
-   */
-  async signOut(): Promise<void> {
-    await new Promise(resolve => setTimeout(resolve, 200));
-    console.log('🎭 Logout simulado realizado');
-  }
-
-  /**
-   * Retorna usuário atual simulado baseado na sessão persistida
-   */
-  async getCurrentUser(): Promise<User | null> {
-    // Simula verificação de token
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // Verifica se há dados de autenticação persistidos
-    if (typeof window !== 'undefined') {
-      try {
-        const authData = localStorage.getItem('auth-storage');
-        if (authData) {
-          const parsedData = JSON.parse(authData);
-          if (parsedData.state && parsedData.state.isAuthenticated && parsedData.state.user) {
-            return parsedData.state.user;
-          }
-        }
-      } catch (error) {
-        console.error('Erro ao verificar dados de autenticação:', error);
-      }
-    }
-    
-    return null;
   }
 
   /**
@@ -118,8 +129,10 @@ class AuthService {
   isAuthenticated(): boolean {
     if (typeof window !== 'undefined') {
       try {
+        const token = localStorage.getItem('auth-token');
         const authData = localStorage.getItem('auth-storage');
-        if (authData) {
+        
+        if (token && authData) {
           const parsedData = JSON.parse(authData);
           return parsedData.state && parsedData.state.isAuthenticated === true;
         }
@@ -131,37 +144,72 @@ class AuthService {
   }
 
   /**
-   * Retorna token atual simulado
+   * Retorna token atual armazenado
    */
-  async getCurrentToken(): Promise<string | null> {
-    await new Promise(resolve => setTimeout(resolve, 50));
-    return this.MOCK_TOKEN;
+  getCurrentToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('auth-token');
+    }
+    return null;
   }
 
   /**
-   * Atualiza dados do usuário simulado
+   * Atualiza perfil do usuário usando a API do backend
    */
-  updateMockUser(updates: Partial<User>): void {
-    this.mockUser = { ...this.mockUser, ...updates };
-    console.log('🎭 Dados do usuário simulado atualizados:', updates);
+  async updateProfile(updates: Partial<User>): Promise<User> {
+    try {
+      const token = this.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(updates),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao atualizar perfil');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na atualização');
+      }
+
+      return data.data;
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      throw error;
+    }
   }
 
   /**
-   * Obtém credenciais de desenvolvimento
+   * Método para desenvolvimento - credenciais de teste
    */
   getDevCredentials(): { email: string; password: string } {
     return {
-      email: this.MOCK_EMAIL,
-      password: this.MOCK_PASSWORD
+      email: 'admin@gmail.com',
+      password: '12341234'
     };
   }
 
   /**
-   * Auto-login para desenvolvimento
+   * Auto-login para desenvolvimento (opcional)
    */
   async autoLoginForDev(): Promise<{ user: User; token: string } | null> {
-    console.log('🎭 Auto-login de desenvolvimento ativado');
-    return await this.signIn(this.MOCK_EMAIL, this.MOCK_PASSWORD);
+    try {
+      const { email, password } = this.getDevCredentials();
+      return await this.signIn(email, password);
+    } catch (error) {
+      console.warn('Auto-login de desenvolvimento falhou:', error);
+      return null;
+    }
   }
 }
 
