@@ -1,26 +1,24 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { NextRequest } from 'next/server';
+import { supabaseAdmin } from '@/lib/api/supabase';
+import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse, validationErrorResponse } from '@/lib/api/response';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Função para verificar token JWT
-function verifyToken(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return null;
-  }
-
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
-  } catch {
-    return null;
-  }
+// Interface para criação/atualização de item do menu
+interface MenuItemRequest {
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  imageUrl?: string;
+  isAvailable?: boolean;
+  preparationTime?: number;
+  ingredients?: string[];
+  allergens?: string[];
+  nutritionalInfo?: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  };
 }
 
 // GET - Listar itens do menu
@@ -31,267 +29,247 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const available = searchParams.get('available');
 
-    let query = supabase
-      .from('menu_items')
-      .select(`
-        *,
-        restaurant:restaurants!menu_items_restaurant_id_fkey(name, category)
-      `);
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
 
-    // Filtrar por restaurante se especificado
+    if (!userId) {
+      return unauthorizedResponse('Usuário não autenticado');
+    }
+
+    let query = supabaseAdmin
+      .from('menu_items')
+      .select('*')
+      .order('category')
+      .order('name');
+
+    // Se restaurantId for fornecido, filtrar por ele
     if (restaurantId) {
       query = query.eq('restaurant_id', restaurantId);
+    } else if (userType === 'restaurant') {
+      // Se for restaurante e não especificar ID, mostrar apenas seus itens
+      query = query.eq('restaurant_id', userId);
+    } else {
+      return errorResponse('ID do restaurante é obrigatório para este tipo de usuário');
     }
 
     // Filtrar por categoria se especificado
-    if (category) {
+    if (category && category !== 'all') {
       query = query.eq('category', category);
     }
 
     // Filtrar por disponibilidade se especificado
     if (available !== null) {
-      query = query.eq('available', available === 'true');
+      const isAvailable = available === 'true';
+      query = query.eq('is_available', isAvailable);
     }
 
-    const { data: menuItems, error } = await query.order('category').order('name');
+    const { data: menuItems, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar itens do menu:', error);
-      return NextResponse.json({ error: 'Erro ao buscar itens do menu' }, { status: 500 });
+      return serverErrorResponse('Erro ao buscar itens do menu');
     }
 
-    return NextResponse.json({ menuItems });
+    // Organizar por categoria
+    const menuByCategory: Record<string, any[]> = {};
+    menuItems.forEach(item => {
+      if (!menuByCategory[item.category]) {
+        menuByCategory[item.category] = [];
+      }
+      menuByCategory[item.category].push(item);
+    });
 
+    return successResponse({
+      items: menuItems,
+      byCategory: menuByCategory,
+      totalItems: menuItems.length
+    }, 'Itens do menu listados com sucesso');
   } catch (error) {
-    console.error('Erro na API de menu:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error('Erro interno ao listar menu:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }
 
 // POST - Criar novo item do menu
 export async function POST(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user || user.userType !== 'restaurant') {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
+
+    if (!userId || userType !== 'restaurant') {
+      return unauthorizedResponse('Apenas restaurantes podem criar itens do menu');
     }
 
-    const { name, description, price, category, image, available = true } = await request.json();
+    const body: MenuItemRequest = await request.json();
 
-    // Validação básica
-    if (!name || !price || price <= 0) {
-      return NextResponse.json(
-        { error: 'Nome e preço são obrigatórios' },
-        { status: 400 }
-      );
+    // Validar dados obrigatórios
+    const errors: string[] = [];
+    if (!body.name || body.name.trim().length === 0) {
+      errors.push('Nome é obrigatório');
+    }
+    if (!body.description || body.description.trim().length === 0) {
+      errors.push('Descrição é obrigatória');
+    }
+    if (!body.price || body.price <= 0) {
+      errors.push('Preço deve ser maior que zero');
+    }
+    if (!body.category || body.category.trim().length === 0) {
+      errors.push('Categoria é obrigatória');
     }
 
-    // Buscar restaurante do usuário
-    const { data: restaurant, error: restaurantError } = await supabase
-      .from('restaurants')
-      .select('id')
-      .eq('user_id', user.userId)
-      .single();
-
-    if (restaurantError || !restaurant) {
-      return NextResponse.json(
-        { error: 'Restaurante não encontrado' },
-        { status: 404 }
-      );
+    if (errors.length > 0) {
+      return validationErrorResponse(errors);
     }
 
     // Criar item do menu
-    const { data: menuItem, error: menuError } = await supabase
+    const { data: menuItem, error } = await supabaseAdmin
       .from('menu_items')
       .insert({
-        restaurant_id: restaurant.id,
-        name,
-        description,
-        price,
-        category,
-        image,
-        available
+        restaurant_id: userId,
+        name: body.name.trim(),
+        description: body.description.trim(),
+        price: body.price,
+        category: body.category.trim(),
+        image_url: body.imageUrl,
+        is_available: body.isAvailable ?? true,
+        preparation_time: body.preparationTime || 15,
+        ingredients: body.ingredients || [],
+        allergens: body.allergens || [],
+        nutritional_info: body.nutritionalInfo || {},
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
 
-    if (menuError) {
-      console.error('Erro ao criar item do menu:', menuError);
-      return NextResponse.json(
-        { error: 'Erro ao criar item do menu' },
-        { status: 500 }
-      );
+    if (error) {
+      console.error('Erro ao criar item do menu:', error);
+      return serverErrorResponse('Erro ao criar item do menu');
     }
 
-    return NextResponse.json({
-      message: 'Item do menu criado com sucesso',
-      menuItem
-    }, { status: 201 });
-
+    return successResponse(menuItem, 'Item do menu criado com sucesso', 201);
   } catch (error) {
-    console.error('Erro ao criar item do menu:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('Erro interno ao criar item do menu:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }
 
 // PUT - Atualizar item do menu
 export async function PUT(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user || user.userType !== 'restaurant') {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
-    }
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
 
-    const { id, name, description, price, category, image, available } = await request.json();
-
-    // Validação básica
-    if (!id || !name || !price || price <= 0) {
-      return NextResponse.json(
-        { error: 'ID, nome e preço são obrigatórios' },
-        { status: 400 }
-      );
-    }
-
-    // Buscar restaurante do usuário
-    const { data: restaurant, error: restaurantError } = await supabase
-      .from('restaurants')
-      .select('id')
-      .eq('user_id', user.userId)
-      .single();
-
-    if (restaurantError || !restaurant) {
-      return NextResponse.json(
-        { error: 'Restaurante não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Verificar se o item pertence ao restaurante
-    const { data: existingItem } = await supabase
-      .from('menu_items')
-      .select('id')
-      .eq('id', id)
-      .eq('restaurant_id', restaurant.id)
-      .single();
-
-    if (!existingItem) {
-      return NextResponse.json(
-        { error: 'Item não encontrado ou sem permissão' },
-        { status: 404 }
-      );
-    }
-
-    // Atualizar item do menu
-    const { data: menuItem, error: updateError } = await supabase
-      .from('menu_items')
-      .update({
-        name,
-        description,
-        price,
-        category,
-        image,
-        available,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error('Erro ao atualizar item do menu:', updateError);
-      return NextResponse.json(
-        { error: 'Erro ao atualizar item do menu' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      message: 'Item do menu atualizado com sucesso',
-      menuItem
-    });
-
-  } catch (error) {
-    console.error('Erro ao atualizar item do menu:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE - Deletar item do menu
-export async function DELETE(request: NextRequest) {
-  try {
-    const user = verifyToken(request);
-    if (!user || user.userType !== 'restaurant') {
-      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+    if (!userId || userType !== 'restaurant') {
+      return unauthorizedResponse('Apenas restaurantes podem atualizar itens do menu');
     }
 
     const { searchParams } = new URL(request.url);
     const itemId = searchParams.get('id');
 
     if (!itemId) {
-      return NextResponse.json(
-        { error: 'ID do item é obrigatório' },
-        { status: 400 }
-      );
+      return errorResponse('ID do item é obrigatório');
     }
 
-    // Buscar restaurante do usuário
-    const { data: restaurant, error: restaurantError } = await supabase
-      .from('restaurants')
-      .select('id')
-      .eq('user_id', user.userId)
+    const body: Partial<MenuItemRequest> = await request.json();
+
+    // Verificar se o item pertence ao restaurante
+    const { data: existingItem, error: fetchError } = await supabaseAdmin
+      .from('menu_items')
+      .select('id, restaurant_id')
+      .eq('id', itemId)
+      .eq('restaurant_id', userId)
       .single();
 
-    if (restaurantError || !restaurant) {
-      return NextResponse.json(
-        { error: 'Restaurante não encontrado' },
-        { status: 404 }
-      );
+    if (fetchError || !existingItem) {
+      return notFoundResponse('Item do menu não encontrado');
+    }
+
+    // Preparar dados para atualização
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+
+    if (body.name !== undefined) updateData.name = body.name.trim();
+    if (body.description !== undefined) updateData.description = body.description.trim();
+    if (body.price !== undefined) updateData.price = body.price;
+    if (body.category !== undefined) updateData.category = body.category.trim();
+    if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl;
+    if (body.isAvailable !== undefined) updateData.is_available = body.isAvailable;
+    if (body.preparationTime !== undefined) updateData.preparation_time = body.preparationTime;
+    if (body.ingredients !== undefined) updateData.ingredients = body.ingredients;
+    if (body.allergens !== undefined) updateData.allergens = body.allergens;
+    if (body.nutritionalInfo !== undefined) updateData.nutritional_info = body.nutritionalInfo;
+
+    // Atualizar item
+    const { data: updatedItem, error } = await supabaseAdmin
+      .from('menu_items')
+      .update(updateData)
+      .eq('id', itemId)
+      .eq('restaurant_id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Erro ao atualizar item do menu:', error);
+      return serverErrorResponse('Erro ao atualizar item do menu');
+    }
+
+    return successResponse(updatedItem, 'Item do menu atualizado com sucesso');
+  } catch (error) {
+    console.error('Erro interno ao atualizar item do menu:', error);
+    return serverErrorResponse('Erro interno do servidor');
+  }
+}
+
+// DELETE - Remover item do menu
+export async function DELETE(request: NextRequest) {
+  try {
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
+
+    if (!userId || userType !== 'restaurant') {
+      return unauthorizedResponse('Apenas restaurantes podem remover itens do menu');
+    }
+
+    const { searchParams } = new URL(request.url);
+    const itemId = searchParams.get('id');
+
+    if (!itemId) {
+      return errorResponse('ID do item é obrigatório');
     }
 
     // Verificar se o item pertence ao restaurante
-    const { data: existingItem } = await supabase
+    const { data: existingItem, error: fetchError } = await supabaseAdmin
       .from('menu_items')
-      .select('id')
+      .select('id, restaurant_id')
       .eq('id', itemId)
-      .eq('restaurant_id', restaurant.id)
+      .eq('restaurant_id', userId)
       .single();
 
-    if (!existingItem) {
-      return NextResponse.json(
-        { error: 'Item não encontrado ou sem permissão' },
-        { status: 404 }
-      );
+    if (fetchError || !existingItem) {
+      return notFoundResponse('Item do menu não encontrado');
     }
 
-    // Deletar item do menu
-    const { error: deleteError } = await supabase
+    // Remover item
+    const { error } = await supabaseAdmin
       .from('menu_items')
       .delete()
-      .eq('id', itemId);
+      .eq('id', itemId)
+      .eq('restaurant_id', userId);
 
-    if (deleteError) {
-      console.error('Erro ao deletar item do menu:', deleteError);
-      return NextResponse.json(
-        { error: 'Erro ao deletar item do menu' },
-        { status: 500 }
-      );
+    if (error) {
+      console.error('Erro ao remover item do menu:', error);
+      return serverErrorResponse('Erro ao remover item do menu');
     }
 
-    return NextResponse.json({
-      message: 'Item do menu deletado com sucesso'
-    });
-
+    return successResponse(null, 'Item do menu removido com sucesso');
   } catch (error) {
-    console.error('Erro ao deletar item do menu:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('Erro interno ao remover item do menu:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }

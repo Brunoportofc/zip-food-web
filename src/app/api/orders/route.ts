@@ -1,218 +1,171 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+import { NextRequest } from 'next/server';
+import { supabaseAdmin } from '@/lib/api/supabase';
+import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '@/lib/api/response';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-// Função para verificar token JWT
-function verifyToken(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '');
-  
-  if (!token) {
-    return null;
-  }
-
-  try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
-  } catch {
-    return null;
-  }
+// Interface para criação de pedido
+interface CreateOrderRequest {
+  restaurantId: string;
+  items: {
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    notes?: string;
+  }[];
+  deliveryAddress: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    zipCode: string;
+  };
+  paymentMethod: 'credit-card' | 'debit-card' | 'pix' | 'cash';
+  notes?: string;
 }
 
 // GET - Listar pedidos
 export async function GET(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
+
+    if (!userId || !userType) {
+      return unauthorizedResponse('Informações de usuário não encontradas');
     }
 
-    const { searchParams } = new URL(request.url);
-    const restaurantId = searchParams.get('restaurantId');
-    const status = searchParams.get('status');
-
-    let query = supabase
+    let query = supabaseAdmin
       .from('orders')
       .select(`
         *,
-        customer:users!orders_customer_id_fkey(name, phone, address),
-        restaurant:restaurants!orders_restaurant_id_fkey(name, address),
-        delivery_driver:delivery_drivers!orders_delivery_driver_id_fkey(
-          id,
-          vehicle_type,
-          user:users!delivery_drivers_user_id_fkey(name, phone)
-        )
+        restaurant:restaurants(*),
+        customer:customers(*),
+        delivery_driver:delivery_drivers(*),
+        order_items(*)
       `);
 
-    // Filtrar por restaurante se especificado
-    if (restaurantId) {
-      query = query.eq('restaurant_id', restaurantId);
+    // Filtrar pedidos baseado no tipo de usuário
+    switch (userType) {
+      case 'customer':
+        query = query.eq('customer_id', userId);
+        break;
+      case 'restaurant':
+        query = query.eq('restaurant_id', userId);
+        break;
+      case 'delivery':
+        query = query.eq('delivery_driver_id', userId);
+        break;
+      default:
+        return errorResponse('Tipo de usuário inválido');
     }
 
-    // Filtrar por status se especificado
-    if (status) {
-      query = query.eq('status', status);
-    }
+    // Ordenar por data de criação (mais recentes primeiro)
+    query = query.order('created_at', { ascending: false });
 
-    // Se for restaurante, mostrar apenas seus pedidos
-    if (user.userType === 'restaurant') {
-      const { data: restaurant } = await supabase
-        .from('restaurants')
-        .select('id')
-        .eq('user_id', user.userId)
-        .single();
-      
-      if (restaurant) {
-        query = query.eq('restaurant_id', restaurant.id);
-      }
-    }
-
-    // Se for cliente, mostrar apenas seus pedidos
-    if (user.userType === 'customer') {
-      query = query.eq('customer_id', user.userId);
-    }
-
-    // Se for entregador, mostrar pedidos atribuídos ou disponíveis
-    if (user.userType === 'delivery') {
-      const { data: driver } = await supabase
-        .from('delivery_drivers')
-        .select('id')
-        .eq('user_id', user.userId)
-        .single();
-      
-      if (driver) {
-        query = query.or(`delivery_driver_id.eq.${driver.id},status.eq.confirmed`);
-      }
-    }
-
-    const { data: orders, error } = await query.order('created_at', { ascending: false });
+    const { data: orders, error } = await query;
 
     if (error) {
       console.error('Erro ao buscar pedidos:', error);
-      return NextResponse.json({ error: 'Erro ao buscar pedidos' }, { status: 500 });
+      return serverErrorResponse('Erro ao buscar pedidos');
     }
 
-    return NextResponse.json({ orders });
-
+    return successResponse(orders, 'Pedidos listados com sucesso');
   } catch (error) {
-    console.error('Erro na API de pedidos:', error);
-    return NextResponse.json({ error: 'Erro interno do servidor' }, { status: 500 });
+    console.error('Erro interno ao listar pedidos:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }
 
 // POST - Criar novo pedido
 export async function POST(request: NextRequest) {
   try {
-    const user = verifyToken(request);
-    if (!user) {
-      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    // Obter informações do usuário do middleware
+    const userId = request.headers.get('x-user-id');
+    const userType = request.headers.get('x-user-type');
+
+    if (!userId || userType !== 'customer') {
+      return unauthorizedResponse('Apenas clientes podem criar pedidos');
     }
 
-    const { restaurantId, items, deliveryAddress, paymentMethod, notes } = await request.json();
+    const body: CreateOrderRequest = await request.json();
 
-    // Validação básica
-    if (!restaurantId || !items || !Array.isArray(items) || items.length === 0) {
-      return NextResponse.json(
-        { error: 'Dados do pedido inválidos' },
-        { status: 400 }
-      );
+    // Validar dados obrigatórios
+    if (!body.restaurantId || !body.items || body.items.length === 0) {
+      return errorResponse('Dados obrigatórios não fornecidos');
     }
 
-    // Calcular total do pedido
-    let totalAmount = 0;
-    for (const item of items) {
-      if (!item.menuItemId || !item.quantity || item.quantity <= 0) {
-        return NextResponse.json(
-          { error: 'Itens do pedido inválidos' },
-          { status: 400 }
-        );
-      }
+    // Calcular totais
+    const subtotal = body.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const deliveryFee = 5.00; // Valor fixo por enquanto
+    const total = subtotal + deliveryFee;
 
-      // Buscar preço do item no menu
-      const { data: menuItem } = await supabase
-        .from('menu_items')
-        .select('price')
-        .eq('id', item.menuItemId)
-        .single();
-
-      if (menuItem) {
-        totalAmount += menuItem.price * item.quantity;
-      }
-    }
-
-    // Buscar taxa de entrega do restaurante
-    const { data: restaurant } = await supabase
-      .from('restaurants')
-      .select('delivery_fee, minimum_order')
-      .eq('id', restaurantId)
-      .single();
-
-    if (!restaurant) {
-      return NextResponse.json(
-        { error: 'Restaurante não encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Verificar pedido mínimo
-    if (totalAmount < restaurant.minimum_order) {
-      return NextResponse.json(
-        { error: `Pedido mínimo de R$ ${restaurant.minimum_order.toFixed(2)}` },
-        { status: 400 }
-      );
-    }
-
-    totalAmount += restaurant.delivery_fee;
-
-    // Criar pedido
-    const { data: order, error: orderError } = await supabase
+    // Iniciar transação
+    const { data: order, error: orderError } = await supabaseAdmin
       .from('orders')
       .insert({
-        customer_id: user.userId,
-        restaurant_id: restaurantId,
-        items: JSON.stringify(items),
-        total_amount: totalAmount,
-        delivery_address: deliveryAddress,
-        payment_method: paymentMethod,
-        notes,
-        status: 'pending'
+        customer_id: userId,
+        restaurant_id: body.restaurantId,
+        status: 'pending',
+        subtotal,
+        delivery_fee: deliveryFee,
+        total,
+        delivery_address: body.deliveryAddress,
+        payment_method: body.paymentMethod,
+        notes: body.notes,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
       .select()
       .single();
 
     if (orderError) {
       console.error('Erro ao criar pedido:', orderError);
-      return NextResponse.json(
-        { error: 'Erro ao criar pedido' },
-        { status: 500 }
-      );
+      return serverErrorResponse('Erro ao criar pedido');
     }
 
-    // Criar notificação para o restaurante
-    await supabase
-      .from('notifications')
-      .insert({
-        user_id: restaurantId,
-        title: 'Novo Pedido',
-        message: `Novo pedido #${order.id} recebido`,
-        type: 'order',
-        data: JSON.stringify({ orderId: order.id })
-      });
+    // Inserir itens do pedido
+    const orderItems = body.items.map(item => ({
+      order_id: order.id,
+      product_id: item.id,
+      product_name: item.name,
+      quantity: item.quantity,
+      unit_price: item.price,
+      total_price: item.price * item.quantity,
+      notes: item.notes
+    }));
 
-    return NextResponse.json({
-      message: 'Pedido criado com sucesso',
-      order
-    }, { status: 201 });
+    const { error: itemsError } = await supabaseAdmin
+      .from('order_items')
+      .insert(orderItems);
 
+    if (itemsError) {
+      console.error('Erro ao inserir itens do pedido:', itemsError);
+      // Reverter criação do pedido
+      await supabaseAdmin.from('orders').delete().eq('id', order.id);
+      return serverErrorResponse('Erro ao processar itens do pedido');
+    }
+
+    // Buscar pedido completo com relacionamentos
+    const { data: completeOrder, error: fetchError } = await supabaseAdmin
+      .from('orders')
+      .select(`
+        *,
+        restaurant:restaurants(*),
+        customer:customers(*),
+        order_items(*)
+      `)
+      .eq('id', order.id)
+      .single();
+
+    if (fetchError) {
+      console.error('Erro ao buscar pedido completo:', fetchError);
+      return successResponse(order, 'Pedido criado com sucesso');
+    }
+
+    return successResponse(completeOrder, 'Pedido criado com sucesso', 201);
   } catch (error) {
-    console.error('Erro ao criar pedido:', error);
-    return NextResponse.json(
-      { error: 'Erro interno do servidor' },
-      { status: 500 }
-    );
+    console.error('Erro interno ao criar pedido:', error);
+    return serverErrorResponse('Erro interno do servidor');
   }
 }
