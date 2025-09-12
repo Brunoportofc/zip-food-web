@@ -23,6 +23,7 @@ const ROUTE_PERMISSIONS: Record<string, UserType[]> = {
   '/api/auth/password-reset': [],
   '/api/auth/verify-code': [],
   '/api/auth/reset-password': [],
+  '/api/auth/forgot-password': [],
   
   // Rotas de cliente
   '/api/customer': ['customer'],
@@ -52,7 +53,8 @@ function isPublicRoute(pathname: string): boolean {
     '/api/auth/register',
     '/api/auth/password-reset',
     '/api/auth/verify-code',
-    '/api/auth/reset-password'
+    '/api/auth/reset-password',
+    '/api/auth/forgot-password'
   ];
   return publicRoutes.some(route => pathname.startsWith(route));
 }

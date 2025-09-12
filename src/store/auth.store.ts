@@ -64,13 +64,41 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
       setUserType: (type) => set({ userType: type }),
       signIn: async (email, password, userType) => {
         try {
-          const { user, token } = await authService.signIn(email, password, userType);
+          set({ isLoading: true });
           
-          // Usa o userType do usuário retornado pelo serviço (que já considera o tipo selecionado)
+          const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password, userType }),
+          });
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.error || 'Erro ao fazer login');
+          }
+          
+          if (!data.success || !data.data) {
+            throw new Error('Resposta inválida do servidor');
+          }
+          
+          const { user, token } = data.data;
+          
+          // Usa o userType do usuário retornado pelo serviço
           const finalUserType = user.type;
           
-          set({ isAuthenticated: true, user, token, userType: finalUserType });
+          set({ 
+            isAuthenticated: true, 
+            user, 
+            token, 
+            userType: finalUserType,
+            isLoading: false,
+            lastAuthCheck: Date.now()
+          });
         } catch (error) {
+          set({ isLoading: false });
           console.error('Erro ao fazer login:', error);
           throw error;
         }

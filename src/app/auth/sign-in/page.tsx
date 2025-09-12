@@ -228,7 +228,7 @@ const SignInContent = () => {
               {/* Forgot Password Link */}
               <div className="text-right">
                 <Link 
-                  href="/auth/password-reset" 
+                  href="/auth/forgot-password" 
                   className="text-sm text-red-600 hover:text-red-700 hover:underline font-medium"
                 >
                   Esqueceu sua senha?
