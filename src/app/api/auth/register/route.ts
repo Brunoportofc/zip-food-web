@@ -1,15 +1,15 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/api/supabase';
 import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/api/response';
-import { createClient } from '@supabase/supabase-js';
 import { sign } from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 // Interface para dados de registro
 interface RegisterRequest {
   email: string;
   password: string;
   name: string;
-  phone?: string;
+  phone: string; // Agora obrigatório
   address?: string;
   userType: 'customer' | 'restaurant' | 'delivery';
   restaurantData?: {
@@ -41,6 +41,15 @@ export async function POST(request: NextRequest) {
     if (!body.name || body.name.trim().length === 0) {
       errors.push('Nome é obrigatório');
     }
+    if (!body.phone || body.phone.trim().length === 0) {
+      errors.push('Telefone é obrigatório');
+    } else {
+      // Validar formato do telefone brasileiro
+      const phoneNumbers = body.phone.replace(/\D/g, '');
+      if (phoneNumbers.length !== 11 || !phoneNumbers.startsWith('1')) {
+        errors.push('Telefone deve estar no formato (11) 98765-4321');
+      }
+    }
     if (!body.userType || !['customer', 'restaurant', 'delivery'].includes(body.userType)) {
       errors.push('Tipo de usuário inválido');
     }
@@ -65,37 +74,45 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(errors);
     }
 
-    // Criar cliente Supabase para autenticação
-    const supabaseAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    // Verificar se o email já está cadastrado com outro tipo de conta
+    const { data: existingUser, error: checkError } = await supabaseAdmin
+      .from('users')
+      .select('email, user_type')
+      .eq('email', body.email)
+      .single();
 
-    // Registrar usuário no Supabase Auth
-    const { data: authData, error: authError } = await supabaseAuth.auth.signUp({
-      email: body.email,
-      password: body.password,
-      options: {
-        data: {
-          name: body.name,
-          user_type: body.userType
-        }
+    if (existingUser && !checkError) {
+      const existingUserType = existingUser.user_type;
+      let userTypeLabel = '';
+      
+      switch (existingUserType) {
+        case 'customer':
+          userTypeLabel = 'cliente';
+          break;
+        case 'restaurant':
+          userTypeLabel = 'restaurante';
+          break;
+        case 'delivery':
+          userTypeLabel = 'entregador';
+          break;
+        default:
+          userTypeLabel = existingUserType;
       }
-    });
-
-    if (authError) {
-      console.error('Erro na autenticação Supabase:', authError);
-      if (authError.message.includes('already registered')) {
-        return errorResponse('Usuário já existe com este email', 409);
-      }
-      return serverErrorResponse('Erro ao criar conta de usuário');
+      
+      return errorResponse(
+        `Este email já está cadastrado como ${userTypeLabel}. Por favor, utilize um email diferente.`,
+        409
+      );
     }
 
-    if (!authData.user) {
-      return serverErrorResponse('Erro ao criar usuário');
-    }
+    // Gerar hash da senha
+    const saltRounds = 12;
+    const passwordHash = await bcrypt.hash(body.password, saltRounds);
 
-    const userId = authData.user.id;
+    // Gerar ID único para o usuário
+    const userId = crypto.randomUUID();
+
+    console.log('✅ Criando usuário com autenticação customizada:', body.email);
 
     try {
       // Inserir dados do usuário na tabela users
@@ -104,7 +121,7 @@ export async function POST(request: NextRequest) {
         .insert({
           id: userId,
           email: body.email,
-          password_hash: 'managed_by_supabase_auth', // Placeholder
+          password_hash: passwordHash,
           name: body.name,
           phone: body.phone,
           address: body.address,
@@ -113,8 +130,6 @@ export async function POST(request: NextRequest) {
 
       if (userError) {
         console.error('Erro ao inserir usuário:', userError);
-        // Tentar limpar o usuário do Auth se falhou na inserção
-        await supabaseAdmin.auth.admin.deleteUser(userId);
         return serverErrorResponse('Erro ao salvar dados do usuário');
       }
 

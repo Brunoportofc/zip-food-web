@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
+import { createClient } from '@supabase/supabase-js';
 
 // Tipos de usuário permitidos
 type UserType = 'customer' | 'restaurant' | 'delivery';
@@ -19,6 +20,9 @@ const ROUTE_PERMISSIONS: Record<string, UserType[]> = {
   // Rotas de autenticação - públicas
   '/api/auth/login': [],
   '/api/auth/register': [],
+  '/api/auth/password-reset': [],
+  '/api/auth/verify-code': [],
+  '/api/auth/reset-password': [],
   
   // Rotas de cliente
   '/api/customer': ['customer'],
@@ -43,7 +47,13 @@ const ROUTE_PERMISSIONS: Record<string, UserType[]> = {
 
 // Função para verificar se a rota é pública
 function isPublicRoute(pathname: string): boolean {
-  const publicRoutes = ['/api/auth/login', '/api/auth/register'];
+  const publicRoutes = [
+    '/api/auth/login', 
+    '/api/auth/register',
+    '/api/auth/password-reset',
+    '/api/auth/verify-code',
+    '/api/auth/reset-password'
+  ];
   return publicRoutes.some(route => pathname.startsWith(route));
 }
 
@@ -74,7 +84,41 @@ function extractToken(request: NextRequest): string | null {
   return authHeader.substring(7); // Remove 'Bearer '
 }
 
-// Função para verificar e decodificar o JWT
+// Função para verificar sessão no Supabase
+async function verifySupabaseSession(token: string): Promise<CustomJWTPayload | null> {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error || !user) {
+      console.error('Erro ao verificar sessão Supabase:', error);
+      return null;
+    }
+    
+    // Busca dados adicionais do usuário na tabela profiles
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_type, name')
+      .eq('id', user.id)
+      .single();
+    
+    return {
+      userId: user.id,
+      email: user.email!,
+      userType: profile?.user_type || 'customer',
+      name: profile?.name || user.user_metadata?.name || 'Usuário',
+    };
+  } catch (error) {
+    console.error('Erro ao verificar sessão:', error);
+    return null;
+  }
+}
+
+// Função para verificar e decodificar o JWT (fallback)
 async function verifyJWT(token: string): Promise<CustomJWTPayload | null> {
   try {
     const secret = new TextEncoder().encode(
@@ -115,8 +159,14 @@ export async function middleware(request: NextRequest) {
     );
   }
   
-  // Verifica e decodifica o JWT
-  const payload = await verifyJWT(token);
+  // Verifica sessão no Supabase primeiro, depois fallback para JWT
+  let payload = await verifySupabaseSession(token);
+  
+  // Se falhou no Supabase, tenta JWT como fallback (desenvolvimento)
+  if (!payload && process.env.NODE_ENV === 'development') {
+    payload = await verifyJWT(token);
+  }
+  
   if (!payload) {
     return NextResponse.json(
       {

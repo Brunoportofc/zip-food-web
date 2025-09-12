@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { FaUserAlt, FaMapMarkerAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes } from 'react-icons/fa';
+import { FaUserAlt, FaMapMarkerAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes, FaBell } from 'react-icons/fa';
 import { useAuthData, useAuthActions } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import { profileService, Address, PaymentMethod, PersonalData } from '@/services/profile.service';
+import NotificationManager from '@/components/NotificationManager';
 
 export default function CustomerProfilePage() {
   const router = useRouter();
@@ -43,6 +44,7 @@ export default function CustomerProfilePage() {
     expiryDate: ''
   });
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'personal' | 'addresses' | 'notifications'>('personal');
 
   
   const loadProfileData = async () => {
@@ -198,14 +200,40 @@ export default function CustomerProfilePage() {
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
               <h2 className="text-xl font-bold mb-6 text-gray-900">Menu</h2>
               <nav className="space-y-2">
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl bg-red-50 cursor-pointer border-2 border-red-100">
-                  <FaUserAlt className="text-red-600" size={18} />
-                  <span className="text-red-600 font-medium">Meus Dados</span>
+                <div 
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer border-2 transition-colors ${
+                    activeTab === 'personal' 
+                      ? 'bg-red-50 border-red-100 text-red-600' 
+                      : 'border-transparent hover:border-red-200 hover:bg-gray-50 text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('personal')}
+                >
+                  <FaUserAlt size={18} />
+                  <span className="font-medium">Meus Dados</span>
                 </div>
                 
-                <div className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-gray-50 cursor-pointer border-2 border-transparent hover:border-red-200">
-                  <FaMapMarkerAlt className="text-gray-700" size={18} />
-                  <span className="text-gray-800">Endereços</span>
+                <div 
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer border-2 transition-colors ${
+                    activeTab === 'addresses' 
+                      ? 'bg-red-50 border-red-100 text-red-600' 
+                      : 'border-transparent hover:border-red-200 hover:bg-gray-50 text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('addresses')}
+                >
+                  <FaMapMarkerAlt size={18} />
+                  <span className="font-medium">Endereços</span>
+                </div>
+                
+                <div 
+                  className={`flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer border-2 transition-colors ${
+                    activeTab === 'notifications' 
+                      ? 'bg-red-50 border-red-100 text-red-600' 
+                      : 'border-transparent hover:border-red-200 hover:bg-gray-50 text-gray-700'
+                  }`}
+                  onClick={() => setActiveTab('notifications')}
+                >
+                  <FaBell size={18} />
+                  <span className="font-medium">Notificações</span>
                 </div>
                 
                 <div 
@@ -244,7 +272,8 @@ export default function CustomerProfilePage() {
               </div>
 
               {/* Personal Information */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+              {activeTab === 'personal' && (
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Dados Pessoais</h2>
                   {!isEditingPersonal ? (
@@ -321,11 +350,18 @@ export default function CustomerProfilePage() {
 
                   </div>
                 )}
-              </div>
+                </div>
+              )}
 
               {/* Endereços */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Endereços</h3>
+              {activeTab === 'addresses' && (
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <FaMapMarkerAlt className="text-red-600" />
+                    Endereços
+                  </h2>
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Meus Endereços</h3>
             
             {addresses.map((address) => (
               <div key={address.id} className="border border-gray-200 rounded-xl p-4 mb-4 bg-gray-50">
@@ -420,7 +456,22 @@ export default function CustomerProfilePage() {
                 <FaPlus /> Adicionar Novo Endereço
               </button>
             )}
-          </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Notificações */}
+              {activeTab === 'notifications' && (
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                    <FaBell className="text-red-600" />
+                    Notificações
+                  </h2>
+                  <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+                    <NotificationManager userId={user.id} />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

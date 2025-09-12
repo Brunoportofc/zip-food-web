@@ -26,8 +26,8 @@ interface AuthState {
   login: (userData: User, token: string) => void;
   logout: () => void;
   setUserType: (type: UserType) => void;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, userType?: UserType) => Promise<void>;
+  signUp: (name: string, email: string, password: string, phone: string) => Promise<void>;
   checkAuth: () => Promise<void>;
   syncUserData: () => Promise<void>;
   setOfflineMode: (isOffline: boolean) => void;
@@ -62,10 +62,9 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
         }
       },
       setUserType: (type) => set({ userType: type }),
-      signIn: async (email, password) => {
+      signIn: async (email, password, userType) => {
         try {
-          const currentUserType = get().userType;
-          const { user, token } = await authService.signIn(email, password, currentUserType || undefined);
+          const { user, token } = await authService.signIn(email, password, userType);
           
           // Usa o userType do usuário retornado pelo serviço (que já considera o tipo selecionado)
           const finalUserType = user.type;
@@ -76,14 +75,14 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
           throw error;
         }
       },
-      signUp: async (name, email, password) => {
+      signUp: async (name, email, password, phone) => {
         try {
           const userType = get().userType;
           if (!userType) throw new Error('Tipo de usuário não selecionado');
           
-          const user = await authService.signUp(name, email, password, userType);
-          const { token } = await authService.signIn(email, password);
-          set({ isAuthenticated: true, user, token });
+          const user = await authService.signUp(name, email, password, userType, phone);
+          // Não faz login automático - usuário deve fazer login manualmente
+          console.log('Usuário registrado com sucesso:', user.name);
         } catch (error) {
           console.error('Erro ao registrar usuário:', error);
           throw error;

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
-import { MdArrowBack, MdStar, MdAccessTime, MdAdd, MdRemove, MdShoppingCart } from 'react-icons/md';
+import { MdArrowBack, MdStar, MdAccessTime, MdAdd, MdRemove, MdShoppingCart, MdLocationOn } from 'react-icons/md';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
 import { showSuccessAlert, showErrorAlert } from '@/components/AlertSystem';
@@ -12,6 +12,7 @@ import { restaurantService } from '@/services/restaurant.service';
 import { menuService } from '@/services/menu.service';
 import useAuthStore from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
+import AddressSelector from '@/components/AddressSelector';
 
 interface MenuItem {
   id: string;
@@ -51,6 +52,8 @@ export default function RestaurantPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [showAddressSelector, setShowAddressSelector] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState<string>('');
 
   const restaurantId = params.id as string;
 
@@ -187,6 +190,11 @@ export default function RestaurantPage() {
       return;
     }
 
+    if (!selectedAddress) {
+      setShowAddressSelector(true);
+      return;
+    }
+
     setIsPlacingOrder(true);
 
     try {
@@ -197,7 +205,7 @@ export default function RestaurantPage() {
           id: user.id,
           name: user.name,
           phone: user.phone || '(11) 99999-9999',
-          address: 'Endereço do cliente' // Em produção, viria do perfil do usuário
+          address: selectedAddress
         },
         items: cart.map(item => ({
           id: item.id,
@@ -416,6 +424,41 @@ export default function RestaurantPage() {
             <MdShoppingCart size={24} className="mr-2" />
             {isPlacingOrder ? 'Finalizando...' : `${getTotalItems()} itens - R$ ${getTotalPrice().toFixed(2)}`}
           </button>
+        </div>
+      )}
+
+      {/* Address Selector Modal */}
+      {showAddressSelector && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <MdLocationOn size={28} />
+                  <h2 className="text-xl font-bold">Selecionar Endereço de Entrega</h2>
+                </div>
+                <button
+                  onClick={() => setShowAddressSelector(false)}
+                  className="text-white hover:text-red-200 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <div className="p-6">
+              <AddressSelector
+                onAddressSelect={(address) => {
+                  setSelectedAddress(address);
+                  setShowAddressSelector(false);
+                  // Após selecionar o endereço, finalizar o pedido
+                  setTimeout(() => {
+                    handlePlaceOrder();
+                  }, 100);
+                }}
+                placeholder="Digite seu endereço de entrega..."
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

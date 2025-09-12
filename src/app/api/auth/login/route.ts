@@ -1,13 +1,14 @@
 import { NextRequest } from 'next/server';
 import { supabaseAdmin } from '@/lib/api/supabase';
 import { successResponse, errorResponse, validationErrorResponse, serverErrorResponse } from '@/lib/api/response';
-import { createClient } from '@supabase/supabase-js';
 import { sign } from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 // Interface para dados de login
 interface LoginRequest {
   email: string;
   password: string;
+  userType?: 'customer' | 'restaurant' | 'delivery';
 }
 
 export async function POST(request: NextRequest) {
@@ -27,42 +28,46 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(errors);
     }
 
-    // Criar cliente Supabase para autenticação
-    const supabaseAuth = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
-    // Fazer login no Supabase Auth
-    const { data: authData, error: authError } = await supabaseAuth.auth.signInWithPassword({
-      email: body.email,
-      password: body.password
-    });
-
-    if (authError) {
-      console.error('Erro na autenticação Supabase:', authError);
-      if (authError.message.includes('Invalid login credentials')) {
-        return errorResponse('Email ou senha incorretos', 401);
-      }
-      return serverErrorResponse('Erro ao fazer login');
-    }
-
-    if (!authData.user) {
-      return errorResponse('Credenciais inválidas', 401);
-    }
-
-    const userId = authData.user.id;
-
-    // Buscar dados do usuário na tabela users
+    // Buscar usuário pelo email na tabela users
     const { data: userData, error: userError } = await supabaseAdmin
       .from('users')
       .select('*')
-      .eq('id', userId)
+      .eq('email', body.email)
       .single();
 
     if (userError || !userData) {
-      console.error('Erro ao buscar dados do usuário:', userError);
-      return serverErrorResponse('Erro ao carregar dados do usuário');
+      console.error('Usuário não encontrado:', userError);
+      return errorResponse('Email ou senha incorretos', 401);
+    }
+
+    // Verificar senha usando bcrypt
+    const isPasswordValid = await bcrypt.compare(body.password, userData.password_hash);
+    
+    if (!isPasswordValid) {
+      return errorResponse('Email ou senha incorretos', 401);
+    }
+
+    const userId = userData.id;
+
+    // Verificar se o tipo de conta solicitado corresponde ao tipo cadastrado
+    if (body.userType && body.userType !== userData.user_type) {
+      let requestedTypeLabel = '';
+      let actualTypeLabel = '';
+      
+      // Mapear tipos para labels em português
+      const typeLabels = {
+        'customer': 'cliente',
+        'restaurant': 'restaurante', 
+        'delivery': 'entregador'
+      };
+      
+      requestedTypeLabel = typeLabels[body.userType] || body.userType;
+      actualTypeLabel = typeLabels[userData.user_type as keyof typeof typeLabels] || userData.user_type;
+      
+      return errorResponse(
+        `Esta conta não foi criada para acesso como ${requestedTypeLabel}. Esta conta está registrada como ${actualTypeLabel}.`,
+        403
+      );
     }
 
     // Buscar dados específicos baseado no tipo de usuário
@@ -110,21 +115,14 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Para customers, os dados já estão na tabela users
       if (userData.user_type === 'customer') {
-        const { data: customer, error: customerError } = await supabaseAdmin
-          .from('customers')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-
-        if (!customerError && customer) {
-          additionalData = {
-            customer: {
-              id: customer.id,
-              address: customer.address
-            }
-          };
-        }
+        additionalData = {
+          customer: {
+            id: userData.id,
+            address: userData.address
+          }
+        };
       }
     } catch (additionalDataError) {
       console.error('Erro ao buscar dados adicionais:', additionalDataError);

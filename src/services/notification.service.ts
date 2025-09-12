@@ -1,10 +1,27 @@
 import { Order, OrderStatus } from './order.service';
 
 export interface NotificationPayload {
-  type: 'order_update' | 'delivery_assignment' | 'delivery_confirmation';
-  orderId: string;
+  type: 'order_update' | 'delivery_assignment' | 'delivery_confirmation' | 'promotion' | 'system';
+  orderId?: string;
   message: string;
+  title: string;
   data?: any;
+  timestamp: number;
+  priority: 'low' | 'normal' | 'high';
+}
+
+export interface PushSubscription {
+  endpoint: string;
+  keys: {
+    p256dh: string;
+    auth: string;
+  };
+}
+
+export interface NotificationPermission {
+  granted: boolean;
+  denied: boolean;
+  default: boolean;
 }
 
 export interface DeliveryNotification {
@@ -23,6 +40,208 @@ export interface DeliveryNotification {
 class NotificationService {
   private listeners: Map<string, ((notification: NotificationPayload) => void)[]> = new Map();
   private deliveryDrivers: string[] = []; // IDs dos entregadores ativos
+  private pushSubscriptions: Map<string, PushSubscription> = new Map();
+  private serviceWorkerRegistration: ServiceWorkerRegistration | null = null;
+  private vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '';
+
+  constructor() {
+    this.initializeServiceWorker();
+  }
+
+  // Inicializar Service Worker para push notifications
+  private async initializeServiceWorker() {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        this.serviceWorkerRegistration = registration;
+        console.log('Service Worker registrado com sucesso');
+      } catch (error) {
+        console.error('Erro ao registrar Service Worker:', error);
+      }
+    }
+  }
+
+  // Verificar permissões de notificação
+  async checkNotificationPermission(): Promise<NotificationPermission> {
+    if (!('Notification' in window)) {
+      return { granted: false, denied: true, default: false };
+    }
+
+    const permission = Notification.permission;
+    return {
+      granted: permission === 'granted',
+      denied: permission === 'denied',
+      default: permission === 'default'
+    };
+  }
+
+  // Solicitar permissão para notificações
+  async requestNotificationPermission(): Promise<boolean> {
+    if (!('Notification' in window)) {
+      console.warn('Este navegador não suporta notificações');
+      return false;
+    }
+
+    const permission = await Notification.requestPermission();
+    return permission === 'granted';
+  }
+
+  // Subscrever para push notifications
+  async subscribeToPushNotifications(userId: string): Promise<PushSubscription | null> {
+    if (!this.serviceWorkerRegistration) {
+      console.error('Service Worker não está registrado');
+      return null;
+    }
+
+    try {
+      const subscription = await this.serviceWorkerRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: this.urlBase64ToUint8Array(this.vapidPublicKey)
+      });
+
+      const pushSubscription: PushSubscription = {
+        endpoint: subscription.endpoint,
+        keys: {
+          p256dh: this.arrayBufferToBase64(subscription.getKey('p256dh')!),
+          auth: this.arrayBufferToBase64(subscription.getKey('auth')!)
+        }
+      };
+
+      this.pushSubscriptions.set(userId, pushSubscription);
+      
+      // Aqui você enviaria a subscription para o servidor
+      await this.sendSubscriptionToServer(userId, pushSubscription);
+      
+      return pushSubscription;
+    } catch (error) {
+      console.error('Erro ao subscrever para push notifications:', error);
+      return null;
+    }
+  }
+
+  // Converter VAPID key
+  private urlBase64ToUint8Array(base64String: string): Uint8Array {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
+  // Converter ArrayBuffer para Base64
+  private arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+  }
+
+  // Enviar subscription para o servidor
+  private async sendSubscriptionToServer(userId: string, subscription: PushSubscription) {
+    try {
+      await fetch('/api/notifications/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          subscription
+        })
+      });
+    } catch (error) {
+      console.error('Erro ao enviar subscription para o servidor:', error);
+    }
+  }
+
+  // Exibir notificação local
+  async showNotification(notification: NotificationPayload) {
+    const permission = await this.checkNotificationPermission();
+    
+    if (!permission.granted) {
+      console.warn('Permissão de notificação não concedida');
+      return;
+    }
+
+    const options: NotificationOptions = {
+      body: notification.message,
+      icon: '/icons/notification-icon.png',
+      badge: '/icons/badge-icon.png',
+      tag: notification.orderId || 'general',
+      data: notification.data,
+      requireInteraction: notification.priority === 'high',
+      actions: this.getNotificationActions(notification.type)
+    };
+
+    if (this.serviceWorkerRegistration) {
+      await this.serviceWorkerRegistration.showNotification(notification.title, options);
+    } else {
+      new Notification(notification.title, options);
+    }
+  }
+
+  // Obter ações da notificação baseadas no tipo
+  private getNotificationActions(type: string): NotificationAction[] {
+    switch (type) {
+      case 'order_update':
+        return [
+          { action: 'view', title: 'Ver Pedido', icon: '/icons/view-icon.png' },
+          { action: 'dismiss', title: 'Dispensar', icon: '/icons/dismiss-icon.png' }
+        ];
+      case 'delivery_assignment':
+        return [
+          { action: 'accept', title: 'Aceitar', icon: '/icons/accept-icon.png' },
+          { action: 'decline', title: 'Recusar', icon: '/icons/decline-icon.png' }
+        ];
+      case 'promotion':
+        return [
+          { action: 'view_offer', title: 'Ver Oferta', icon: '/icons/offer-icon.png' },
+          { action: 'dismiss', title: 'Dispensar', icon: '/icons/dismiss-icon.png' }
+        ];
+      default:
+        return [];
+    }
+  }
+
+  // Notificação específica para pedidos
+  async notifyOrderUpdate(userId: string, order: Order, message: string, priority: 'low' | 'normal' | 'high' = 'normal') {
+    const notification: NotificationPayload = {
+      type: 'order_update',
+      orderId: order.id,
+      title: `Pedido #${order.id.slice(-6)}`,
+      message,
+      data: { order },
+      timestamp: Date.now(),
+      priority
+    };
+
+    await this.showNotification(notification);
+    this.sendToUser(userId, notification);
+  }
+
+  // Notificação para promoções
+  async notifyPromotion(userId: string, title: string, message: string, promotionData?: any) {
+    const notification: NotificationPayload = {
+      type: 'promotion',
+      title,
+      message,
+      data: promotionData,
+      timestamp: Date.now(),
+      priority: 'normal'
+    };
+
+    await this.showNotification(notification);
+    this.sendToUser(userId, notification);
+  }
 
   // Registrar entregador como ativo
   registerDeliveryDriver(driverId: string) {

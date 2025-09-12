@@ -75,28 +75,38 @@ const SignInContent = () => {
     try {
       // Salva o tipo de usuário no store antes de fazer login
       storeSetUserType(userType);
-      await signIn(email, password);
+      await signIn(email, password, userType);
+      
+      // Mostrar mensagem de sucesso
+      showSuccessAlert('Sucesso', 'Login realizado com sucesso!');
       
       // Redirecionamentos baseados no tipo de usuário
-      switch (userType) {
-        case 'restaurant':
-          // Verificar se o restaurante já tem configuração completa
-          const { restaurantConfigService } = await import('@/services/restaurant-config.service');
-          const hasConfig = await restaurantConfigService.isRestaurantConfigured('current_restaurant');
-          
-          if (hasConfig) {
-            router.push('/restaurant');
-          } else {
-            router.push('/restaurant/cadastro');
-          }
-          break;
-        case 'delivery':
-          router.push('/delivery');
-          break;
-        default:
-          router.push('/customer');
-          break;
-      }
+      setTimeout(() => {
+        switch (userType) {
+          case 'restaurant':
+            // Verificar se o restaurante já tem configuração completa
+            import('@/services/restaurant-config.service').then(async ({ restaurantConfigService }) => {
+              try {
+                const hasConfig = await restaurantConfigService.isRestaurantConfigured('current_restaurant');
+                
+                if (hasConfig) {
+                  router.push('/restaurant');
+                } else {
+                  router.push('/restaurant/cadastro');
+                }
+              } catch (error) {
+                router.push('/restaurant/cadastro');
+              }
+            });
+            break;
+          case 'delivery':
+            router.push('/delivery');
+            break;
+          default:
+            router.push('/customer');
+            break;
+        }
+      }, 1500);
     } catch (error: any) {
       showErrorAlert('Erro', error.message || 'Falha no login');
       console.error(error);
@@ -213,6 +223,16 @@ const SignInContent = () => {
                     onKeyDown={(e) => e.key === 'Enter' && submit()}
                   />
                 </div>
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="text-right">
+                <Link 
+                  href="/auth/password-reset" 
+                  className="text-sm text-red-600 hover:text-red-700 hover:underline font-medium"
+                >
+                  Esqueceu sua senha?
+                </Link>
               </div>
 
               {/* Submit Button */}

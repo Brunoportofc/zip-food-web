@@ -2,6 +2,23 @@
 
 > **Plataforma de delivery inspirada no iFood** - Um marketplace simplificado que conecta clientes, restaurantes e entregadores em um ecossistema de delivery on-demand.
 
+## 🚀 Funcionalidades Implementadas
+
+### ✅ Sistema de Redefinição de Senha via SMS
+
+- **Código de 6 dígitos** gerado automaticamente
+- **Expiração em 15 minutos** por segurança
+- **Rate limiting** para prevenir abuso
+- **Validação de telefone brasileiro** no formato (11) 98765-4321
+- **Interface intuitiva** com 3 etapas claras
+- **Integração com Twilio** (produção) e mock (desenvolvimento)
+
+### 📱 Campo de Telefone Obrigatório
+
+- **Validação em tempo real** durante o cadastro
+- **Formatação automática** do número
+- **Integração completa** com todos os tipos de usuário (cliente, restaurante, entregador)
+
 ## 📋 Índice
 
 - [Visão Geral do Sistema](#-visão-geral-do-sistema)

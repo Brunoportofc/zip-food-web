@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-import { FiLock, FiMail, FiUser } from 'react-icons/fi';
+import { FiLock, FiMail, FiUser, FiPhone } from 'react-icons/fi';
 import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
 import LottieAnimation from '@/components/LottieAnimation';
 
@@ -33,6 +33,7 @@ const SignUpContent = () => {
   const [form, setForm] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -67,11 +68,32 @@ const SignUpContent = () => {
   //   }
   // }, [isAuthenticated, router]);
 
-  const submit = async () => {
-    const { name, email, password, confirmPassword } = form;
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 2) return numbers;
+    if (numbers.length <= 7) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+  };
 
-    if (!name || !email || !password || !confirmPassword) {
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setForm(prev => ({ ...prev, phone: formatted }));
+  };
+
+  const validatePhone = (phone: string) => {
+    const numbers = phone.replace(/\D/g, '');
+    return numbers.length === 11 && numbers.startsWith('1');
+  };
+
+  const submit = async () => {
+    const { name, email, phone, password, confirmPassword } = form;
+
+    if (!name || !email || !phone || !password || !confirmPassword) {
       return showAlert('Erro', 'Por favor, preencha todos os campos');
+    }
+
+    if (!validatePhone(phone)) {
+      return showAlert('Erro', 'Número de telefone inválido. Use o formato (11) 98765-4321');
     }
 
     if (password !== confirmPassword) {
@@ -84,43 +106,16 @@ const SignUpContent = () => {
     try {
       // Salva o tipo de usuário no store antes de fazer cadastro
       storeSetUserType(userType);
-      await signUp(name, email, password);
+      await signUp(name, email, password, phone);
       
-      // Obter o usuário do store após o signUp
-      const currentUser = useAuthStore.getState().user;
+      // Mostrar mensagem de sucesso
+      showAlert('Sucesso', 'Conta criada com sucesso! Faça login para continuar.');
       
-      // Redirecionamentos baseados no tipo de usuário
-      switch (userType) {
-        case 'restaurant':
-          // Verificar se o restaurante já tem configuração
-          try {
-            if (currentUser) {
-              const isConfigured = await restaurantConfigService.isRestaurantConfigured(currentUser.id);
-              if (isConfigured) {
-                const config = await restaurantConfigService.getRestaurantConfig(currentUser.id);
-                if (config && config.approvalStatus === 'approved') {
-                  router.push('/restaurant');
-                } else {
-                  router.push('/restaurant/aprovacao');
-                }
-              } else {
-                router.push('/restaurant/cadastro');
-              }
-            } else {
-              router.push('/restaurant/cadastro');
-            }
-          } catch (error) {
-            console.error('Erro ao verificar configuração:', error);
-            router.push('/restaurant/cadastro');
-          }
-          break;
-        case 'delivery':
-          router.push('/delivery');
-          break;
-        default:
-          router.push('/customer');
-          break;
-      }
+      // Redirecionar para página de login com o tipo de usuário
+      setTimeout(() => {
+        router.push(`/auth/sign-in?type=${userType}`);
+      }, 2000);
+      
     } catch (error: any) {
       showAlert('Erro', error.message || 'Falha no cadastro');
       console.error(error);
@@ -236,6 +231,27 @@ const SignUpContent = () => {
                     onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                   />
                 </div>
+              </div>
+
+              {/* Phone Input */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Telefone *
+                </label>
+                <div className="relative">
+                  <FiPhone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="tel"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    placeholder="(11) 98765-4321"
+                    value={form.phone}
+                    onChange={handlePhoneChange}
+                    maxLength={15}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Digite apenas números. Formato: (11) 98765-4321
+                </p>
               </div>
 
               {/* Password Input */}

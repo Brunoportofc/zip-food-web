@@ -1,11 +1,12 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
+import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp, MdLocationOn } from 'react-icons/md';
 import { orderService } from '@/services/order.service';
 import useAuthStore from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
+import DeliveryTracking from '@/components/DeliveryTracking';
 
 
 
@@ -30,6 +31,7 @@ export default function OrdersPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const { user } = useAuthStore();
 
   // Carregar pedidos do usuário
@@ -191,7 +193,16 @@ export default function OrdersPage() {
                     <p className="text-gray-700">{order.address}</p>
                   </div>
                   
-                  <div className="flex justify-end mt-4">
+                  <div className="flex justify-end mt-4 space-x-3">
+                    {(order.status === 'Em entrega' || order.status === 'Preparando') && (
+                      <button 
+                        onClick={() => setTrackingOrderId(order.id)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition-colors flex items-center"
+                      >
+                        <MdLocationOn className="mr-1" size={16} />
+                        Acompanhar Entrega
+                      </button>
+                    )}
                     <button className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 transition-colors">
                       Pedir Novamente
                     </button>
@@ -200,6 +211,26 @@ export default function OrdersPage() {
               )}
             </div>
           ))}
+        </div>
+      )}
+      
+      {/* Modal de Tracking de Entrega */}
+      {trackingOrderId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-xl font-semibold">Acompanhar Entrega - Pedido #{trackingOrderId}</h2>
+              <button 
+                onClick={() => setTrackingOrderId(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-4">
+              <DeliveryTracking orderId={trackingOrderId} />
+            </div>
+          </div>
         </div>
       )}
       </div>
