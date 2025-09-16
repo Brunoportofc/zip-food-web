@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendNotification } from '../subscribe/route';
+import { sendNotification } from '@/lib/notifications';
 import { OrderStatus } from '@/services/order.service';
 
 interface NotificationRequest {
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Erro ao enviar notificação:', error);
     
-    if (error.message?.includes('Subscription não encontrada')) {
+    if ((error as Error).message?.includes('Subscription não encontrada')) {
       return NextResponse.json(
         { error: 'Usuário não está inscrito para notificações' },
         { status: 404 }
@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Endpoint específico para notificações de pedidos
-export async function sendOrderNotification(
+// Endpoint específico para notificações de pedidos 
+async function sendOrderNotification(
   userId: string,
   orderId: string,
   status: OrderStatus,
@@ -100,12 +100,12 @@ export async function sendOrderNotification(
     return { success: true };
   } catch (error) {
     console.error('Erro ao enviar notificação de pedido:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
-// Endpoint para notificações de entregadores
-export async function sendDeliveryNotification(
+// Endpoint específico para notificações de entregadores
+async function sendDeliveryNotification(
   driverId: string,
   orderId: string,
   type: 'new_delivery' | 'delivery_update' | 'payment_received',
@@ -135,7 +135,7 @@ export async function sendDeliveryNotification(
     return { success: true };
   } catch (error) {
     console.error('Erro ao enviar notificação de entrega:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -205,7 +205,7 @@ function getOrderNotificationContent(
         message: 'Seu pedido está pronto e aguardando o entregador.',
         priority: 'high'
       };
-    case 'out_for_delivery':
+    case 'delivering':
       return {
         title: `Pedido ${orderNumber} Saiu para Entrega! 🚗`,
         message: 'Seu pedido está a caminho. Acompanhe a entrega em tempo real.',
@@ -265,7 +265,7 @@ function getDeliveryNotificationContent(
 
 function getOrderActions(status: OrderStatus): Array<{ action: string; title: string; icon?: string }> {
   switch (status) {
-    case 'out_for_delivery':
+    case 'delivering':
       return [
         { action: 'track', title: 'Acompanhar', icon: '/icons/track-icon.png' },
         { action: 'view', title: 'Ver Detalhes', icon: '/icons/view-icon.png' }

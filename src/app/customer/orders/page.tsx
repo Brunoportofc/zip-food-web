@@ -50,7 +50,7 @@ export default function OrdersPage() {
         const mappedOrders: Order[] = userOrders.map(order => ({
           id: order.id,
           date: new Date(order.createdAt).toLocaleDateString('pt-BR'),
-          restaurant: order.restaurantName || 'Restaurante',
+          restaurant: 'Restaurante', // Temporário até implementar busca de restaurante
           items: order.items.map(item => ({
             name: item.name,
             quantity: item.quantity,
@@ -59,10 +59,10 @@ export default function OrdersPage() {
           total: order.total,
           status: order.status === 'delivered' ? 'Entregue' : 
                  order.status === 'preparing' ? 'Preparando' :
-                 order.status === 'in_delivery' ? 'Em entrega' :
+                 order.status === 'delivering' ? 'Em entrega' :
                  order.status === 'cancelled' ? 'Cancelado' : 'Pendente',
           deliveryTime: order.estimatedDeliveryTime || '30-45 min',
-          address: order.deliveryAddress
+          address: order.customer?.address || 'Endereço não informado'
         }));
         
         setOrders(mappedOrders);
@@ -228,7 +228,11 @@ export default function OrdersPage() {
               </button>
             </div>
             <div className="p-4">
-              <DeliveryTracking orderId={trackingOrderId} />
+              <DeliveryTracking 
+                orderId={trackingOrderId}
+                restaurantLocation={{ lat: -23.5505, lng: -46.6333, address: "Restaurante" }}
+                customerLocation={{ lat: -23.5505, lng: -46.6333, address: "Endereço de entrega" }}
+              />
             </div>
           </div>
         </div>

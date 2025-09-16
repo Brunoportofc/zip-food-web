@@ -231,7 +231,7 @@ const RestaurantApprovalPage = () => {
         {/* Action Buttons */}
         <div className="mt-8 flex justify-center space-x-4">
           <button
-            onClick={() => router.push('/restaurant/cadastro')}
+            onClick={() => router.push('/restaurant/register')}
             className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
             Editar Cadastro

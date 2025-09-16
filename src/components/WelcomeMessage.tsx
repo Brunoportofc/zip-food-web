@@ -89,9 +89,19 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ restaurantName, onConti
           onClick={onContinue}
           className="bg-red-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors flex items-center mx-auto"
         >
-          Ir para o Painel do Restaurante
+          Personalizar Restaurante
           <FaArrowRight className="ml-3" />
         </button>
+        
+        {/* Skip Option */}
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => window.location.href = '/restaurant/dashboard'}
+            className="text-gray-500 hover:text-gray-700 text-sm underline transition-colors"
+          >
+            Pular personalização e ir direto para o painel
+          </button>
+        </div>
       </div>
     </div>
   );

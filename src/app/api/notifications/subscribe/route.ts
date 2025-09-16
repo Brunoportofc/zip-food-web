@@ -1,22 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import webpush from 'web-push';
-
-// Configurar VAPID keys (em produção, use variáveis de ambiente)
-const vapidKeys = {
-  publicKey: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || '',
-  privateKey: process.env.VAPID_PRIVATE_KEY || '',
-  subject: process.env.VAPID_SUBJECT || 'mailto:admin@zipfood.com'
-};
-
-webpush.setVapidDetails(
-  vapidKeys.subject,
-  vapidKeys.publicKey,
-  vapidKeys.privateKey
-);
-
-// Simulação de banco de dados para subscriptions
-// Em produção, use um banco de dados real
-const subscriptions = new Map<string, any>();
+import { sendNotification, subscriptions } from '@/lib/notifications';
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,20 +32,14 @@ export async function POST(request: NextRequest) {
 
     // Enviar notificação de boas-vindas
     try {
-      await webpush.sendNotification(
-        subscription,
-        JSON.stringify({
-          title: 'ZipFood - Notificações Ativadas! 🎉',
-          body: 'Você receberá atualizações sobre seus pedidos em tempo real.',
-          icon: '/icons/notification-icon.png',
-          badge: '/icons/badge-icon.png',
-          tag: 'welcome',
-          data: {
-            type: 'welcome',
-            timestamp: Date.now()
-          }
-        })
-      );
+      await sendNotification(userId, {
+        title: '🎉 Bem-vindo ao ZipFood!',
+        body: 'Você receberá notificações sobre seus pedidos aqui.',
+        icon: '/icons/icon-192x192.png',
+        badge: '/icons/badge-72x72.png',
+        tag: 'welcome',
+        data: { type: 'welcome', userId }
+      });
     } catch (pushError) {
       console.error('Erro ao enviar notificação de boas-vindas:', pushError);
       // Não falhar a requisição por causa disso
@@ -168,56 +145,4 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// Função auxiliar para enviar notificações (pode ser chamada por outros serviços)
-export async function sendPushNotification(
-  userId: string, 
-  payload: {
-    title: string;
-    body: string;
-    icon?: string;
-    badge?: string;
-    tag?: string;
-    data?: any;
-    actions?: Array<{ action: string; title: string; icon?: string }>;
-  }
-) {
-  const subscription = subscriptions.get(userId);
-  
-  if (!subscription) {
-    throw new Error(`Subscription não encontrada para usuário ${userId}`);
-  }
-
-  const notificationPayload = {
-    title: payload.title,
-    body: payload.body,
-    icon: payload.icon || '/icons/notification-icon.png',
-    badge: payload.badge || '/icons/badge-icon.png',
-    tag: payload.tag || 'general',
-    data: payload.data || {},
-    actions: payload.actions || [],
-    timestamp: Date.now()
-  };
-
-  try {
-    await webpush.sendNotification(
-      subscription,
-      JSON.stringify(notificationPayload)
-    );
-    
-    console.log(`Notificação enviada para usuário ${userId}`);
-    return true;
-  } catch (error) {
-    console.error(`Erro ao enviar notificação para usuário ${userId}:`, error);
-    
-    // Se a subscription expirou ou é inválida, remover
-    if (error.statusCode === 410 || error.statusCode === 404) {
-      subscriptions.delete(userId);
-      console.log(`Subscription inválida removida para usuário ${userId}`);
-    }
-    
-    throw error;
-  }
-}
-
-// Exportar função para uso em outros módulos
-export { sendPushNotification as sendNotification, subscriptions };
+export { sendNotification, subscriptions };

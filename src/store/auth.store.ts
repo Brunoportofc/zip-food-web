@@ -22,6 +22,7 @@ interface AuthState {
   userType: UserType | null;
   isOfflineMode: boolean;
   isLoading: boolean;
+  isInitialized: boolean; // Flag para controlar se a verificação inicial foi concluída
   lastAuthCheck: number;
   login: (userData: User, token: string) => void;
   logout: () => void;
@@ -44,6 +45,7 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
         userType: null,
         isOfflineMode: false,
         isLoading: false,
+        isInitialized: false, // Inicialmente não foi verificado
         lastAuthCheck: 0,
         login: (userData, token) => set({ 
           isAuthenticated: true, 
@@ -51,12 +53,19 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
           token, 
           userType: userData.type,
           isLoading: false,
+          isInitialized: true, // Marca como inicializado após login
           lastAuthCheck: Date.now()
         }),
       logout: async () => {
         try {
           await authService.signOut();
-          set({ isAuthenticated: false, user: null, token: null, userType: null });
+          set({ 
+            isAuthenticated: false, 
+            user: null, 
+            token: null, 
+            userType: null,
+            isInitialized: true // Mantém como inicializado após logout
+          });
         } catch (error) {
           console.error('Erro ao fazer logout:', error);
         }
@@ -89,6 +98,12 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
           // Usa o userType do usuário retornado pelo serviço
           const finalUserType = user.type;
           
+          console.log('Auth Store - Login bem-sucedido:', {
+            userId: user.id,
+            userType: finalUserType,
+            userName: user.name
+          });
+          
           set({ 
             isAuthenticated: true, 
             user, 
@@ -97,6 +112,39 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
             isLoading: false,
             lastAuthCheck: Date.now()
           });
+
+          // Lógica de redirecionamento para restaurantes
+          if (finalUserType === 'restaurant') {
+            try {
+              // Verifica se o restaurante já tem cadastro completo
+              const restaurantResponse = await fetch(`/api/restaurants?owner=${user.id}`, {
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+              });
+              
+              if (restaurantResponse.ok) {
+                const restaurantData = await restaurantResponse.json();
+                const restaurants = restaurantData.data || [];
+                
+                // Se já tem restaurante cadastrado, redireciona para o dashboard
+                if (restaurants.length > 0) {
+                  window.location.href = '/restaurant/dashboard';
+                } else {
+                  // Se não tem restaurante, redireciona para o cadastro
+                  window.location.href = '/restaurant/register';
+                }
+              } else {
+                // Em caso de erro na verificação, redireciona para o cadastro por segurança
+                window.location.href = '/restaurant/register';
+              }
+            } catch (restaurantError) {
+              console.error('Erro ao verificar restaurante:', restaurantError);
+              // Em caso de erro, redireciona para o cadastro
+              window.location.href = '/restaurant/register';
+            }
+          }
         } catch (error) {
           set({ isLoading: false });
           console.error('Erro ao fazer login:', error);
@@ -145,6 +193,7 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
               isAuthenticated: true,
               userType: finalUserType,
               isLoading: false,
+              isInitialized: true, // Marca como inicializado após verificação
               lastAuthCheck: now
             });
           } else {
@@ -153,6 +202,7 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
               isAuthenticated: false,
               userType: null,
               isLoading: false,
+              isInitialized: true, // Marca como inicializado mesmo sem usuário
               lastAuthCheck: now
             });
           }
@@ -163,6 +213,7 @@ const useAuthStore = createWithEqualityFn<AuthState>()(
             isAuthenticated: false,
             userType: null,
             isLoading: false,
+            isInitialized: true, // Marca como inicializado mesmo com erro
             lastAuthCheck: now
           });
         }
@@ -205,7 +256,8 @@ export const useAuthData = () => useAuthStore(
     isAuthenticated: state.isAuthenticated,
     user: state.user,
     userType: state.userType,
-    isLoading: state.isLoading
+    isLoading: state.isLoading,
+    isInitialized: state.isInitialized // Incluindo flag de inicialização
   })
 );
 

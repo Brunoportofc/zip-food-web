@@ -92,10 +92,10 @@ const SignInContent = () => {
                 if (hasConfig) {
                   router.push('/restaurant');
                 } else {
-                  router.push('/restaurant/cadastro');
+                  router.push('/restaurant/register');
                 }
               } catch (error) {
-                router.push('/restaurant/cadastro');
+                router.push('/restaurant/register');
               }
             });
             break;

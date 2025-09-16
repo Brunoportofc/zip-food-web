@@ -12,7 +12,7 @@ import { restaurantService } from '@/services/restaurant.service';
 import { menuService } from '@/services/menu.service';
 import useAuthStore from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
-import AddressSelector from '@/components/AddressSelector';
+import AddressSelector, { Address } from '@/components/AddressSelector';
 
 interface MenuItem {
   id: string;
@@ -53,7 +53,7 @@ export default function RestaurantPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [showAddressSelector, setShowAddressSelector] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<string>('');
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
 
   const restaurantId = params.id as string;
 
@@ -205,7 +205,7 @@ export default function RestaurantPage() {
           id: user.id,
           name: user.name,
           phone: user.phone || '(11) 99999-9999',
-          address: selectedAddress
+          address: selectedAddress?.formattedAddress || 'Endereço não informado'
         },
         items: cart.map(item => ({
           id: item.id,

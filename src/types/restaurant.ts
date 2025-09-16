@@ -1,20 +1,20 @@
 // Status possíveis de um restaurante
 export type RestaurantStatus = 'pending' | 'active' | 'suspended' | 'rejected';
 
-// Categorias de restaurantes disponíveis
+// Categorias de restaurantes disponíveis (sincronizadas com o serviço)
 export type RestaurantCategory = 
-  | 'pizza'
-  | 'hamburger'
-  | 'japonesa'
-  | 'italiana'
-  | 'saudavel'
-  | 'falafel'
-  | 'hummus'
-  | 'shawarma'
-  | 'sabich'
-  | 'shakshuka'
-  | 'bourekas'
-  | 'kosher';
+  | 'italian'
+  | 'chinese'
+  | 'japanese'
+  | 'indian'
+  | 'mexican'
+  | 'american'
+  | 'mediterranean'
+  | 'thai'
+  | 'french'
+  | 'middle_eastern'
+  | 'fast_food'
+  | 'other';
 
 // Interface principal do restaurante
 export interface Restaurant {
@@ -61,20 +61,20 @@ export interface RestaurantFilters {
   searchTerm?: string;
 }
 
-// Mapeamento de categorias para exibição
+// Nomes de exibição das categorias (sincronizados com o serviço)
 export const categoryDisplayNames: Record<RestaurantCategory, string> = {
-  pizza: 'Pizza',
-  hamburger: 'Hambúrguer',
-  japonesa: 'Japonesa',
-  italiana: 'Italiana',
-  saudavel: 'Saudável',
-  falafel: 'Falafel',
-  hummus: 'Hummus',
-  shawarma: 'Shawarma',
-  sabich: 'Sabich',
-  shakshuka: 'Shakshuka',
-  bourekas: 'Bourekas',
-  kosher: 'Kosher'
+  italian: 'Italiana',
+  chinese: 'Chinesa',
+  japanese: 'Japonesa',
+  indian: 'Indiana',
+  mexican: 'Mexicana',
+  american: 'Americana',
+  mediterranean: 'Mediterrânea',
+  thai: 'Tailandesa',
+  french: 'Francesa',
+  middle_eastern: 'Oriente Médio',
+  fast_food: 'Fast Food',
+  other: 'Outros'
 };
 
 // Mapeamento de status para exibição
@@ -99,19 +99,20 @@ export function categoryToSlug(category: RestaurantCategory): string {
 }
 
 // Mapeamento de slug para categoria
+// Mapeamento de slug para categoria (sincronizado)
 export const slugToCategory: Record<string, RestaurantCategory> = {
-  'pizza': 'pizza',
-  'hamburger': 'hamburger',
-  'japonesa': 'japonesa',
-  'italiana': 'italiana',
-  'saudavel': 'saudavel',
-  'falafel': 'falafel',
-  'hummus': 'hummus',
-  'shawarma': 'shawarma',
-  'sabich': 'sabich',
-  'shakshuka': 'shakshuka',
-  'bourekas': 'bourekas',
-  'kosher': 'kosher'
+  'italian': 'italian',
+  'chinese': 'chinese',
+  'japanese': 'japanese',
+  'indian': 'indian',
+  'mexican': 'mexican',
+  'american': 'american',
+  'mediterranean': 'mediterranean',
+  'thai': 'thai',
+  'french': 'french',
+  'middle-eastern': 'middle_eastern',
+  'fast-food': 'fast_food',
+  'other': 'other'
 };
 
 // Função utilitária para converter slug em categoria

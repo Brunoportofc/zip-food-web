@@ -120,7 +120,7 @@ class NotificationService {
   }
 
   // Converter VAPID key
-  private urlBase64ToUint8Array(base64String: string): Uint8Array {
+  private urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding)
       .replace(/-/g, '+')
@@ -178,8 +178,7 @@ class NotificationService {
       badge: '/icons/badge-icon.png',
       tag: notification.orderId || 'general',
       data: notification.data,
-      requireInteraction: notification.priority === 'high',
-      actions: this.getNotificationActions(notification.type)
+      requireInteraction: notification.priority === 'high'
     };
 
     if (this.serviceWorkerRegistration) {
@@ -190,22 +189,17 @@ class NotificationService {
   }
 
   // Obter ações da notificação baseadas no tipo
-  private getNotificationActions(type: string): NotificationAction[] {
+  private getNotificationActions(type: string): any[] {
     switch (type) {
       case 'order_update':
         return [
-          { action: 'view', title: 'Ver Pedido', icon: '/icons/view-icon.png' },
-          { action: 'dismiss', title: 'Dispensar', icon: '/icons/dismiss-icon.png' }
+          { action: 'view', title: 'Ver Pedido' },
+          { action: 'dismiss', title: 'Dispensar' }
         ];
       case 'delivery_assignment':
         return [
-          { action: 'accept', title: 'Aceitar', icon: '/icons/accept-icon.png' },
-          { action: 'decline', title: 'Recusar', icon: '/icons/decline-icon.png' }
-        ];
-      case 'promotion':
-        return [
-          { action: 'view_offer', title: 'Ver Oferta', icon: '/icons/offer-icon.png' },
-          { action: 'dismiss', title: 'Dispensar', icon: '/icons/dismiss-icon.png' }
+          { action: 'accept', title: 'Aceitar' },
+          { action: 'decline', title: 'Recusar' }
         ];
       default:
         return [];
@@ -304,7 +298,10 @@ class NotificationService {
     this.sendToUser(customerId, {
       type: 'order_update',
       orderId: order.id,
+      title: 'Atualização do Pedido',
       message: statusMessages[order.status],
+      timestamp: Date.now(),
+      priority: 'normal',
       data: {
         order,
         previousStatus,
@@ -336,7 +333,10 @@ class NotificationService {
     this.sendToAllDrivers({
       type: 'delivery_assignment',
       orderId: order.id,
+      title: 'Nova Entrega Disponível',
       message: `Nova entrega disponível - R$ ${order.deliveryFee.toFixed(2)}`,
+      timestamp: Date.now(),
+      priority: 'high',
       data: deliveryNotification
     });
   }
@@ -347,7 +347,10 @@ class NotificationService {
     this.sendToUser(order.customer.id, {
       type: 'delivery_confirmation',
       orderId: order.id,
+      title: 'Pedido Entregue',
       message: 'Seu pedido foi entregue com sucesso!',
+      timestamp: Date.now(),
+      priority: 'normal',
       data: {
         order,
         deliveredAt: new Date(),
@@ -359,7 +362,10 @@ class NotificationService {
     this.sendToUser(order.restaurantId, {
       type: 'delivery_confirmation',
       orderId: order.id,
+      title: 'Entrega Confirmada',
       message: `Pedido ${order.id} foi entregue com sucesso`,
+      timestamp: Date.now(),
+      priority: 'normal',
       data: {
         order,
         deliveredAt: new Date(),

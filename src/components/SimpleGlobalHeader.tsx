@@ -34,7 +34,7 @@ const SimpleGlobalHeader = () => {
           router.push('/customer');
           break;
         case 'restaurant':
-          router.push('/restaurant/cadastro');
+          router.push('/restaurant/register');
           break;
         case 'delivery':
           router.push('/delivery');

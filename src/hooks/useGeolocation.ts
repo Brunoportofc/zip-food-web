@@ -26,7 +26,7 @@ export const useGeolocation = (): UseGeolocationReturn => {
   const [error, setError] = useState<GeolocationError | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSuccess = useCallback((pos: GeolocationPosition) => {
+  const handleSuccess = useCallback((pos: globalThis.GeolocationPosition) => {
     setPosition({
       lat: pos.coords.latitude,
       lng: pos.coords.longitude

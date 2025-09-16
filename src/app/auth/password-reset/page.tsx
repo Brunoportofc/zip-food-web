@@ -230,7 +230,7 @@ export default function PasswordResetPage() {
 
             <Button
               onClick={handleRequestCode}
-              disabled={loading || !formData.phone || (rateLimit && !rateLimit.canSend)}
+              disabled={loading || !formData.phone || (rateLimit ? !rateLimit.canSend : false)}
               className="w-full bg-orange-500 hover:bg-orange-600"
             >
               {loading ? 'Enviando...' : 'Enviar Código'}

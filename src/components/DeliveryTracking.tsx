@@ -41,7 +41,8 @@ const statusMessages = {
   ready: 'Pedido pronto para retirada',
   picked_up: 'Pedido coletado',
   on_route: 'A caminho da entrega',
-  delivered: 'Pedido entregue'
+  delivered: 'Pedido entregue',
+  cancelled: 'Pedido cancelado'
 };
 
 const statusColors = {
@@ -49,7 +50,8 @@ const statusColors = {
   ready: 'bg-blue-500',
   picked_up: 'bg-purple-500',
   on_route: 'bg-green-500',
-  delivered: 'bg-gray-500'
+  delivered: 'bg-gray-500',
+  cancelled: 'bg-red-500'
 };
 
 const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
@@ -69,7 +71,7 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
   const [isTracking, setIsTracking] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const trackingInterval = useRef<NodeJS.Timeout | null>(null);
-  const refreshIntervalRef = useRef<NodeJS.Timeout>();
+  const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { position: userLocation } = useGeolocation();
 
   // Buscar informações de entrega
@@ -114,7 +116,12 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
             const route = directions.routes[0];
             newStatus.actualETA = route.legs[0].duration.text;
             newStatus.distance = route.legs[0].distance.text;
-            newStatus.route = route.overview_path;
+            newStatus.route = route.overview_polyline?.points ? 
+              google.maps.geometry.encoding.decodePath(route.overview_polyline.points).map(point => ({
+                lat: point.lat(),
+                lng: point.lng()
+              })) : 
+              [];
           }
         } catch (error) {
           console.error('Erro ao calcular rota:', error);
@@ -201,7 +208,7 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
     if (deliveryStatus.currentLocation && deliveryStatus.status !== 'preparing' && deliveryStatus.status !== 'ready') {
       markers.push({
         id: 'delivery',
-        position: deliveryStatus.currentLocation,
+        position: { ...deliveryStatus.currentLocation, address: 'Localização do entregador' },
         title: 'Entregador',
         icon: '/icons/delivery-marker.png'
       });
@@ -346,10 +353,8 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
           zoom={14}
           markers={getMapMarkers()}
           deliveryRoute={getDeliveryRoute()}
-          route={deliveryStatus.route}
           className="w-full h-64"
           showCurrentLocation={false}
-          fitBounds={true}
           onLocationUpdate={(position) => {
             // Atualizar localização do usuário se necessário
           }}

@@ -75,11 +75,11 @@ export async function POST(request: NextRequest) {
       console.log('💾 [FORGOT-PASSWORD] Usando armazenamento em memória como fallback');
       
       // Usar armazenamento em memória como fallback
-      if (!global.resetTokens) {
-        global.resetTokens = new Map();
+      if (!(global as any).resetTokens) {
+        (global as any).resetTokens = new Map();
       }
       
-      global.resetTokens.set(resetToken, {
+      (global as any).resetTokens.set(resetToken, {
         userId: user.id,
         email: user.email,
         expiresAt: expiresAt.getTime()

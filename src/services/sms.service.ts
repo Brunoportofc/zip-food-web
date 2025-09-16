@@ -283,11 +283,11 @@ export class SMSService {
         console.log('Usando armazenamento em memória como fallback');
         
         // Armazenar em memória (não recomendado para produção)
-        if (!global.verificationCodes) {
-          global.verificationCodes = new Map();
+        if (!(global as any).verificationCodes) {
+          (global as any).verificationCodes = new Map();
         }
         
-        global.verificationCodes.set(formattedPhone, {
+        (global as any).verificationCodes.set(formattedPhone, {
           code: verificationCode,
           userId: user.id,
           expiresAt: expiresAt.getTime()
@@ -385,13 +385,13 @@ export class SMSService {
       }
       
       // Se não encontrou na tabela users, tentar na memória (fallback)
-      if (global.verificationCodes && global.verificationCodes.has(formattedPhone)) {
-        const stored = global.verificationCodes.get(formattedPhone);
+      if ((global as any).verificationCodes && (global as any).verificationCodes.has(formattedPhone)) {
+        const stored = (global as any).verificationCodes.get(formattedPhone);
         
         if (stored.code === code) {
           // Verificar se não expirou
           if (Date.now() > stored.expiresAt) {
-            global.verificationCodes.delete(formattedPhone);
+            (global as any).verificationCodes.delete(formattedPhone);
             return {
               success: false,
               message: 'Código expirado'
@@ -399,7 +399,7 @@ export class SMSService {
           }
           
           // Remover código usado
-          global.verificationCodes.delete(formattedPhone);
+          (global as any).verificationCodes.delete(formattedPhone);
           
           return {
             success: true,
@@ -438,8 +438,8 @@ export class SMSService {
         .eq('phone', formattedPhone);
       
       // Limpar da memória também
-      if (global.verificationCodes && global.verificationCodes.has(formattedPhone)) {
-        global.verificationCodes.delete(formattedPhone);
+      if ((global as any).verificationCodes && (global as any).verificationCodes.has(formattedPhone)) {
+        (global as any).verificationCodes.delete(formattedPhone);
       }
     } catch (error) {
       console.error('Erro ao limpar código de verificação:', error);

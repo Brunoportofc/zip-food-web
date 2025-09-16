@@ -174,6 +174,41 @@ class OrderService {
   }
 
   /**
+   * Obtém pedidos por cliente usando a API do backend
+   */
+  async getOrdersByCustomer(customerId: string): Promise<Order[]> {
+    try {
+      const token = authService.getCurrentToken();
+      if (!token) {
+        throw new Error('Token de autenticação não encontrado');
+      }
+
+      const response = await fetch(`${this.API_BASE_URL}?customerId=${customerId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Erro ao buscar pedidos do cliente');
+      }
+
+      if (!data.success) {
+        throw new Error(data.message || 'Erro na busca');
+      }
+
+      return data.data.map(this.transformOrderFromAPI);
+    } catch (error) {
+      console.error('Erro ao buscar pedidos do cliente:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Cria novo pedido usando a API do backend
    */
   async createOrder(orderData: Omit<Order, 'id' | 'createdAt' | 'updatedAt' | 'statusHistory' | 'confirmationCode'>): Promise<Order> {
@@ -286,13 +321,12 @@ class OrderService {
       };
 
       if (newStatus in statusMessages) {
-        await notificationService.sendNotification({
-          userId: order.customerId,
-          title: 'Atualização do Pedido',
-          message: statusMessages[newStatus as keyof typeof statusMessages],
-          type: 'order_update',
-          data: { orderId: order.id, status: newStatus }
-        });
+        await notificationService.sendPushNotification(
+          order.customerId,
+          'Atualização do Pedido',
+          statusMessages[newStatus as keyof typeof statusMessages],
+          { orderId: order.id, status: newStatus }
+        );
       }
 
       // Lógica específica para cada status

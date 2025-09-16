@@ -50,7 +50,7 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
   const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesService = useRef<google.maps.places.PlacesService | null>(null);
   const geocoder = useRef<google.maps.Geocoder | null>(null);
-  const debounceRef = useRef<NodeJS.Timeout>();
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   const { position: currentLocation, getCurrentPosition: getGeoPosition, loading: locationLoading } = useGeolocation();
 

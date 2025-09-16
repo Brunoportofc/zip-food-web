@@ -68,13 +68,13 @@ export async function POST(request: NextRequest) {
       console.log('🔍 [RESET-PASSWORD] Token não encontrado no banco, verificando memória...');
       
       // Verificar no armazenamento em memória
-      if (global.resetTokens && global.resetTokens.has(token)) {
-        tokenData = global.resetTokens.get(token);
+      if ((global as any).resetTokens && (global as any).resetTokens.has(token)) {
+        tokenData = (global as any).resetTokens.get(token);
         const now = Date.now();
         
         if (now > tokenData.expiresAt) {
           console.log('❌ [RESET-PASSWORD] Token expirado na memória');
-          global.resetTokens.delete(token);
+          (global as any).resetTokens.delete(token);
           return NextResponse.json(
             { error: 'Token de redefinição expirado. Solicite um novo link' },
             { status: 400 }
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     if (tokenData) {
       // Token estava na memória
       console.log('🧹 [RESET-PASSWORD] Limpando token da memória');
-      global.resetTokens.delete(token);
+      (global as any).resetTokens.delete(token);
     } else {
       // Token estava no banco
       console.log('🧹 [RESET-PASSWORD] Limpando token do banco');

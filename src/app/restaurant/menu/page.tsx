@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import ImageUpload from '@/components/ImageUpload';
+import { IMAGE_CONFIGS, ProcessedImage } from '@/lib/image-upload';
 
 import { 
   MdAdd, 
@@ -47,9 +49,6 @@ export default function RestaurantMenu() {
   const loadMenuData = async () => {
     try {
       setLoading(true);
-      
-      // Sincronizar menu com dados do restaurante
-      await menuService.syncWithRestaurantData(restaurantId);
       
       // Carregar itens e categorias
       const [items, cats] = await Promise.all([
@@ -100,6 +99,8 @@ export default function RestaurantMenu() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todos');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [itemImage, setItemImage] = useState<ProcessedImage | null>(null);
+  const [itemErrors, setItemErrors] = useState<string[]>([]);
   const [newItem, setNewItem] = useState<Partial<MenuItem>>({
     name: '',
     description: '',
@@ -111,6 +112,40 @@ export default function RestaurantMenu() {
 
   const handleAddItem = async () => {
     try {
+      // Validar campos obrigatórios
+      const errors: string[] = [];
+      
+      if (!newItem.name || newItem.name.trim().length < 2) {
+        errors.push('Nome deve ter pelo menos 2 caracteres');
+      }
+      
+      if (!newItem.description || newItem.description.trim().length < 20 || newItem.description.trim().length > 200) {
+        errors.push('Descrição deve ter entre 20 e 200 caracteres');
+      }
+      
+      if (!newItem.price || newItem.price <= 0) {
+        errors.push('Preço deve ser maior que zero');
+      }
+      
+      if (!newItem.category || newItem.category.trim().length === 0) {
+        errors.push('Categoria é obrigatória');
+      }
+
+      // Verificar nome único (case-insensitive)
+      const existingItem = menuItems.find(item => 
+        item.name.toLowerCase() === newItem.name?.toLowerCase() && 
+        (!editingItem || item.id !== editingItem.id)
+      );
+      
+      if (existingItem) {
+        errors.push('Já existe um item com este nome');
+      }
+
+      if (errors.length > 0) {
+        setItemErrors(errors);
+        return;
+      }
+
       const menuServiceItem: Omit<MenuServiceItem, 'id'> = {
         restaurantId,
         name: newItem.name || '',
@@ -118,7 +153,7 @@ export default function RestaurantMenu() {
         price: Number(newItem.price) || 0,
         category: newItem.category || '',
         available: newItem.available || true,
-        image: newItem.image,
+        image: itemImage ? URL.createObjectURL(itemImage.compressed) : newItem.image,
         preparationTime: 15
       };
 
@@ -180,6 +215,8 @@ export default function RestaurantMenu() {
       available: true,
       image: ''
     });
+    setItemImage(null);
+    setItemErrors([]);
   };
 
   const handleCancelEdit = () => {
@@ -343,6 +380,21 @@ export default function RestaurantMenu() {
               {editingItem ? <MdEdit className="mr-2" size={20} /> : <MdAdd className="mr-2" size={20} />}
               {editingItem ? 'Editar Item' : 'Novo Item'}
             </h2>
+
+            {/* Erros de validação */}
+            {itemErrors.length > 0 && (
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                <ul className="text-red-700 text-sm space-y-1">
+                  {itemErrors.map((error, index) => (
+                    <li key={index} className="flex items-center">
+                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-2"></span>
+                      {error}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
               <Input
                 label="Nome do Item"
@@ -363,26 +415,45 @@ export default function RestaurantMenu() {
                 onChangeText={(text) => setNewItem({ ...newItem, price: parseFloat(text) || 0 })}
                 keyboardType="numeric"
               />
-              <Input
-                label="URL da Imagem"
-                placeholder="https://exemplo.com/imagem.jpg"
-                value={newItem.image || ''}
-                onChangeText={(text) => setNewItem({ ...newItem, image: text })}
-              />
-              <div className="md:col-span-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descrição
-                  </label>
-                  <textarea
-                    placeholder="Descreva o item do menu..."
-                    value={newItem.description || ''}
-                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none text-black"
-                  />
-                </div>
+              
+              {/* Upload de Imagem do Item */}
+              <div className="lg:col-span-2">
+                <ImageUpload
+                  label="Imagem do Item"
+                  description="Imagem do prato (800x600px recomendado, máximo 2MB)"
+                  options={IMAGE_CONFIGS.MENU_ITEM}
+                  onImageProcessed={(processed) => {
+                    setItemImage(processed);
+                    setItemErrors(prev => prev.filter(e => !e.includes('imagem')));
+                  }}
+                  onError={(error) => {
+                    setItemErrors(prev => [...prev.filter(e => !e.includes('imagem')), `Imagem: ${error}`]);
+                  }}
+                  value={newItem.image}
+                />
               </div>
+              <div className="md:col-span-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Descrição <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      placeholder="Descreva o item do menu (20-200 caracteres)..."
+                      value={newItem.description || ''}
+                      onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 resize-none text-black"
+                      minLength={20}
+                      maxLength={200}
+                    />
+                    <div className="mt-1 text-sm text-gray-500">
+                      {newItem.description?.length || 0}/200 caracteres
+                      {newItem.description && newItem.description.length < 20 && (
+                        <span className="text-red-500 ml-2">Mínimo 20 caracteres</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               <div className="md:col-span-2 flex items-center space-x-3">
                 <input
                   type="checkbox"

@@ -143,8 +143,7 @@ class SyncService {
   // Sincronização de menu
   async syncMenuUpdate(restaurantId: string, source: SyncEvent['source'] = 'restaurant') {
     try {
-      await menuService.syncWithRestaurantData(restaurantId);
-      
+      // Buscar os itens do menu atualizados
       const menuItems = await menuService.getMenuItems(restaurantId);
       
       this.broadcastEvent({

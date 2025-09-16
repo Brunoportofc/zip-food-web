@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { smsService } from '@/services/sms.service';
 import bcrypt from 'bcryptjs';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // POST /api/auth/password-reset - Solicitar código de redefinição
 export async function POST(request: NextRequest) {
@@ -43,7 +49,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('💥 [PASSWORD-RESET] Erro na solicitação de redefinição de senha:', error);
-    console.error('💥 [PASSWORD-RESET] Stack trace:', error.stack);
+    console.error('💥 [PASSWORD-RESET] Stack trace:', (error as Error).stack);
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

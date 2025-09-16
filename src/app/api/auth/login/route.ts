@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
         id: userData.id,
         email: userData.email,
         name: userData.name,
-        userType: userData.user_type,
+        type: userData.user_type, // Mudança: 'userType' -> 'type' para consistência com auth.store
         phone: userData.phone,
         address: userData.address
       },

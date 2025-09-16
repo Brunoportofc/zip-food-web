@@ -42,7 +42,7 @@ const GlobalHeader = ({ className, showBackground = true }: GlobalHeaderProps) =
           router.push('/customer');
           break;
         case 'restaurant':
-          router.push('/restaurant/cadastro');
+          router.push('/restaurant/register');
           break;
         case 'delivery':
           router.push('/delivery');

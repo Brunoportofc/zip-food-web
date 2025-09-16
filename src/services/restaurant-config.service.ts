@@ -46,19 +46,17 @@ class RestaurantConfigService {
       const restaurantData = {
         name: config.businessName,
         description: config.displayName,
-        category: 'italiana' as RestaurantCategory,
         address: `${config.address?.street}, ${config.address?.number} - ${config.address?.neighborhood}`,
+        city: config.address?.city || 'São Paulo',
+        cuisine_type: 'italiana',
         phone: config.phone || '',
         email: config.email || '',
-        deliveryFee: config.deliveryAreas?.[0]?.deliveryFee || 5.99,
-        minimumOrder: config.deliveryAreas?.[0]?.minimumOrder || 20.00,
-        estimatedDeliveryTime: '30-45 min',
-        rating: 0,
-        isPromoted: false
+        delivery_fee: config.deliveryAreas?.[0]?.deliveryFee || 5.99,
+        minimum_order: config.deliveryAreas?.[0]?.minimumOrder || 20.00
       };
       
       // Criar restaurante no sistema principal
-      const restaurant = await restaurantService.createRestaurant(restaurantData, 'current_owner');
+      const restaurant = await restaurantService.createRestaurant(restaurantData);
       
       // Marcar como aprovado automaticamente para desenvolvimento
       await restaurantService.approveRestaurant(restaurant.id);
