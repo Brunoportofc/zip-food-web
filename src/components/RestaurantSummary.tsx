@@ -148,12 +148,12 @@ const RestaurantSummary: React.FC<RestaurantSummaryProps> = ({
         </div>
         <p className="text-green-700 mb-4">
           Suas informações estão completas. Ao confirmar, seu restaurante será cadastrado na plataforma 
-          e ficará disponível para receber pedidos após a aprovação.
+          e ficará disponível para receber pedidos imediatamente.
         </p>
         <div className="text-sm text-green-600">
-          <p>• Tempo estimado para aprovação: 24-48 horas</p>
+          <p>• Aprovação automática - sem tempo de espera</p>
           <p>• Você receberá um e-mail de confirmação</p>
-          <p>• Poderá acompanhar o status no painel do restaurante</p>
+          <p>• Poderá acessar o painel do restaurante imediatamente</p>
         </div>
       </div>
 

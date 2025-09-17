@@ -46,11 +46,7 @@ const RestaurantDashboard = () => {
     try {
       const restaurantConfig = await restaurantConfigService.getRestaurantConfig(user!.id);
       
-      if (!restaurantConfig || restaurantConfig.approvalStatus !== 'approved') {
-          router.push('/restaurant/aprovacao');
-          return;
-        }
-
+      // Remover verificação de aprovação - todos os restaurantes são aprovados automaticamente
       setConfig(restaurantConfig);
       
       // Carregar métricas reais do serviço de pedidos

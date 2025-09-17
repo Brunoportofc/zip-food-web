@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import { MdLocationOn, MdDirectionsBike, MdAccessTime, MdPhone, MdRefresh } from 'react-icons/md';
-import GoogleMap from './GoogleMap';
+import GeoapifyMap from './GeoapifyMap';
 import { getCurrentPosition } from '@/lib/platform';
 import { mapsService, LatLng } from '@/services/maps.service';
 import { useGeolocation } from '@/hooks/useGeolocation';
@@ -116,11 +116,10 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
             const route = directions.routes[0];
             newStatus.actualETA = route.legs[0].duration.text;
             newStatus.distance = route.legs[0].distance.text;
+            // Decodificar polyline usando função personalizada (Geoapify não usa o mesmo formato)
+            // Para uma implementação completa, seria necessário usar uma biblioteca de decodificação
             newStatus.route = route.overview_polyline?.points ? 
-              google.maps.geometry.encoding.decodePath(route.overview_polyline.points).map(point => ({
-                lat: point.lat(),
-                lng: point.lng()
-              })) : 
+              this.decodePolyline(route.overview_polyline.points) : 
               [];
           }
         } catch (error) {
@@ -348,7 +347,7 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
 
       {/* Mapa */}
       <div className="p-4">
-        <GoogleMap
+        <GeoapifyMap
           center={deliveryStatus.currentLocation || restaurantLocation}
           zoom={14}
           markers={getMapMarkers()}

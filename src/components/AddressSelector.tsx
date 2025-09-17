@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MdLocationOn, MdMyLocation, MdSearch, MdClose } from 'react-icons/md';
 import { toast } from 'react-hot-toast';
 import { getCurrentPosition } from '@/lib/platform';
-import GoogleMap from './GoogleMap';
+import GeoapifyMap from './GeoapifyMap';
 import { useGeolocation } from '@/hooks/useGeolocation';
 import { mapsService, LatLng } from '@/services/maps.service';
 
@@ -47,153 +47,80 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
   const [error, setError] = useState<string | null>(null);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
-  const geocoder = useRef<google.maps.Geocoder | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   
   const { position: currentLocation, getCurrentPosition: getGeoPosition, loading: locationLoading } = useGeolocation();
 
-  // Verificar se Google Maps está carregado
-  useEffect(() => {
-    const checkGoogleMaps = () => {
-      if (window.google && window.google.maps && window.google.maps.places) {
-        setIsGoogleLoaded(true);
-        autocompleteService.current = new google.maps.places.AutocompleteService();
-        geocoder.current = new google.maps.Geocoder();
-        
-        // Criar um div temporário para o PlacesService
-        const tempDiv = document.createElement('div');
-        const tempMap = new google.maps.Map(tempDiv);
-        placesService.current = new google.maps.places.PlacesService(tempMap);
-      } else {
-        setTimeout(checkGoogleMaps, 100);
-      }
-    };
-    
-    checkGoogleMaps();
+  // Refs para serviços do Geoapify
+  const [geoapifyLoaded, setGeoapifyLoaded] = useState(false);
+
+  // Verificar se Geoapify está carregado
+  const checkGeoapify = useCallback(() => {
+    if (window.geoapify) {
+      setGeoapifyLoaded(true);
+    } else {
+      setTimeout(checkGeoapify, 100);
+    }
   }, []);
 
-  // Buscar sugestões de endereços
+  useEffect(() => {
+    checkGeoapify();
+  }, [checkGeoapify]);
+
+  // Buscar sugestões de endereços usando Geoapify
   const searchAddresses = useCallback(async (query: string) => {
-    if (!isGoogleLoaded || !autocompleteService.current || query.length < 3) {
+    if (!query.trim() || query.length < 3) {
       setSuggestions([]);
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      const request = {
-        input: query,
-        componentRestrictions: { country: 'br' },
-        types: ['address']
-      };
-
-      autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
-        if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
-          const addressPromises = predictions.slice(0, 5).map(prediction => 
-            getAddressDetails(prediction.place_id!)
-          );
-          
-          Promise.all(addressPromises)
-            .then(addresses => {
-              setSuggestions(addresses.filter(addr => addr !== null) as Address[]);
-              setShowSuggestions(true);
-            })
-            .catch(error => {
-              console.error('Erro ao buscar detalhes dos endereços:', error);
-              setError('Erro ao buscar endereços');
-              setSuggestions([]);
-            })
-            .finally(() => {
-              setIsLoading(false);
-            });
-        } else {
-          setSuggestions([]);
-          setIsLoading(false);
-        }
-      });
-    } catch (error) {
-      console.error('Erro na busca de endereços:', error);
-      setError('Erro ao buscar endereços');
-      setSuggestions([]);
-      setIsLoading(false);
-    }
-  }, [isGoogleLoaded]);
-
-  // Obter detalhes do endereço pelo place_id
-  const getAddressDetails = (placeId: string): Promise<Address | null> => {
-    return new Promise((resolve) => {
-      if (!placesService.current) {
-        resolve(null);
+      setIsLoading(true);
+      setError(null);
+      
+      // Usar Geoapify Autocomplete API
+      const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
+      if (!apiKey || apiKey === 'SUA_CHAVE_GEOAPIFY_AQUI') {
+        console.warn('Geoapify API key não configurada');
+        setSuggestions([]);
         return;
       }
 
-      placesService.current.getDetails(
-        {
-          placeId,
-          fields: ['address_components', 'formatted_address', 'geometry']
-        },
-        (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place) {
-            const address = parseGoogleAddress(place);
-            resolve(address);
-          } else {
-            resolve(null);
-          }
-        }
-      );
-    });
-  };
-
-  // Converter resposta do Google em formato de endereço
-  const parseGoogleAddress = (place: google.maps.places.PlaceResult): Address | null => {
-    if (!place.address_components || !place.geometry?.location) {
-      return null;
-    }
-
-    const components = place.address_components;
-    let street = '';
-    let number = '';
-    let neighborhood = '';
-    let city = '';
-    let state = '';
-    let zipCode = '';
-
-    components.forEach(component => {
-      const types = component.types;
+      const url = `https://api.geoapify.com/v1/geocode/autocomplete?text=${encodeURIComponent(query)}&apiKey=${apiKey}&format=json&limit=5&filter=countrycode:br`;
       
-      if (types.includes('route')) {
-        street = component.long_name;
-      } else if (types.includes('street_number')) {
-        number = component.long_name;
-      } else if (types.includes('sublocality') || types.includes('neighborhood')) {
-        neighborhood = component.long_name;
-      } else if (types.includes('administrative_area_level_2')) {
-        city = component.long_name;
-      } else if (types.includes('administrative_area_level_1')) {
-        state = component.short_name;
-      } else if (types.includes('postal_code')) {
-        zipCode = component.long_name;
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.results) {
+        const addressSuggestions: Address[] = data.results.map((result: any) => ({
+          id: result.place_id || Math.random().toString(),
+          street: result.street || '',
+          number: result.housenumber || '',
+          neighborhood: result.suburb || result.district || '',
+          city: result.city || result.town || '',
+          state: result.state || '',
+          zipCode: result.postcode || '',
+          coordinates: {
+            lat: result.lat,
+            lng: result.lon
+          },
+          formattedAddress: result.formatted
+        }));
+        
+        setSuggestions(addressSuggestions);
+        setShowSuggestions(true);
       }
-    });
+    } catch (error) {
+      console.error('Erro ao buscar endereços:', error);
+      setError('Erro ao buscar endereços');
+      setSuggestions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    return {
-      street,
-      number,
-      neighborhood,
-      city,
-      state,
-      zipCode,
-      coordinates: {
-        lat: place.geometry.location.lat(),
-        lng: place.geometry.location.lng()
-      },
-      formattedAddress: place.formatted_address || ''
-    };
-  };
+  // Função removida - não é mais necessária com Geoapify
+  // A API do Geoapify já retorna todos os detalhes necessários
 
   // Obter localização atual
   const getCurrentLocationAddress = useCallback(async () => {
@@ -366,7 +293,7 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
       {/* Mapa */}
       {showMap && selectedAddress && (
         <div className="mt-4">
-          <GoogleMap
+          <GeoapifyMap
             center={selectedAddress.coordinates}
             zoom={16}
             markers={[

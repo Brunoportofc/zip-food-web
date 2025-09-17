@@ -69,7 +69,7 @@ const WelcomeMessage: React.FC<WelcomeMessageProps> = ({ restaurantName, onConti
               <div>
                 <h4 className="font-semibold text-gray-800">Comece a Vender</h4>
                 <p className="text-gray-600 text-sm">
-                  Após a aprovação, você poderá acessar seu painel e começar a receber pedidos.
+                  Após o cadastro, você poderá acessar seu painel e começar a receber pedidos imediatamente.
                 </p>
               </div>
             </div>

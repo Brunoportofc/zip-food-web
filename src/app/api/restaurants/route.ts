@@ -1,6 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/api/supabase';
 import { successResponse, errorResponse, serverErrorResponse } from '@/lib/api/response';
+import jwt from 'jsonwebtoken';
+
+// Função para verificar token JWT
+function verifyToken(request: NextRequest) {
+  const token = request.cookies.get('auth-token')?.value || 
+                request.headers.get('authorization')?.replace('Bearer ', '');
+  
+  if (!token) {
+    return null;
+  }
+
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+  } catch {
+    return null;
+  }
+}
 
 // Tipos para validação
 interface CreateRestaurantData {
@@ -18,6 +35,10 @@ interface CreateRestaurantData {
   delivery_fee?: number;
   minimum_order?: number;
   delivery_radius_km?: number;
+  user_id?: string;
+  category?: string;
+  status?: string;
+  is_active?: boolean;
 }
 
 // Mensagens de erro internacionalizadas
@@ -70,11 +91,6 @@ function validateRestaurantData(data: any, lang: string = 'en'): { isValid: bool
   // Endereço obrigatório
   if (!data.address || typeof data.address !== 'string' || data.address.trim().length === 0) {
     errors.push(getErrorMessage('ADDRESS_REQUIRED', lang));
-  }
-
-  // Cidade obrigatória
-  if (!data.city || typeof data.city !== 'string' || data.city.trim().length === 0) {
-    errors.push(getErrorMessage('CITY_REQUIRED', lang));
   }
 
   // Tipo de cozinha obrigatório
@@ -184,7 +200,29 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const lang = request.headers.get('Accept-Language')?.split(',')[0]?.split('-')[0] || 'en';
+    
+    // Verificar autenticação (opcional para cadastro inicial)
+    const user = verifyToken(request);
+    
     const body = await request.json();
+
+    // Se há usuário autenticado, verificar se já possui restaurante
+    if (user) {
+      const { data: existingRestaurant } = await supabaseAdmin
+        .from('restaurants')
+        .select('id')
+        .eq('user_id', user.userId)
+        .single();
+
+      if (existingRestaurant) {
+        return errorResponse(
+          lang === 'pt' ? 'Você já possui um restaurante cadastrado. Cada conta pode ter apenas um estabelecimento.' :
+          lang === 'he' ? 'כבר יש לך מסעדה רשומה. כל חשבון יכול להיות רק מוסד אחד.' :
+          'You already have a registered restaurant. Each account can have only one establishment.',
+          409
+        );
+      }
+    }
 
     // Validar dados de entrada
     const validation = validateRestaurantData(body, lang);
@@ -196,22 +234,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Preparar dados para inserção
-    const restaurantData: CreateRestaurantData = {
+    // Preparar dados para inserção com aprovação automática
+    const restaurantData = {
+      user_id: user?.userId || null,
       name: body.name.trim(),
-      description: body.description?.trim() || null,
+      description: body.description?.trim() || '',
+      category: body.cuisine_type.trim(),
       address: body.address.trim(),
-      city: body.city.trim(),
-      country: body.country?.trim() || 'Israel',
-      latitude: body.latitude ? parseFloat(body.latitude) : null,
-      longitude: body.longitude ? parseFloat(body.longitude) : null,
-      cuisine_type: body.cuisine_type.trim(),
-      operating_hours: body.operating_hours || {},
-      phone: body.phone?.trim() || null,
-      email: body.email?.trim() || null,
-      delivery_fee: body.delivery_fee ? parseFloat(body.delivery_fee) : 0.00,
-      minimum_order: body.minimum_order ? parseFloat(body.minimum_order) : 0.00,
-      delivery_radius_km: body.delivery_radius_km ? parseInt(body.delivery_radius_km) : 5
+      phone: body.phone?.trim(),
+      opening_hours: body.operating_hours || body.opening_hours || {},
+      delivery_fee: body.delivery_fee || 0,
+      minimum_order: body.minimum_order || 0,
+      is_active: true
     };
 
     // Inserir no banco de dados
@@ -223,6 +257,17 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error creating restaurant:', error);
+      
+      // Verificar se é erro de constraint única
+      if (error.code === '23505' && error.message.includes('restaurants_user_id_unique')) {
+        return errorResponse(
+          lang === 'pt' ? 'Você já possui um restaurante cadastrado. Cada conta pode ter apenas um estabelecimento.' :
+          lang === 'he' ? 'כבר יש לך מסעדה רשומה. כל חשבון יכול להיות רק מוסד אחד.' :
+          'You already have a registered restaurant. Each account can have only one establishment.',
+          409
+        );
+      }
+      
       return serverErrorResponse(getErrorMessage('SERVER_ERROR', lang));
     }
 

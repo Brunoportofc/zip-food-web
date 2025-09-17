@@ -134,11 +134,17 @@ class RestaurantService {
   // Headers com idioma e autenticação
   private getHeaders() {
     const token = authService.getToken();
-    return {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Accept-Language': this.lang,
-      ...(token && { 'Authorization': `Bearer ${token}` })
+      'Accept-Language': this.lang
     };
+    
+    // Adicionar token de autenticação se disponível
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return headers;
   }
 
   // Método auxiliar para fazer requisições com tratamento de erros internacionalizados

@@ -200,48 +200,104 @@ export default function RestaurantRegisterPage() {
     }));
   };
 
-  // Função para obter localização atual
+  // Função para obter localização atual e preencher campos
   const handleGetCurrentLocation = async () => {
-    setIsGettingLocation(true);
-    
     try {
-      // Solicitar permissão e obter coordenadas
+      setIsGettingLocation(true);
+      
+      console.log('🔍 Iniciando processo de geolocalização...');
+      
+      // Verificar se a API do Geoapify está configurada
+        const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
+        if (!apiKey || apiKey === 'SUA_CHAVE_GEOAPIFY_AQUI') {
+          toast({
+            title: "⚠️ API do Geoapify não configurada",
+            description: "O sistema está usando endereços simulados. Configure a chave da API para obter seu endereço real. Consulte o arquivo COMO_OBTER_ENDERECO_REAL.md",
+            variant: "destructive",
+          });
+        }
+      
+      // Solicitar permissão e obter coordenadas com maior precisão
       const position = await getCurrentPosition();
       
+      if (!position) {
+        throw new Error('Não foi possível obter a localização');
+      }
+      
+      const { lat, lng } = position;
+      const accuracy = position.accuracy;
+      
+      console.log('📍 Coordenadas obtidas:', {
+        latitude: lat,
+        longitude: lng,
+        accuracy: accuracy ? `${accuracy}m` : 'N/A',
+        timestamp: new Date().toISOString()
+      });
+      
+      // Validar precisão da localização
+      if (accuracy && accuracy > 100) {
+        console.warn(`⚠️ Precisão da localização: ${accuracy}m - pode não ser muito precisa`);
+        toast.warning(`Precisão da localização: ${Math.round(accuracy)}m. Para melhor precisão, ative o GPS.`);
+      }
+      
+      console.log('🌍 Iniciando geocodificação reversa...');
+      
       // Converter coordenadas em endereço
-      const addressData = await getAddressFromCoordinates(position.lat, position.lng);
+      const addressData = await getAddressFromCoordinates(lat, lng);
       
-      // Preencher campos do formulário
-      setFormData(prev => ({
-        ...prev,
-        address: addressData.formattedAddress || `${addressData.streetNumber || ''} ${addressData.street || ''}`.trim(),
-        city: addressData.city || prev.city,
-        country: addressData.country || prev.country,
-        latitude: position.lat,
-        longitude: position.lng
-      }));
+      console.log('🏠 Dados do endereço obtidos:', {
+        formattedAddress: addressData.formattedAddress,
+        street: addressData.street,
+        streetNumber: addressData.streetNumber,
+        city: addressData.city,
+        state: addressData.state,
+        country: addressData.country,
+        postalCode: addressData.postalCode
+      });
       
-      toast.success('Localização obtida com sucesso!');
+      // Preencher campos do formulário com dados obtidos
+      if (addressData.formattedAddress || addressData.street) {
+        const fullAddress = addressData.formattedAddress || 
+          `${addressData.streetNumber || ''} ${addressData.street || ''}`.trim();
+        
+        setFormData(prev => ({
+          ...prev,
+          address: fullAddress,
+          city: addressData.city || prev.city,
+          country: addressData.country || prev.country,
+          latitude: lat,
+          longitude: lng
+        }));
+        
+        console.log('✅ Formulário preenchido com sucesso!');
+        toast.success('Localização obtida com sucesso!');
+        
+      } else {
+        console.error('❌ Endereço incompleto ou inválido:', addressData);
+        throw new Error('Não foi possível obter um endereço válido da localização');
+      }
       
-    } catch (error) {
-      console.error('Erro ao obter localização:', error);
+    } catch (error: any) {
+      console.error('❌ Erro ao obter localização:', error);
       
       // Mensagens de erro específicas
       if (error && typeof error === 'object' && 'code' in error) {
         const geoError = error as { code: number; message: string };
         switch (geoError.code) {
           case 1:
-            toast.error('Permissão de localização negada. Por favor, permita o acesso à localização.');
+            toast.error('Permissão de localização negada. Por favor, permita o acesso à localização nas configurações do navegador.');
             break;
           case 2:
-            toast.error('Localização indisponível. Verifique se o GPS está ativado.');
+            toast.error('Localização indisponível. Verifique se o GPS está ativado e tente novamente.');
             break;
           case 3:
-            toast.error('Tempo limite excedido ao obter localização.');
+            toast.error('Tempo limite excedido ao obter localização. Verifique sua conexão e tente novamente.');
             break;
           default:
             toast.error('Erro ao obter localização. Tente novamente.');
         }
+      } else if (error.message) {
+        toast.error(error.message);
       } else {
         toast.error('Erro ao obter localização. Tente novamente.');
       }
@@ -267,34 +323,19 @@ export default function RestaurantRegisterPage() {
         return;
       }
 
-      // Validar imagens obrigatórias
-      const imageValidationErrors: string[] = [];
-      if (!coverImage) {
-        imageValidationErrors.push('Imagem de capa é obrigatória');
-      }
-      if (!logoImage) {
-        imageValidationErrors.push('Logo do restaurante é obrigatório');
-      }
-
-      if (imageValidationErrors.length > 0) {
-        setImageErrors(imageValidationErrors);
-        setIsLoading(false);
-        return;
-      }
-
       // Enviar dados para o servidor
       const result = await restaurantService.createRestaurant(formData);
       
       // Mostrar mensagem de sucesso
       setSuccessMessage({
         title: 'Restaurante Cadastrado!',
-        message: 'Seu restaurante foi cadastrado com sucesso! Você será redirecionado para configurar o menu.',
+        message: 'Seu restaurante foi cadastrado e aprovado automaticamente! Redirecionando para o dashboard...',
         isVisible: true
       });
       
-      // Aguardar um pouco antes de redirecionar para o menu
+      // Aguardar um pouco antes de redirecionar
       setTimeout(() => {
-        router.push('/restaurant/menu');
+        router.push('/restaurant/dashboard');
       }, 2000);
       
     } catch (error) {

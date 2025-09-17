@@ -591,7 +591,7 @@ const RestaurantWizard: React.FC<RestaurantWizardProps> = ({ initialData, onComp
         try {
           // Usar Google Geocoding API para obter endereço
           const response = await fetch(
-            `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+            `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY}&format=json`
           );
           const data = await response.json();
           

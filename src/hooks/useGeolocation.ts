@@ -65,6 +65,13 @@ export const useGeolocation = (): UseGeolocationReturn => {
       setLoading(true);
       setError(null);
 
+      // Configurações otimizadas para maior precisão
+      const options: PositionOptions = {
+        enableHighAccuracy: true, // Usar GPS quando disponível
+        timeout: 15000, // Aumentar timeout para 15 segundos
+        maximumAge: 60000 // Cache por 1 minuto para evitar múltiplas solicitações
+      };
+
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const position = {
@@ -81,11 +88,7 @@ export const useGeolocation = (): UseGeolocationReturn => {
             message: err.message
           });
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000 // 5 minutos
-        }
+        options
       );
     });
   }, [handleSuccess, handleError]);

@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * Serviço de Mapas usando Geoapify
+ * Substitui completamente o Google Maps por Geoapify
+ */
+
 export interface LatLng {
   lat: number;
   lng: number;
@@ -55,46 +60,62 @@ export interface GeocodeResult {
   status: string;
 }
 
+interface GeoapifyRoute {
+  geometry: {
+    coordinates: number[][];
+  };
+  properties: {
+    distance: number;
+    time: number;
+  };
+}
+
+interface GeoapifyDirectionsResponse {
+  features: GeoapifyRoute[];
+}
+
 class MapsService {
   private apiKey: string;
-  private baseUrl = 'https://maps.googleapis.com/maps/api';
+  private baseUrl = 'https://api.geoapify.com/v1';
 
   constructor() {
-    this.apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
-    if (!this.apiKey) {
-      console.warn('Google Maps API key não encontrada');
+    this.apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY || '';
+    if (!this.apiKey || this.apiKey === 'SUA_CHAVE_GEOAPIFY_AQUI') {
+      console.warn('Geoapify API key não encontrada');
     }
   }
 
   /**
-   * Carrega a API do Google Maps dinamicamente
+   * Carrega a API do Geoapify dinamicamente
    */
-  async loadGoogleMapsAPI(): Promise<typeof google> {
-    if (typeof window !== 'undefined' && window.google) {
-      return window.google;
-    }
-
+  async loadGeoapifyAPI(): Promise<void> {
     return new Promise((resolve, reject) => {
+      // Verificar se está no cliente
       if (typeof window === 'undefined') {
-        reject(new Error('Google Maps só pode ser carregado no cliente'));
+        reject(new Error('Geoapify só pode ser carregado no cliente'));
         return;
       }
 
+      // Verificar se já foi carregado
+      if (window.geoapify) {
+        resolve();
+        return;
+      }
+
+      // Carregar script do Geoapify
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${this.apiKey}&libraries=places,geometry`;
+      script.src = `https://maps.geoapify.com/v1/sdk/maps.js?apiKey=${this.apiKey}`;
       script.async = true;
       script.defer = true;
 
       script.onload = () => {
-        if (window.google) {
-          resolve(window.google);
-        } else {
-          reject(new Error('Falha ao carregar Google Maps API'));
-        }
+        console.log('✅ Geoapify API carregada com sucesso');
+        resolve();
       };
 
       script.onerror = () => {
-        reject(new Error('Erro ao carregar Google Maps API'));
+        console.error('❌ Falha ao carregar Geoapify API');
+        reject(new Error('Falha ao carregar Geoapify API'));
       };
 
       document.head.appendChild(script);
@@ -102,51 +123,64 @@ class MapsService {
   }
 
   /**
-   * Geocoding: Converte endereço em coordenadas
+   * Geocodificação usando Geoapify
    */
   async geocodeAddress(address: string): Promise<LatLng | null> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/geocode/json?address=${encodeURIComponent(address)}&key=${this.apiKey}`
-      );
+      const url = `${this.baseUrl}/geocode/search?text=${encodeURIComponent(address)}&apiKey=${this.apiKey}&format=json`;
       
-      const data: GeocodeResult = await response.json();
+      const response = await fetch(url);
       
-      if (data.status === 'OK' && data.results.length > 0) {
-        return data.results[0].geometry.location;
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
       }
       
-      return null;
+      const data = await response.json();
+      
+      if (!data.results || data.results.length === 0) {
+        return null;
+      }
+      
+      const result = data.results[0];
+      
+      return {
+        lat: result.lat,
+        lng: result.lon
+      };
     } catch (error) {
-      console.error('Erro no geocoding:', error);
+      console.error('❌ Erro na geocodificação:', error);
       return null;
     }
   }
 
   /**
-   * Reverse Geocoding: Converte coordenadas em endereço
+   * Geocodificação reversa usando Geoapify
    */
   async reverseGeocode(lat: number, lng: number): Promise<string | null> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/geocode/json?latlng=${lat},${lng}&key=${this.apiKey}`
-      );
+      const url = `${this.baseUrl}/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${this.apiKey}&format=json`;
       
-      const data: GeocodeResult = await response.json();
+      const response = await fetch(url);
       
-      if (data.status === 'OK' && data.results.length > 0) {
-        return data.results[0].formatted_address;
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
       }
       
-      return null;
+      const data = await response.json();
+      
+      if (!data.results || data.results.length === 0) {
+        return null;
+      }
+      
+      return data.results[0].formatted;
     } catch (error) {
-      console.error('Erro no reverse geocoding:', error);
+      console.error('❌ Erro na geocodificação reversa:', error);
       return null;
     }
   }
 
   /**
-   * Calcula rota entre dois pontos
+   * Calcula rota entre dois pontos usando Geoapify
    */
   async getDirections(
     origin: LatLng | string,
@@ -162,15 +196,53 @@ class MapsService {
         ? destination 
         : `${destination.lat},${destination.lng}`;
 
-      const response = await fetch(
-        `${this.baseUrl}/directions/json?origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destinationStr)}&mode=${travelMode.toLowerCase()}&key=${this.apiKey}`
-      );
+      const mode = travelMode === 'DRIVING' ? 'drive' : 
+                   travelMode === 'WALKING' ? 'walk' :
+                   travelMode === 'BICYCLING' ? 'bicycle' : 'drive';
+
+      const url = `${this.baseUrl}/routing?waypoints=${originStr}|${destinationStr}&mode=${mode}&apiKey=${this.apiKey}`;
       
-      const data: DirectionsResult = await response.json();
+      console.log('🗺️ Calculando rota via Geoapify...');
       
-      return data;
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
+      const data: GeoapifyDirectionsResponse = await response.json();
+      
+      if (!data.features || data.features.length === 0) {
+        return null;
+      }
+      
+      const route = data.features[0];
+      
+      // Converter para formato compatível
+      const directionsResult: DirectionsResult = {
+        routes: [{
+          legs: [{
+            distance: {
+              text: `${(route.properties.distance / 1000).toFixed(1)} km`,
+              value: route.properties.distance
+            },
+            duration: {
+              text: `${Math.round(route.properties.time / 60)} min`,
+              value: route.properties.time
+            },
+            start_address: originStr,
+            end_address: destinationStr,
+            steps: []
+          }],
+          overview_polyline: {
+            points: this.encodePolyline(route.geometry.coordinates)
+          }
+        }]
+      };
+      
+      return directionsResult;
     } catch (error) {
-      console.error('Erro ao obter direções:', error);
+      console.error('❌ Erro ao obter direções:', error);
       return null;
     }
   }
@@ -204,7 +276,7 @@ class MapsService {
   }
 
   /**
-   * Busca lugares próximos
+   * Busca lugares próximos usando Geoapify
    */
   async searchNearbyPlaces(
     location: LatLng,
@@ -212,18 +284,34 @@ class MapsService {
     type?: string
   ): Promise<PlaceResult[]> {
     try {
-      let url = `${this.baseUrl}/place/nearbysearch/json?location=${location.lat},${location.lng}&radius=${radius}&key=${this.apiKey}`;
+      const categories = type || 'commercial';
+      const url = `${this.baseUrl}/places?categories=${categories}&filter=circle:${location.lng},${location.lat},${radius}&bias=proximity:${location.lng},${location.lat}&limit=20&apiKey=${this.apiKey}`;
       
-      if (type) {
-        url += `&type=${type}`;
-      }
-
       const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+      
       const data = await response.json();
       
-      return data.results || [];
+      // Converter para formato compatível
+      const places: PlaceResult[] = (data.features || []).map((feature: any) => ({
+        place_id: feature.properties.place_id || '',
+        formatted_address: feature.properties.formatted || '',
+        geometry: {
+          location: {
+            lat: feature.geometry.coordinates[1],
+            lng: feature.geometry.coordinates[0]
+          }
+        },
+        name: feature.properties.name,
+        types: feature.properties.categories || []
+      }));
+      
+      return places;
     } catch (error) {
-      console.error('Erro na busca de lugares:', error);
+      console.error('❌ Erro na busca de lugares:', error);
       return [];
     }
   }
@@ -314,6 +402,15 @@ class MapsService {
     }
     
     return inside;
+  }
+
+  /**
+   * Codifica coordenadas em polyline (formato simplificado)
+   */
+  private encodePolyline(coordinates: number[][]): string {
+    // Implementação simplificada de encoding de polyline
+    // Para uma implementação completa, use uma biblioteca específica
+    return coordinates.map(coord => `${coord[1]},${coord[0]}`).join('|');
   }
 
   /**
