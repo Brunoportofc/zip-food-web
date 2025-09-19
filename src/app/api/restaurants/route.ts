@@ -5,16 +5,33 @@ import jwt from 'jsonwebtoken';
 
 // Função para verificar token JWT
 function verifyToken(request: NextRequest) {
-  const token = request.cookies.get('auth-token')?.value || 
-                request.headers.get('authorization')?.replace('Bearer ', '');
+  const cookieToken = request.cookies.get('auth-token')?.value;
+  const authHeader = request.headers.get('authorization');
+  const bearerToken = authHeader?.replace('Bearer ', '');
+  
+  console.log('🔍 DEBUG - Verificando tokens:');
+  console.log('Cookie token:', cookieToken ? 'EXISTS' : 'NULL');
+  console.log('Auth header:', authHeader ? authHeader : 'NULL');
+  console.log('Bearer token:', bearerToken ? 'EXISTS' : 'NULL');
+  
+  const token = cookieToken || bearerToken;
   
   if (!token) {
+    console.log('❌ Nenhum token encontrado');
     return null;
   }
 
   try {
-    return jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
-  } catch {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    console.log('✅ Token decodificado:', {
+      userId: decoded.userId,
+      email: decoded.email,
+      userType: decoded.userType,
+      hasUserId: !!decoded.userId
+    });
+    return decoded;
+  } catch (error) {
+    console.log('❌ Erro ao verificar token:', error);
     return null;
   }
 }
@@ -132,11 +149,8 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin
       .from('restaurants')
-      .select(`
-        *,
-        menu_items:menu_items(count)
-      `)
-      .eq('status', 'active')
+      .select('*')
+      .eq('status', 'approved')
       .eq('is_active', true);
 
     // Filtrar por categoria
@@ -166,13 +180,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Filtrar por restaurantes promovidos
-    if (isPromoted === 'true') {
-      query = query.eq('is_promoted', true);
-    }
+    // if (isPromoted === 'true') {
+    //   query = query.eq('is_promoted', true);
+    // }
 
-    // Ordenar por: promovidos primeiro, depois por avaliação
-    query = query.order('is_promoted', { ascending: false })
-                 .order('rating', { ascending: false });
+    // Ordenar por nome
+    query = query.order('name', { ascending: true });
 
     const { data: restaurants, error } = await query;
 
@@ -184,7 +197,6 @@ export async function GET(request: NextRequest) {
     // Processar dados para incluir informações calculadas
     const processedRestaurants = restaurants.map(restaurant => ({
       ...restaurant,
-      hasMenu: restaurant.menu_items && restaurant.menu_items.length > 0,
       deliveryTime: restaurant.estimated_delivery_time || '30-45 min',
       isOpen: true // Por enquanto, todos estão abertos
     }));
@@ -225,8 +237,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar dados de entrada
+    console.log('🔍 DEBUG - Dados recebidos para validação:', body);
     const validation = validateRestaurantData(body, lang);
+    console.log('🔍 DEBUG - Resultado da validação:', { isValid: validation.isValid, errors: validation.errors });
     if (!validation.isValid) {
+      console.log('❌ DEBUG - Validação falhou:', validation.errors);
       return errorResponse(
         getErrorMessage('INVALID_DATA', lang),
         400,
@@ -236,19 +251,41 @@ export async function POST(request: NextRequest) {
 
     // Preparar dados para inserção com aprovação automática
     const restaurantData = {
+      created_by: user?.userId || null,
       user_id: user?.userId || null,
       name: body.name.trim(),
       description: body.description?.trim() || '',
+      cuisine_type: body.cuisine_type.trim(),
       category: body.cuisine_type.trim(),
       address: body.address.trim(),
+      city: body.city?.trim() || 'São Paulo',
+      country: body.country?.trim() || 'Brasil',
+      latitude: body.latitude || null,
+      longitude: body.longitude || null,
       phone: body.phone?.trim(),
-      opening_hours: body.operating_hours || body.opening_hours || {},
+      email: body.email?.trim(),
+      operating_hours: body.operating_hours || body.opening_hours || {},
       delivery_fee: body.delivery_fee || 0,
       minimum_order: body.minimum_order || 0,
+      delivery_radius_km: body.delivery_radius_km || 5.00,
+      status: 'approved',
       is_active: true
     };
 
-    // Inserir no banco de dados
+    console.log('🔍 DEBUG - Dados do usuário extraídos do token:', {
+      userId: user?.userId,
+      email: user?.email,
+      userType: user?.userType
+    });
+    
+    console.log('🔍 DEBUG - Dados preparados para inserção:', {
+      created_by: restaurantData.created_by,
+      user_id: restaurantData.user_id,
+      name: restaurantData.name,
+      hasUserId: !!restaurantData.user_id
+    });
+
+    // Inserir no banco de dados usando service role para contornar RLS
     const { data: restaurant, error } = await supabaseAdmin
       .from('restaurants')
       .insert([restaurantData])

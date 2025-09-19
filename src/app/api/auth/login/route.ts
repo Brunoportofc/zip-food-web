@@ -14,6 +14,7 @@ interface LoginRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: LoginRequest = await request.json();
+    console.log('🔍 DEBUG LOGIN - Dados recebidos:', { email: body.email, hasPassword: !!body.password, userType: body.userType });
 
     // Validação básica
     const errors: string[] = [];
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (errors.length > 0) {
+      console.log('❌ DEBUG LOGIN - Erros de validação:', errors);
       return validationErrorResponse(errors);
     }
 
@@ -35,15 +37,23 @@ export async function POST(request: NextRequest) {
       .eq('email', body.email)
       .single();
 
+    console.log('🔍 DEBUG LOGIN - Resultado da busca:', { 
+      found: !!userData, 
+      error: userError?.message,
+      userId: userData?.id 
+    });
+
     if (userError || !userData) {
-      console.error('Usuário não encontrado:', userError);
+      console.error('❌ DEBUG LOGIN - Usuário não encontrado:', userError);
       return errorResponse('Email ou senha incorretos', 401);
     }
 
     // Verificar senha usando bcrypt
     const isPasswordValid = await bcrypt.compare(body.password, userData.password_hash);
+    console.log('🔍 DEBUG LOGIN - Verificação de senha:', { isValid: isPasswordValid });
     
     if (!isPasswordValid) {
+      console.log('❌ DEBUG LOGIN - Senha inválida');
       return errorResponse('Email ou senha incorretos', 401);
     }
 
