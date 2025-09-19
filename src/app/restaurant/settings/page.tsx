@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import useAuthStore, { User } from '@/store/auth.store';
+import { useAuthStore, User } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import { showSuccessAlert, showErrorAlert, showWarningAlert } from '@/components/AlertSystem';
 

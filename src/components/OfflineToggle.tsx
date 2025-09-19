@@ -1,6 +1,5 @@
 import React from 'react';
-
-import { useConnectivity } from '@/hooks/useConnectivity';
+import useConnectivity from '@/hooks/useConnectivity';
 
 interface OfflineToggleProps {
   className?: string;

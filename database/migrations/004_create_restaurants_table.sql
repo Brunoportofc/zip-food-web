@@ -1,6 +1,7 @@
--- Migração: Criação da tabela restaurants com todos os campos necessários
--- Data: 2025-01-17
--- Descrição: Tabela para armazenar informações dos restaurantes parceiros
+-- database/migrations/004_create_restaurants_table.sql
+
+-- Habilita a extensão para gerar UUIDs se ainda não estiver habilitada
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Criação da tabela restaurants
 CREATE TABLE IF NOT EXISTS public.restaurants (
@@ -22,57 +23,74 @@ CREATE TABLE IF NOT EXISTS public.restaurants (
     delivery_radius_km DECIMAL(5, 2) DEFAULT 5.00,
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected', 'suspended')),
     is_active BOOLEAN DEFAULT true,
-    user_id UUID,
-    created_by UUID,
+    
+    -- ===================== CORREÇÃO ADICIONADA =====================
+    -- Garante que todo restaurante esteja vinculado a um usuário.
+    user_id UUID NOT NULL,
+    created_by UUID NOT NULL,
+    -- ===============================================================
+    
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    -- Adiciona a restrição de chave estrangeira para user_id
+    CONSTRAINT fk_user
+        FOREIGN KEY(user_id) 
+        REFERENCES auth.users(id)
+        ON DELETE CASCADE,
+
+    -- Adiciona a restrição de chave estrangeira para created_by
+    CONSTRAINT fk_creator
+        FOREIGN KEY(created_by) 
+        REFERENCES auth.users(id)
+        ON DELETE SET NULL
 );
 
--- Índices para otimização de consultas
-CREATE INDEX IF NOT EXISTS idx_restaurants_city ON public.restaurants(city);
-CREATE INDEX IF NOT EXISTS idx_restaurants_cuisine_type ON public.restaurants(cuisine_type);
-CREATE INDEX IF NOT EXISTS idx_restaurants_category ON public.restaurants(category);
-CREATE INDEX IF NOT EXISTS idx_restaurants_status ON public.restaurants(status);
-CREATE INDEX IF NOT EXISTS idx_restaurants_is_active ON public.restaurants(is_active);
-CREATE INDEX IF NOT EXISTS idx_restaurants_user_id ON public.restaurants(user_id);
-CREATE INDEX IF NOT EXISTS idx_restaurants_created_by ON public.restaurants(created_by);
-CREATE INDEX IF NOT EXISTS idx_restaurants_location ON public.restaurants(latitude, longitude);
+-- Habilita a Segurança de Nível de Linha (RLS) na tabela de restaurantes
+ALTER TABLE public.restaurants ENABLE ROW LEVEL SECURITY;
 
--- Função para atualizar updated_at automaticamente
-CREATE OR REPLACE FUNCTION update_updated_at_column()
+-- Política de RLS: Permite que usuários autenticados leiam todos os restaurantes
+CREATE POLICY "Allow authenticated read access"
+ON public.restaurants
+FOR SELECT
+TO authenticated
+USING (true);
+
+-- Política de RLS: Permite que um usuário insira um novo restaurante para si mesmo
+CREATE POLICY "Allow individual insert"
+ON public.restaurants
+FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+
+-- Política de RLS: Permite que um usuário atualize seu próprio restaurante
+CREATE POLICY "Allow individual update"
+ON public.restaurants
+FOR UPDATE
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+
+-- Política de RLS: Permite que um usuário exclua seu próprio restaurante
+CREATE POLICY "Allow individual delete"
+ON public.restaurants
+FOR DELETE
+USING (auth.uid() = user_id);
+
+-- Cria um gatilho para atualizar o campo updated_at automaticamente
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ language 'plpgsql';
+$$ LANGUAGE plpgsql;
 
--- Trigger para atualizar updated_at automaticamente
-DROP TRIGGER IF EXISTS update_restaurants_updated_at ON public.restaurants;
-CREATE TRIGGER update_restaurants_updated_at 
-    BEFORE UPDATE ON public.restaurants 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
+-- Aplica o gatilho à tabela
+CREATE TRIGGER on_restaurants_updated
+BEFORE UPDATE ON public.restaurants
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_updated_at();
 
--- Habilitar RLS na tabela restaurants
-ALTER TABLE public.restaurants ENABLE ROW LEVEL SECURITY;
-
--- Política para permitir que todos vejam restaurantes ativos e aprovados
-DROP POLICY IF EXISTS "Permitir visualização de restaurantes ativos" ON public.restaurants;
-CREATE POLICY "Permitir visualização de restaurantes ativos" ON public.restaurants
-    FOR SELECT USING (is_active = true AND status = 'approved');
-
--- Política para permitir que usuários autenticados criem restaurantes
-DROP POLICY IF EXISTS "Permitir criação de restaurantes por usuários autenticados" ON public.restaurants;
-CREATE POLICY "Permitir criação de restaurantes por usuários autenticados" ON public.restaurants
-    FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
-
--- Política para permitir que o criador edite seus próprios restaurantes
-DROP POLICY IF EXISTS "Permitir edição pelo criador" ON public.restaurants;
-CREATE POLICY "Permitir edição pelo criador" ON public.restaurants
-    FOR UPDATE USING (created_by = auth.uid() OR user_id = auth.uid());
-
--- Política para permitir que o criador delete seus próprios restaurantes
-DROP POLICY IF EXISTS "Permitir exclusão pelo criador" ON public.restaurants;
-CREATE POLICY "Permitir exclusão pelo criador" ON public.restaurants
-    FOR DELETE USING (created_by = auth.uid() OR user_id = auth.uid());
+-- Adiciona comentários para clareza
+COMMENT ON TABLE public.restaurants IS 'Stores information about partner restaurants.';
+COMMENT ON COLUMN public.restaurants.user_id IS 'Foreign key to the user who owns the restaurant.';
+COMMENT ON COLUMN public.restaurants.created_by IS 'Foreign key to the user who created the record.';

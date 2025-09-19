@@ -105,18 +105,30 @@ async function verifySupabaseSession(token: string): Promise<CustomJWTPayload | 
       return null;
     }
     
-    // Busca dados adicionais do usuário na tabela profiles
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('user_type, name')
+    // Busca dados adicionais do usuário na tabela users (em vez de profiles)
+    const { data: userProfile, error: profileError } = await supabase
+      .from('users')
+      .select('user_type, name, phone')
       .eq('id', user.id)
       .single();
+    
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      // Se não encontrar na tabela users, usar dados do auth.users
+      const userType = user.user_metadata?.user_type || 'customer';
+       return {
+         userId: user.id,
+         email: user.email!,
+         userType: userType === 'delivery_driver' ? 'delivery' : userType,
+         name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+       };
+    }
     
     return {
       userId: user.id,
       email: user.email!,
-      userType: profile?.user_type || 'customer',
-      name: profile?.name || user.user_metadata?.name || 'Usuário',
+      userType: userProfile?.user_type || 'customer',
+      name: userProfile?.name || user.user_metadata?.name || 'Usuário',
     };
   } catch (error) {
     console.error('Erro ao verificar sessão:', error);

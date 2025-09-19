@@ -1,51 +1,79 @@
+// src/app/restaurant/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import useAuthStore from '@/store/auth.store';
+// CORREÇÃO: A importação agora é nomeada (com chaves)
+import { useAuthStore } from '@/store/auth.store';
 import { restaurantConfigService } from '@/services/restaurant-config.service';
 import { RestaurantConfiguration } from '@/types/restaurant-config';
+import RestaurantWizard from '@/components/RestaurantWizard';
+import SuccessMessage from '@/components/SuccessMessage';
+import WelcomeMessage from '@/components/WelcomeMessage';
 
 const RestaurantPage = () => {
   const router = useRouter();
-  const { user } = useAuthStore();
-  const [loading, setLoading] = useState(true);
+  const { user, isAuthenticated, isLoading } = useAuthStore();
+  const [config, setConfig] = useState<RestaurantConfiguration | null>(null);
+  const [isWizardComplete, setWizardComplete] = useState(false);
+  const [isConfigLoading, setConfigLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || user.type !== 'restaurant') {
+    if (!isLoading && !isAuthenticated) {
       router.push('/auth/sign-in');
       return;
     }
 
-    checkRestaurantStatus();
-  }, [user, router]);
-
-  const checkRestaurantStatus = async () => {
-    try {
-      // Simplificado: redireciona diretamente para o dashboard
-      // A configuração inicial é assumida como feita no cadastro
-      router.push('/restaurant/dashboard');
-    } catch (error) {
-      console.error('Erro ao redirecionar:', error);
-      router.push('/restaurant/dashboard'); // Fallback para dashboard
-    } finally {
-      setLoading(false);
+    if (user && user.user_type === 'restaurant') {
+      const fetchConfig = async () => {
+        try {
+          const fetchedConfig = await restaurantConfigService.getConfiguration(user.id);
+          setConfig(fetchedConfig);
+          if (fetchedConfig && fetchedConfig.isSetupComplete) {
+            setWizardComplete(true);
+          }
+        } catch (error) {
+          console.error('Failed to fetch restaurant configuration:', error);
+          // Redirecionar para registro se não houver configuração
+          router.push('/restaurant/register');
+        } finally {
+          setConfigLoading(false);
+        }
+      };
+      fetchConfig();
     }
+  }, [user, isAuthenticated, isLoading, router]);
+
+  const handleWizardComplete = (newConfig: RestaurantConfiguration) => {
+    setConfig(newConfig);
+    setWizardComplete(true);
   };
 
-  if (loading) {
+  if (isLoading || isConfigLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando status do restaurante...</p>
-        </div>
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-lg">Carregando dados do restaurante...</p>
       </div>
     );
   }
 
-  // Esta página não deve ser renderizada, pois sempre redireciona
-  return null;
+  if (!config && !isWizardComplete) {
+     return <RestaurantWizard onComplete={handleWizardComplete} />;
+  }
+
+  if (isWizardComplete) {
+    return (
+      <div className="container mx-auto p-4">
+        <WelcomeMessage userType="restaurant" />
+        <SuccessMessage message="Configuração do restaurante concluída com sucesso!" />
+        <button onClick={() => router.push('/restaurant/dashboard')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">
+          Ir para o Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  return <RestaurantWizard onComplete={handleWizardComplete} />;
 };
 
 export default RestaurantPage;

@@ -1,5 +1,23 @@
 // Centralized type exports for the ZipFood application
 
+// Authentication types
+export type {
+  UserType,
+  User,
+  SignInData,
+  SignUpData,
+  AuthResponse,
+  AuthError
+} from './auth';
+
+export {
+  userTypeDisplayNames,
+  isValidUserType,
+  isValidEmail,
+  isValidPassword,
+  isValidPhone
+} from './auth';
+
 // Menu types
 export type {
   ProductCategory,

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp, MdLocationOn } from 'react-icons/md';
 import { orderService } from '@/services/order.service';
-import useAuthStore from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
 import DeliveryTracking from '@/components/DeliveryTracking';

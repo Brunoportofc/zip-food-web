@@ -1,38 +1,52 @@
+// src/components/AuthCheck.tsx
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuthData, useAuthActions } from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 
 interface AuthCheckProps {
   children: React.ReactNode;
 }
 
-/**
- * Componente que verifica o estado de autenticação do usuário
- * e inicializa o estado de autenticação
- */
-const AuthCheck = ({ children }: AuthCheckProps) => {
-  const { isAuthenticated, isLoading } = useAuthData();
-  const { checkAuth } = useAuthActions();
-  const [hasChecked, setHasChecked] = useState(false);
-  const checkAuthRef = useRef(checkAuth);
+export default function AuthCheck({ children }: AuthCheckProps) {
+  const { isAuthenticated, isLoading } = useAuthStore();
+  const router = useRouter();
   const pathname = usePathname();
-  
-  // Atualiza a referência quando checkAuth muda
+  const [mounted, setMounted] = useState(false);
+
+  // Rotas públicas que não precisam de autenticação
+  const publicRoutes = ['/', '/auth/sign-in', '/auth/sign-up'];
+  const isPublicRoute = publicRoutes.includes(pathname);
+
   useEffect(() => {
-    checkAuthRef.current = checkAuth;
-  }, [checkAuth]);
-  
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
-    
-    // Sempre verifica autenticação na inicialização para restaurar sessão persistida
-    if (!hasChecked) {
-      checkAuthRef.current().finally(() => setHasChecked(true));
+    // Só redireciona se estiver montado, não estiver carregando, não for rota pública e não estiver autenticado
+    if (mounted && !isLoading && !isPublicRoute && !isAuthenticated) {
+      router.push('/auth/sign-in');
     }
-  }, [hasChecked]);
+  }, [mounted, isLoading, isPublicRoute, isAuthenticated, router]);
 
+  // Enquanto não estiver montado, renderiza uma div vazia para evitar hidratação
+  if (!mounted) {
+    return <div style={{ minHeight: '100vh' }}></div>;
+  }
+
+  // Se está carregando e não é rota pública, mostra loading
+  if (isLoading && !isPublicRoute) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Sempre renderiza os children
   return <>{children}</>;
-};
-
-export default AuthCheck;
+}

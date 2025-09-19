@@ -1,5 +1,7 @@
+// src/components/ConnectivityStatus.tsx
 import React from 'react';
-import { useConnectivity } from '@/hooks/useConnectivity';
+// CORREÇÃO: A importação agora é default (sem chaves)
+import useConnectivity from '@/hooks/useConnectivity';
 
 interface ConnectivityStatusProps {
   className?: string;
@@ -8,31 +10,14 @@ interface ConnectivityStatusProps {
 const ConnectivityStatus: React.FC<ConnectivityStatusProps> = ({ className }) => {
   const { isOnline } = useConnectivity();
 
+  if (isOnline) {
+    return null; // Não renderiza nada se estiver online
+  }
+
   return (
-    <>
-      {/* Banner de modo offline */}
-      {!isOnline && (
-        <div className={`bg-yellow-500 text-white px-4 py-2 text-center ${className}`}>
-          <span className="flex items-center justify-center">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            Modo Offline
-          </span>
-        </div>
-      )}
-    </>
+    <div className={`fixed bottom-0 left-0 right-0 bg-yellow-500 text-black text-center p-2 z-50 ${className}`}>
+      Você está offline. Algumas funcionalidades podem não estar disponíveis.
+    </div>
   );
 };
 

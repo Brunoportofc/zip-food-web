@@ -9,7 +9,7 @@ import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
 import LottieAnimation from '@/components/LottieAnimation';
 
 import { showAlert } from '@/lib/platform';
-import useAuthStore, { UserType } from '@/store/auth.store';
+import { useAuthStore, UserType } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -39,7 +39,7 @@ const SignUpContent = () => {
   });
   const [userType, setUserType] = useState<UserType>('customer');
   
-  const { signUp, setUserType: storeSetUserType, isAuthenticated } = useAuthStore();
+  const { signUp, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   
 
@@ -104,9 +104,14 @@ const SignUpContent = () => {
     setIsLoading(true);
 
     try {
-      // Salva o tipo de usuário no store antes de fazer cadastro
-      storeSetUserType(userType);
-      await signUp(name, email, password, phone);
+      // Chama a função signUp com os dados corretos
+      await signUp({
+        name,
+        email,
+        password,
+        phone,
+        userType
+      });
       
       // Mostrar mensagem de sucesso
       showAlert('Sucesso', 'Conta criada com sucesso! Faça login para continuar.');
@@ -300,26 +305,7 @@ const SignUpContent = () => {
             </div>
           </AnimatedContainer>
 
-          {/* Logout Button for Authenticated Users */}
-          {isAuthenticated && (
-            <AnimatedContainer animationType="fadeInUp" delay={550}>
-              <div className="text-center mt-4">
-                <p className="text-gray-600 mb-2">
-                  Você já está logado. Deseja fazer logout para criar uma nova conta?
-                </p>
-                <button
-                  onClick={() => {
-                    const { logout } = useAuthStore.getState();
-                    logout();
-                    alert('Logout realizado com sucesso!');
-                  }}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Fazer Logout
-                </button>
-              </div>
-            </AnimatedContainer>
-          )}
+
 
           {/* Sign In Link */}
           <AnimatedContainer animationType="fadeInUp" delay={600}>

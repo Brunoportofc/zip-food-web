@@ -10,7 +10,8 @@ import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
 import LottieAnimation from '@/components/LottieAnimation';
 
 import { showErrorAlert, showSuccessAlert } from '@/components/AlertSystem';
-import useAuthStore, { UserType } from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
+import { type UserType } from '@/types';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -33,7 +34,7 @@ const SignInContent = () => {
   const [form, setForm] = useState({ email: '', password: '' });
   const [userType, setUserType] = useState<UserType>('customer');
   
-  const { signIn, setUserType: storeSetUserType, isAuthenticated, logout } = useAuthStore();
+  const { signIn, isAuthenticated, signOut } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   
 
@@ -73,9 +74,12 @@ const SignInContent = () => {
     setIsLoading(true);
 
     try {
-      // Salva o tipo de usuário no store antes de fazer login
-      storeSetUserType(userType);
-      await signIn(email, password, userType);
+      // Chama a função signIn com os dados corretos
+      await signIn({
+        email,
+        password,
+        userType
+      });
       
       // Mostrar mensagem de sucesso
       showSuccessAlert('Sucesso', 'Login realizado com sucesso!');
@@ -249,22 +253,6 @@ const SignInContent = () => {
           {/* Footer Links */}
           <AnimatedContainer animationType="fadeInUp" delay={600}>
             <div className="text-center mt-6 space-y-3">
-              {isAuthenticated && (
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Você já está logado. Deseja fazer logout?
-                  </p>
-                  <button
-                     onClick={() => {
-                       logout();
-                       showSuccessAlert('Sucesso', 'Logout realizado com sucesso!');
-                     }}
-                     className="text-red-600 hover:text-red-700 font-medium underline"
-                   >
-                     Fazer Logout
-                   </button>
-                </div>
-              )}
               <p className="text-gray-600">
                 Não tem uma conta?{' '}
                 <Link 

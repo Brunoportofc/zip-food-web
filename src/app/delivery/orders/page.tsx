@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { orderService, Order, OrderStatus } from '@/services/order.service';
-import useAuthStore from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import { 
   MdDeliveryDining, 

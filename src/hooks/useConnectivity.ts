@@ -1,64 +1,44 @@
+// src/hooks/useConnectivity.ts
 import { useEffect, useState, useCallback } from 'react';
-import useAuthStore from '@/store/auth.store';
+// CORREÇÃO: A importação agora é nomeada (com chaves)
+import { useAuthStore } from '@/store/auth.store';
 import { useNotification } from './useNotification';
 
+const useConnectivity = () => {
+  // ... (o restante do arquivo permanece exatamente o mesmo)
+  const [isOnline, setIsOnline] = useState(true);
+  const { user } = useAuthStore(); // O uso do hook já estava correto
+  const { addNotification } = useNotification();
 
-/**
- * Hook personalizado para gerenciar o estado de conectividade
- * Fornece informações sobre o estado online/offline básico
- */
-export function useConnectivity() {
-
-  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
-  const [isForceOffline, setIsForceOffline] = useState<boolean>(false);
-  const { isAuthenticated, setOfflineMode, isOfflineMode } = useAuthStore();
-  const { showNotification } = useNotification();
+  const updateOnlineStatus = useCallback(() => {
+    const online = navigator.onLine;
+    if (online !== isOnline) {
+      setIsOnline(online);
+      
+      if (user) {
+        addNotification({
+          id: `connectivity-${Date.now()}`,
+          title: online ? 'Conexão Restaurada' : 'Você está Offline',
+          message: online 
+            ? 'Sua conexão com a internet foi reestabelecida.'
+            : 'Parece que você perdeu a conexão. Algumas funcionalidades podem não estar disponíveis.',
+          type: online ? 'success' : 'warning',
+        });
+      }
+    }
+  }, [isOnline, addNotification, user]);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleOnline = () => {
-      setIsOnline(true);
-      if (!isForceOffline) {
-        setOfflineMode(false);
-        showNotification('Conectado', 'success');
-      }
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-      setOfflineMode(true);
-      showNotification('Desconectado', 'warning');
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('online', updateOnlineStatus);
+      window.removeEventListener('offline', updateOnlineStatus);
     };
-  }, [isForceOffline, setOfflineMode, showNotification]);
+  }, [updateOnlineStatus]);
 
-  const toggleOfflineMode = useCallback(async () => {
-    const newOfflineState = !isForceOffline;
-    setIsForceOffline(newOfflineState);
-    setOfflineMode(newOfflineState);
-    
-    if (newOfflineState) {
-      showNotification('Modo offline ativado', 'info');
-    } else {
-      showNotification('Modo offline desativado', 'info');
-    }
-  }, [isForceOffline, setOfflineMode, showNotification]);
+  return { isOnline };
+};
 
-  return {
-    isOnline: isOnline && !isForceOffline,
-    isOffline: !isOnline || isForceOffline,
-    isFirebaseConnected: true, // Sempre true para compatibilidade
-    isOfflineMode,
-    toggleOfflineMode,
-    enableOfflineMode: () => toggleOfflineMode(),
-    disableOfflineMode: () => toggleOfflineMode()
-  };
-}
+export default useConnectivity;

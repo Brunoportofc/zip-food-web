@@ -6,7 +6,7 @@ import AnimatedContainer from '@/components/AnimatedContainer';
 import { toast } from 'react-hot-toast';
 import { showSuccessAlert, showConfirmAlert } from '@/components/AlertSystem';
 import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
-import useAuthStore from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import { orderService, Order, OrderStatus } from '@/services/order.service';
 import { 
   MdShoppingCart, 

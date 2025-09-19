@@ -1,5 +1,4 @@
 import { Restaurant, RestaurantStatus, RestaurantCategory } from '@/types/restaurant';
-import { authService } from './auth.service';
 
 // Interface para dados de criação de restaurante (simplificada)
 export interface CreateRestaurantData {
@@ -131,54 +130,27 @@ class RestaurantService {
     ];
   }
 
-  // Headers com idioma e autenticação
-  private getHeaders() {
-    const token = authService.getToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-      'Accept-Language': this.lang
-    };
-    
-    // Adicionar token de autenticação se disponível
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    return headers;
-  }
-
   // Método auxiliar para fazer requisições com tratamento de erros internacionalizados
-  private async makeRequest(url: string, options: RequestInit = {}) {
+  private async makeRequest(url: string, options: RequestInit = {}): Promise<any> {
+    const config: RequestInit = {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept-Language': this.lang,
+        ...options.headers,
+      },
+    };
+
     try {
-      const response = await fetch(url, {
-        ...options,
-        headers: {
-          ...this.getHeaders(),
-          ...options.headers,
-        },
-      });
+      const response = await fetch(url, config);
+      const data = await response.json();
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        
-        if (response.status === 404) {
-          throw new Error(getErrorMessage('RESTAURANT_NOT_FOUND', this.lang));
-        }
-        if (response.status === 401 || response.status === 403) {
-          throw new Error(getErrorMessage('UNAUTHORIZED', this.lang));
-        }
-        if (response.status === 400) {
-          throw new Error(errorData.error || getErrorMessage('VALIDATION_ERROR', this.lang));
-        }
-        
-        throw new Error(errorData.error || getErrorMessage('SERVER_ERROR', this.lang));
+        throw new Error(data.error || 'Ocorreu um erro na requisição.');
       }
-
-      return response.json();
+      return data;
     } catch (error) {
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        throw new Error(getErrorMessage('NETWORK_ERROR', this.lang));
-      }
+      console.error('Request Error:', error);
       throw error;
     }
   }

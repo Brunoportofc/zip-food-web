@@ -9,7 +9,7 @@ import {
   FaEnvelope, FaEdit, FaCheck, FaTimes, FaInfoCircle, FaTachometerAlt,
   FaSave, FaSpinner
 } from 'react-icons/fa';
-import useAuthStore from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import { restaurantConfigService } from '@/services/restaurant-config.service';
 import { restaurantService } from '@/services/restaurant.service';
 import { orderService, Order } from '@/services/order.service';
@@ -46,7 +46,7 @@ const RestaurantDashboard = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!user || user.type !== 'restaurant') {
+    if (!user || user.user_type !== 'restaurant') {
       router.push('/auth/sign-in');
       return;
     }

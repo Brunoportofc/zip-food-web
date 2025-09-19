@@ -4,7 +4,7 @@ import { useState } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { useAuthData, useAuthActions } from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 
 
 interface DeliveryProfile {
@@ -34,8 +34,7 @@ interface DeliveryProfile {
 }
 
 export default function DeliveryProfile() {
-  const { user } = useAuthData();
-  const { logout } = useAuthActions();
+  const { user, signOut } = useAuthStore();
   
   const [activeTab, setActiveTab] = useState<'personal' | 'vehicle' | 'bank' | 'address'>('personal');
   const [isEditing, setIsEditing] = useState(false);

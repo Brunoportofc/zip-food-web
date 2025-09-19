@@ -10,7 +10,7 @@ import { showSuccessAlert, showErrorAlert } from '@/components/AlertSystem';
 import { orderService } from '@/services/order.service';
 import { restaurantService } from '@/services/restaurant.service';
 import { menuService } from '@/services/menu.service';
-import useAuthStore from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import AddressSelector, { Address } from '@/components/AddressSelector';
 

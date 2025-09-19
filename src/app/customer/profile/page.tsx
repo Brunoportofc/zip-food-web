@@ -3,15 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaUserAlt, FaMapMarkerAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes, FaBell } from 'react-icons/fa';
-import { useAuthData, useAuthActions } from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import { profileService, Address, PaymentMethod, PersonalData } from '@/services/profile.service';
 import NotificationManager from '@/components/NotificationManager';
 
 export default function CustomerProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuthData();
-  const { logout } = useAuthActions();
+  const { user, isAuthenticated, isLoading, signOut } = useAuthStore();
   
   // Estados para edição
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
@@ -172,7 +171,7 @@ export default function CustomerProfilePage() {
   
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       toast.success('Logout realizado com sucesso');
       router.push('/auth/sign-in');
     } catch (error) {

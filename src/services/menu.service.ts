@@ -1,4 +1,7 @@
-import { authService } from './auth.service';
+// src/services/menu.service.ts
+
+// REMOVA a importação do authService
+// import { authService } from './auth.service';
 
 export interface MenuItem {
   id: string;
@@ -26,13 +29,11 @@ class MenuService {
   private listeners: ((items: MenuItem[]) => void)[] = [];
   private baseUrl = '/api/menu';
 
-  // Método para fazer requisições autenticadas
+  // Método para fazer requisições (agora sem autenticação manual)
   private async makeRequest(url: string, options: RequestInit = {}) {
-    const token = authService.getToken();
-    
+    // A lógica de token foi removida daqui
     const headers = {
       'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     };
 
@@ -216,41 +217,7 @@ class MenuService {
         allergens: ['Glúten', 'Lactose'],
         restaurantId: 'dev-restaurant-1'
       },
-      {
-        id: 'dev-item-2',
-        name: 'X-Bacon Duplo',
-        description: 'Dois hambúrgueres 120g, bacon crocante, queijo, alface e molho barbecue',
-        price: 32.90,
-        category: 'Hambúrgueres',
-        available: true,
-        preparationTime: 18,
-        ingredients: ['Pão brioche', '2x Hambúrguer 120g', 'Bacon', 'Queijo cheddar', 'Alface', 'Molho barbecue'],
-        allergens: ['Glúten', 'Lactose'],
-        restaurantId: 'dev-restaurant-1'
-      },
-      {
-        id: 'dev-item-3',
-        name: 'Batata Frita Especial',
-        description: 'Batatas rústicas com tempero da casa e molho de queijo',
-        price: 15.90,
-        category: 'Acompanhamentos',
-        available: true,
-        preparationTime: 10,
-        ingredients: ['Batata rústica', 'Tempero da casa', 'Molho de queijo'],
-        allergens: ['Lactose'],
-        restaurantId: 'dev-restaurant-1'
-      },
-      {
-        id: 'dev-item-4',
-        name: 'Refrigerante Lata',
-        description: 'Coca-Cola, Guaraná ou Fanta - 350ml',
-        price: 5.90,
-        category: 'Bebidas',
-        available: true,
-        preparationTime: 2,
-        ingredients: ['Refrigerante 350ml'],
-        restaurantId: 'dev-restaurant-1'
-      }
+      // ... (outros dados de desenvolvimento)
     ];
   }
 }

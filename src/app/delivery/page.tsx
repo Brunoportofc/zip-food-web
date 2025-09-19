@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import useAuthStore from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { 
   MdDeliveryDining, 

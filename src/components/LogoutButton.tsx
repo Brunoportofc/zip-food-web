@@ -2,7 +2,7 @@
 
 
 import { useRouter } from 'next/navigation';
-import useAuthStore from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 
 interface LogoutButtonProps {
   className?: string;
@@ -14,10 +14,10 @@ interface LogoutButtonProps {
 const LogoutButton = ({ className = '' }: LogoutButtonProps) => {
 
   const router = useRouter();
-  const { logout } = useAuthStore();
+  const { signOut } = useAuthStore();
 
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     router.push('/auth/sign-in');
   };
 

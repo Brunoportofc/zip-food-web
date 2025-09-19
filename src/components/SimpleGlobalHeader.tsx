@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { MdLogin, MdLogout, MdDeliveryDining } from 'react-icons/md';
-import { useAuthData, useAuthActions } from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
 import Button from '@/components/ui/Button';
 
 /**
@@ -11,8 +11,7 @@ import Button from '@/components/ui/Button';
  */
 const SimpleGlobalHeader = () => {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuthData();
-  const { logout } = useAuthActions();
+  const { isAuthenticated, user, signOut } = useAuthStore();
 
   const handleLoginClick = () => {
     router.push('/auth/sign-in');
@@ -20,7 +19,7 @@ const SimpleGlobalHeader = () => {
 
   const handleLogoutClick = async () => {
     try {
-      await logout();
+      await signOut();
       router.push('/');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
@@ -29,7 +28,7 @@ const SimpleGlobalHeader = () => {
 
   const handleLogoClick = () => {
     if (isAuthenticated && user) {
-      switch (user.type) {
+      switch (user.user_type) {
         case 'customer':
           router.push('/customer');
           break;
@@ -80,7 +79,7 @@ const SimpleGlobalHeader = () => {
                     {user.name}
                   </p>
                   <p className="text-xs text-gray-500 capitalize">
-                    {user.type}
+                    {user.user_type}
                   </p>
                 </div>
                 {user.profileImage && (
