@@ -1,11 +1,11 @@
 import { ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { UserType } from '@/types/auth';
+import { UserRole } from '@/services/auth.service';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requiredUserType?: UserType | UserType[];
+  requiredUserType?: UserRole | UserRole[];
   requiresPermission?: string;
   fallbackPath?: string;
   loadingComponent?: ReactNode;

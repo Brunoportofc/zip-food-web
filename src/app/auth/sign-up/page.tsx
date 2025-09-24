@@ -100,8 +100,23 @@ export default function SignUpPage() {
       
       if (result.success) {
         toast.success('Conta criada com sucesso!');
-        // O middleware cuidará do redirecionamento baseado no papel do usuário
-        router.push('/');
+        
+        // Redirecionar baseado no tipo de usuário
+        // O middleware também cuidará do redirecionamento, mas fazemos aqui para ser mais rápido
+        switch (formData.user_type) {
+          case 'customer':
+            router.push('/customer');
+            break;
+          case 'delivery':
+            router.push('/delivery');
+            break;
+          case 'restaurant':
+            // Para restaurantes, o middleware verificará se já está cadastrado
+            router.push('/restaurant');
+            break;
+          default:
+            router.push('/');
+        }
       } else {
         // Se o erro for de email já em uso, mostrar opção de limpeza
         if (result.error?.includes('já está sendo usado')) {

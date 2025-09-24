@@ -35,8 +35,28 @@ export default function SignInPage() {
       
       if (result.success) {
         toast.success('Login realizado com sucesso!');
-        // O middleware cuidará do redirecionamento baseado no papel do usuário
-        router.push('/');
+        
+        // Redirecionar baseado no tipo de usuário
+        // O middleware também cuidará do redirecionamento, mas fazemos aqui para ser mais rápido
+        if (result.userRole) {
+          switch (result.userRole) {
+            case 'customer':
+              router.push('/customer');
+              break;
+            case 'delivery':
+              router.push('/delivery');
+              break;
+            case 'restaurant':
+              // Para restaurantes, o middleware verificará se já está cadastrado
+              router.push('/restaurant');
+              break;
+            default:
+              router.push('/');
+          }
+        } else {
+          // Se não conseguir determinar o tipo, deixar o middleware cuidar
+          router.push('/');
+        }
       } else {
         toast.error(result.error || 'Erro ao fazer login');
       }

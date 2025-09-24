@@ -12,9 +12,11 @@ interface AuthContextType {
   userData: UserData | null;
   userRole: UserRole | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signUp: (email: string, password: string, displayName: string, role: UserRole) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; userRole?: UserRole }>;
+  signUp: (email: string, password: string, displayName: string, role: UserRole) => Promise<{ success: boolean; error?: string; userRole?: UserRole }>;
   signOut: () => Promise<void>;
+  isUserType: (requiredType: UserRole | UserRole[]) => boolean;
+  hasPermission: (permission: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -82,7 +84,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         
         // O onAuthStateChanged vai atualizar o estado automaticamente
-        return { success: true };
+        // O middleware cuidará do redirecionamento baseado no tipo de usuário
+        return { success: true, userRole: result.user?.role };
       } else {
         return { success: false, error: result.error };
       }
@@ -111,7 +114,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
         
         // O onAuthStateChanged vai atualizar o estado automaticamente
-        return { success: true };
+        // O middleware cuidará do redirecionamento baseado no tipo de usuário
+        return { success: true, userRole: role };
       } else {
         return { success: false, error: result.error };
       }
@@ -134,12 +138,42 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Fazer logout no Firebase
       await authService.signOut();
       
-      // O onAuthStateChanged vai limpar o estado automaticamente
+      // Limpar estados locais
+      setUser(null);
+      setUserData(null);
+      setUserRole(null);
+      
     } catch (error) {
-      console.error('❌ Erro ao fazer logout:', error);
+      console.error('Erro ao fazer logout:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Função para verificar se o usuário tem um tipo específico
+  const isUserType = (requiredType: UserRole | UserRole[]): boolean => {
+    if (!userRole) return false;
+    
+    if (Array.isArray(requiredType)) {
+      return requiredType.includes(userRole);
+    }
+    
+    return userRole === requiredType;
+  };
+
+  // Função para verificar permissões (implementação básica)
+  const hasPermission = (permission: string): boolean => {
+    // Implementação básica - pode ser expandida conforme necessário
+    if (!userRole) return false;
+    
+    // Exemplo de permissões básicas por tipo de usuário
+    const permissions: Record<UserRole, string[]> = {
+      customer: ['view_restaurants', 'place_orders', 'view_orders'],
+      restaurant: ['manage_menu', 'view_orders', 'manage_restaurant'],
+      delivery: ['view_deliveries', 'accept_deliveries', 'update_delivery_status']
+    };
+    
+    return permissions[userRole]?.includes(permission) || false;
   };
 
   const value: AuthContextType = {
@@ -150,6 +184,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signIn,
     signUp,
     signOut,
+    isUserType,
+    hasPermission,
   };
 
   return (

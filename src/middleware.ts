@@ -16,6 +16,7 @@ const publicRoutes = [
 // Rotas específicas por papel
 const customerRoutes = ['/customer'];
 const restaurantRoutes = ['/restaurant'];
+const deliveryRoutes = ['/delivery'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -68,8 +69,9 @@ export async function middleware(request: NextRequest) {
     // Lógica de redirecionamento baseada no papel
     if (userRole === 'customer') {
       // Usuário é cliente
-      if (restaurantRoutes.some(route => pathname.startsWith(route))) {
-        console.log('🔄 [Middleware] Cliente tentando acessar área de restaurante, redirecionando');
+      if (restaurantRoutes.some(route => pathname.startsWith(route)) || 
+          deliveryRoutes.some(route => pathname.startsWith(route))) {
+        console.log('🔄 [Middleware] Cliente tentando acessar área restrita, redirecionando');
         return NextResponse.redirect(new URL('/customer', request.url));
       }
       
@@ -78,17 +80,97 @@ export async function middleware(request: NextRequest) {
         console.log('🔄 [Middleware] Redirecionando cliente para sua área');
         return NextResponse.redirect(new URL('/customer', request.url));
       }
-    } else if (userRole === 'restaurant') {
-      // Usuário é restaurante
-      if (customerRoutes.some(route => pathname.startsWith(route))) {
-        console.log('🔄 [Middleware] Restaurante tentando acessar área de cliente, redirecionando');
-        return NextResponse.redirect(new URL('/restaurant', request.url));
+    } else if (userRole === 'delivery') {
+      // Usuário é entregador
+      if (customerRoutes.some(route => pathname.startsWith(route)) || 
+          restaurantRoutes.some(route => pathname.startsWith(route))) {
+        console.log('🔄 [Middleware] Entregador tentando acessar área restrita, redirecionando');
+        return NextResponse.redirect(new URL('/delivery', request.url));
       }
       
-      // Se está na raiz, redirecionar para área do restaurante
+      // Se está na raiz, redirecionar para área do entregador
       if (pathname === '/') {
-        console.log('🔄 [Middleware] Redirecionando restaurante para sua área');
-        return NextResponse.redirect(new URL('/restaurant', request.url));
+        console.log('🔄 [Middleware] Redirecionando entregador para sua área');
+        return NextResponse.redirect(new URL('/delivery', request.url));
+      }
+    } else if (userRole === 'restaurant') {
+      // Usuário é restaurante
+      if (customerRoutes.some(route => pathname.startsWith(route)) || 
+          deliveryRoutes.some(route => pathname.startsWith(route))) {
+        console.log('🔄 [Middleware] Restaurante tentando acessar área restrita, redirecionando');
+        return NextResponse.redirect(new URL('/restaurant/register', request.url));
+      }
+      
+      // Se está na raiz, verificar se tem restaurante cadastrado
+      if (pathname === '/') {
+        console.log('🔄 [Middleware] Verificando se restaurante está cadastrado');
+        
+        try {
+          // Verificar se o restaurante já está cadastrado
+          const checkRestaurantResponse = await fetch(new URL('/api/restaurant/check', request.url), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: uid }),
+          });
+
+          if (checkRestaurantResponse.ok) {
+            const { hasRestaurant } = await checkRestaurantResponse.json();
+            
+            if (hasRestaurant) {
+              console.log('✅ [Middleware] Restaurante cadastrado, redirecionando para dashboard');
+              return NextResponse.redirect(new URL('/restaurant/dashboard', request.url));
+            } else {
+              console.log('⚠️ [Middleware] Restaurante não cadastrado, redirecionando para registro');
+              return NextResponse.redirect(new URL('/restaurant/register', request.url));
+            }
+          } else {
+            // Se a API falhar, assumir que não está cadastrado
+            console.log('⚠️ [Middleware] Erro ao verificar restaurante, redirecionando para registro');
+            return NextResponse.redirect(new URL('/restaurant/register', request.url));
+          }
+        } catch (error) {
+          console.error('❌ [Middleware] Erro ao verificar restaurante cadastrado:', error);
+          // Em caso de erro, redirecionar para registro
+          return NextResponse.redirect(new URL('/restaurant/register', request.url));
+        }
+      }
+      
+      // Se está tentando acessar /restaurant diretamente, verificar se tem restaurante cadastrado
+      if (pathname === '/restaurant') {
+        console.log('🔄 [Middleware] Acesso direto a /restaurant, verificando cadastro');
+        
+        try {
+          // Verificar se o restaurante já está cadastrado
+          const checkRestaurantResponse = await fetch(new URL('/api/restaurant/check', request.url), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: uid }),
+          });
+
+          if (checkRestaurantResponse.ok) {
+            const { hasRestaurant } = await checkRestaurantResponse.json();
+            
+            if (hasRestaurant) {
+              console.log('✅ [Middleware] Restaurante cadastrado, redirecionando para dashboard');
+              return NextResponse.redirect(new URL('/restaurant/dashboard', request.url));
+            } else {
+              console.log('⚠️ [Middleware] Restaurante não cadastrado, redirecionando para registro');
+              return NextResponse.redirect(new URL('/restaurant/register', request.url));
+            }
+          } else {
+            // Se a API falhar, assumir que não está cadastrado
+            console.log('⚠️ [Middleware] Erro ao verificar restaurante, redirecionando para registro');
+            return NextResponse.redirect(new URL('/restaurant/register', request.url));
+          }
+        } catch (error) {
+          console.error('❌ [Middleware] Erro ao verificar restaurante cadastrado:', error);
+          // Em caso de erro, redirecionar para registro
+          return NextResponse.redirect(new URL('/restaurant/register', request.url));
+        }
       }
     } else {
       console.log('❌ [Middleware] Papel de usuário inválido:', userRole);

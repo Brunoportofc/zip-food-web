@@ -18,7 +18,7 @@ import {
 } from 'firebase/firestore';
 
 // Tipos
-export type UserRole = 'customer' | 'restaurant';
+export type UserRole = 'customer' | 'restaurant' | 'delivery';
 
 export interface UserData {
   uid: string;
