@@ -1,10 +1,15 @@
-import { createClient } from '@supabase/supabase-js';
-
-// Configuração do cliente Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { db } from '@/lib/firebase/config';
+import { 
+  doc, 
+  setDoc, 
+  getDoc, 
+  deleteDoc, 
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs
+} from 'firebase/firestore';
 
 // Interface para configuração do provedor de SMS
 interface SMSProvider {
@@ -233,86 +238,94 @@ export class SMSService {
         };
       }
 
-      // Buscar usuário com o telefone original
-      let { data: users, error: userError } = await supabase
-        .from('users')
-        .select('id, name, phone')
-        .eq('phone', phone)
-        .limit(1);
-      
-      let user = users && users.length > 0 ? users[0] : null;
-      
-      // Se não encontrar, tenta com o telefone formatado
-      if (userError || !user) {
-        const result = await supabase
-          .from('users')
-          .select('id, name, phone')
-          .eq('phone', formattedPhone)
-          .limit(1);
+      try {
+        // Buscar usuário com o telefone original
+        let userQuery = query(
+          collection(db, 'users'),
+          where('phone', '==', phone)
+        );
+        let userSnapshot = await getDocs(userQuery);
         
-        const formattedUsers = result.data;
-        user = formattedUsers && formattedUsers.length > 0 ? formattedUsers[0] : null;
-        userError = result.error;
-      }
-
-      if (userError || !user) {
-        return {
-          success: false,
-          message: 'Nenhuma conta encontrada com este número de telefone.'
-        };
-      }
-
-      // Gerar código de verificação
-      const verificationCode = this.generateVerificationCode();
-      const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
-
-      // TEMPORÁRIO: Salvar código em uma tabela alternativa (users) até criar sms_verification_codes
-      // Vamos usar um campo temporário na tabela users para armazenar o código
-      const { error: updateError } = await supabase
-        .from('users')
-        .update({
-          // Usando campos existentes ou criando um campo JSON temporário
-          verification_code: verificationCode,
-          verification_expires: expiresAt.toISOString()
-        })
-        .eq('id', user.id);
-
-      if (updateError) {
-        console.error('Erro ao salvar código de verificação:', updateError);
-        // Se não conseguir salvar na tabela users, vamos usar memória temporariamente
-        console.log('Usando armazenamento em memória como fallback');
-        
-        // Armazenar em memória (não recomendado para produção)
-        if (!(global as any).verificationCodes) {
-          (global as any).verificationCodes = new Map();
+        let user = null;
+        if (!userSnapshot.empty) {
+          const userDoc = userSnapshot.docs[0];
+          user = { id: userDoc.id, ...userDoc.data() };
         }
         
-        (global as any).verificationCodes.set(formattedPhone, {
-          code: verificationCode,
-          userId: user.id,
-          expiresAt: expiresAt.getTime()
-        });
-      }
+        // Se não encontrar, tenta com o telefone formatado
+        if (!user) {
+          userQuery = query(
+            collection(db, 'users'),
+            where('phone', '==', formattedPhone)
+          );
+          userSnapshot = await getDocs(userQuery);
+          
+          if (!userSnapshot.empty) {
+            const userDoc = userSnapshot.docs[0];
+            user = { id: userDoc.id, ...userDoc.data() };
+          }
+        }
 
-      // Preparar mensagem
-      const message = `ZipFood: Seu código de redefinição de senha é ${verificationCode}. Válido por 15 minutos. Não compartilhe este código.`;
+        if (!user) {
+          return {
+            success: false,
+            message: 'Nenhuma conta encontrada com este número de telefone.'
+          };
+        }
 
-      // Enviar SMS
-      const smsSuccess = await this.provider.sendSMS(formattedPhone, message);
+        // Gerar código de verificação
+        const verificationCode = this.generateVerificationCode();
+        const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutos
 
-      if (!smsSuccess) {
+        // Salvar código de verificação no Firestore
+        try {
+          await setDoc(doc(db, 'users', user.id), {
+            verification_code: verificationCode,
+            verification_expires: expiresAt.toISOString()
+          }, { merge: true });
+        } catch (updateError) {
+          console.error('Erro ao salvar código de verificação no Firestore:', updateError);
+          // Se não conseguir salvar no Firestore, vamos usar memória temporariamente
+          console.log('Usando armazenamento em memória como fallback');
+          
+          // Armazenar em memória (não recomendado para produção)
+          if (!(global as any).verificationCodes) {
+            (global as any).verificationCodes = new Map();
+          }
+          
+          (global as any).verificationCodes.set(formattedPhone, {
+            code: verificationCode,
+            userId: user.id,
+            expiresAt: expiresAt.getTime()
+          });
+        }
+
+        // Preparar mensagem
+        const message = `ZipFood: Seu código de redefinição de senha é ${verificationCode}. Válido por 15 minutos. Não compartilhe este código.`;
+
+        // Enviar SMS
+        const smsSuccess = await this.provider.sendSMS(formattedPhone, message);
+
+        if (!smsSuccess) {
+          return {
+            success: false,
+            message: 'Erro ao enviar SMS. Tente novamente.'
+          };
+        }
+
+        return {
+          success: true,
+          message: 'Código enviado com sucesso!',
+          // Incluir código apenas em desenvolvimento para facilitar testes
+          ...(process.env.NODE_ENV !== 'production' && { code: verificationCode })
+        };
+      } catch (dbError) {
+        console.error('Erro ao buscar usuário no banco de dados:', dbError);
         return {
           success: false,
-          message: 'Erro ao enviar SMS. Tente novamente.'
+          message: 'Erro interno. Tente novamente.'
         };
       }
-
-      return {
-        success: true,
-        message: 'Código enviado com sucesso!',
-        // Incluir código apenas em desenvolvimento para facilitar testes
-        ...(process.env.NODE_ENV !== 'production' && { code: verificationCode })
-      };
 
     } catch (error) {
       console.error('Erro no serviço de SMS:', error);
@@ -349,39 +362,48 @@ export class SMSService {
         };
       }
 
-      // Primeiro, tentar buscar na tabela users (método temporário)
-      const { data: user, error: userError } = await supabase
-        .from('users')
-        .select('id, verification_code, verification_expires')
-        .eq('phone', formattedPhone)
-        .single();
-      
-      if (!userError && user && user.verification_code === code) {
-        // Verificar se não expirou
-        if (user.verification_expires && new Date() > new Date(user.verification_expires)) {
-          // Limpar código expirado
-          await supabase
-            .from('users')
-            .update({ verification_code: null, verification_expires: null })
-            .eq('id', user.id);
+      try {
+        // Buscar usuário no Firestore
+        const userQuery = query(
+          collection(db, 'users'),
+          where('phone', '==', formattedPhone)
+        );
+        const userSnapshot = await getDocs(userQuery);
+        
+        if (!userSnapshot.empty) {
+          const userDoc = userSnapshot.docs[0];
+          const user = userDoc.data();
           
-          return {
-            success: false,
-            message: 'Código expirado'
-          };
+          if (user.verification_code === code) {
+            // Verificar se não expirou
+            if (user.verification_expires && new Date() > new Date(user.verification_expires)) {
+              // Limpar código expirado
+              await setDoc(doc(db, 'users', userDoc.id), {
+                verification_code: null,
+                verification_expires: null
+              }, { merge: true });
+              
+              return {
+                success: false,
+                message: 'Código expirado'
+              };
+            }
+            
+            // Limpar código usado
+            await setDoc(doc(db, 'users', userDoc.id), {
+              verification_code: null,
+              verification_expires: null
+            }, { merge: true });
+            
+            return {
+              success: true,
+              message: 'Código verificado com sucesso!',
+              userId: userDoc.id
+            };
+          }
         }
-        
-        // Limpar código usado
-        await supabase
-          .from('users')
-          .update({ verification_code: null, verification_expires: null })
-          .eq('id', user.id);
-        
-        return {
-          success: true,
-          message: 'Código verificado com sucesso!',
-          userId: user.id
-        };
+      } catch (firestoreError) {
+        console.error('Erro ao verificar código no Firestore:', firestoreError);
       }
       
       // Se não encontrou na tabela users, tentar na memória (fallback)
@@ -431,11 +453,20 @@ export class SMSService {
       const formattedPhone = this.validateAndFormatPhone(phone);
       if (!formattedPhone) return;
       
-      // Limpar da tabela users se existir
-      await supabase
-        .from('users')
-        .update({ verification_code: null, verification_expires: null })
-        .eq('phone', formattedPhone);
+      // Limpar do Firestore se existir
+      const userQuery = query(
+        collection(db, 'users'),
+        where('phone', '==', formattedPhone)
+      );
+      const userSnapshot = await getDocs(userQuery);
+      
+      if (!userSnapshot.empty) {
+        const userDoc = userSnapshot.docs[0];
+        await setDoc(doc(db, 'users', userDoc.id), {
+          verification_code: null,
+          verification_expires: null
+        }, { merge: true });
+      }
       
       // Limpar da memória também
       if ((global as any).verificationCodes && (global as any).verificationCodes.has(formattedPhone)) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/api/supabase';
+import { db as adminDb } from '@/lib/api/firebase';
 import { successResponse, errorResponse, serverErrorResponse } from '@/lib/api/response';
 
 // Mensagens de erro internacionalizadas
@@ -38,41 +38,38 @@ export async function GET(
       return errorResponse(getErrorMessage('INVALID_ID', lang), 400);
     }
 
-    // Buscar restaurante com menu completo
-    const { data: restaurant, error } = await supabaseAdmin
-      .from('restaurants')
-      .select(`
-        *,
-        menu_items:menu_items(
-          id,
-          name,
-          description,
-          price,
-          category,
-          image_url,
-          is_available,
-          preparation_time,
-          ingredients,
-          allergens,
-          nutritional_info,
-          created_at,
-          updated_at
-        )
-      `)
-      .eq('id', restaurantId)
-      .eq('is_active', true)
-      .single();
+    let restaurant: any = null;
+    
+    try {
+      // Buscar restaurante
+      const restaurantRef = adminDb.collection('restaurants').doc(restaurantId);
+      const restaurantDoc = await restaurantRef.get();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
+      if (!restaurantDoc.exists) {
         return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
       }
-      console.error('Erro ao buscar restaurante:', error);
-      return serverErrorResponse(getErrorMessage('SERVER_ERROR', lang));
-    }
 
-    if (!restaurant) {
-      return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
+      const restaurantData = restaurantDoc.data();
+      if (!restaurantData?.is_active) {
+        return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
+      }
+
+      restaurant = { id: restaurantDoc.id, ...restaurantData } as any;
+
+      // Buscar itens do menu do restaurante
+      const menuSnapshot = await adminDb.collection('menu_items')
+        .where('restaurant_id', '==', restaurantId)
+        .get();
+
+      const menuItems = menuSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      restaurant.menu_items = menuItems;
+    } catch (firestoreError) {
+      console.error('Erro ao buscar restaurante no Firestore:', firestoreError);
+      return serverErrorResponse(getErrorMessage('SERVER_ERROR', lang));
     }
 
     // Organizar menu por categorias
@@ -144,16 +141,21 @@ export async function PUT(
       return errorResponse(getErrorMessage('INVALID_ID', lang), 400);
     }
 
-    // Verificar se o restaurante existe
-    const { data: existingRestaurant, error: fetchError } = await supabaseAdmin
-      .from('restaurants')
-      .select('id')
-      .eq('id', restaurantId)
-      .single();
+    let restaurant: any = null;
 
-    if (fetchError || !existingRestaurant) {
-      return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
-    }
+    try {
+      // Verificar se o restaurante existe
+      const restaurantRef = adminDb.collection('restaurants').doc(restaurantId);
+      const restaurantDoc = await restaurantRef.get();
+
+      if (!restaurantDoc.exists) {
+        return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
+      }
+
+      const existingRestaurant = restaurantDoc.data();
+      if (!existingRestaurant?.is_active) {
+        return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
+      }
 
     // Preparar dados para atualização (apenas campos fornecidos)
     const updateData: any = {};
@@ -177,16 +179,14 @@ export async function PUT(
     // Adicionar timestamp de atualização
     updateData.updated_at = new Date().toISOString();
 
-    // Atualizar no banco de dados
-    const { data: restaurant, error } = await supabaseAdmin
-      .from('restaurants')
-      .update(updateData)
-      .eq('id', restaurantId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating restaurant:', error);
+      // Atualizar no Firestore
+      await restaurantRef.update(updateData);
+      
+      // Buscar dados atualizados
+      const updatedDoc = await restaurantRef.get();
+      restaurant = { id: updatedDoc.id, ...updatedDoc.data() };
+    } catch (firestoreError) {
+      console.error('Erro ao atualizar restaurante no Firestore:', firestoreError);
       return serverErrorResponse(getErrorMessage('SERVER_ERROR', lang));
     }
 
@@ -215,35 +215,27 @@ export async function DELETE(
       return errorResponse(getErrorMessage('INVALID_ID', lang), 400);
     }
 
-    // Verificar se o restaurante existe
-    const { data: existingRestaurant, error: fetchError } = await supabaseAdmin
-      .from('restaurants')
-      .select('id, is_active')
-      .eq('id', restaurantId)
-      .single();
+    try {
+      // Verificar se o restaurante existe
+      const restaurantRef = adminDb.collection('restaurants').doc(restaurantId);
+      const restaurantDoc = await restaurantRef.get();
 
-    if (fetchError || !existingRestaurant) {
-      return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
-    }
+      if (!restaurantDoc.exists) {
+        return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
+      }
 
-    // Soft delete - marcar como inativo
-    const { data: restaurant, error } = await supabaseAdmin
-      .from('restaurants')
-      .update({ 
+      // Soft delete - marcar como inativo
+      await restaurantRef.update({ 
         is_active: false,
         updated_at: new Date().toISOString()
-      })
-      .eq('id', restaurantId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error deleting restaurant:', error);
+      });
+    } catch (firestoreError) {
+      console.error('Erro ao deletar restaurante no Firestore:', firestoreError);
       return serverErrorResponse(getErrorMessage('SERVER_ERROR', lang));
     }
 
     return successResponse(
-      { id: restaurantId, is_active: false },
+      null,
       lang === 'he' ? 'המסעדה הוסרה בהצלחה' : 'Restaurant deleted successfully'
     );
 

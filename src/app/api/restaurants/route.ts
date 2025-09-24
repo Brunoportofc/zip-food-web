@@ -1,18 +1,24 @@
 // src/app/api/restaurants/route.ts
 import { NextRequest } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
-import { supabaseAdmin } from '@/lib/api/supabase';
+import { adminAuth, adminDb } from '@/lib/firebase/admin';
 import { errorResponse, successResponse } from '@/lib/api/response';
 
 // POST - Criar novo restaurante
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createRouteHandlerClient({ cookies });
-    const { data: { user } } = await supabase.auth.getUser();
+    // Verificar autenticação via header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return errorResponse('Token de autenticação necessário.', 401);
+    }
 
-    if (!user) {
-      return errorResponse('Acesso não autorizado.', 401);
+    const token = authHeader.split('Bearer ')[1];
+    let user;
+    
+    try {
+      user = await adminAuth.verifyIdToken(token);
+    } catch (authError) {
+      return errorResponse('Token inválido.', 401);
     }
 
     const body = await request.json();
@@ -41,32 +47,40 @@ export async function POST(request: NextRequest) {
     }
     
     const restaurantData = {
-      created_by: user.id,
-      user_id: user.id,
+      created_by: user.uid,
+      user_id: user.uid,
       name: body.name.trim(),
-      // ... (resto dos seus dados)
       address: address.trim(),
       city: city.trim(),
       country: country.trim(),
       latitude: lat,
       longitude: lon,
       cuisine_type: body.cuisine_type.trim(),
+      created_at: new Date(),
+      updated_at: new Date(),
     };
     
-    const { data: restaurant, error } = await supabaseAdmin
-      .from('restaurants')
-      .insert([restaurantData])
-      .select()
-      .single();
+    try {
+      // Verificar se já existe um restaurante para este usuário
+      const existingRestaurant = await adminDb.collection('restaurants')
+        .where('user_id', '==', user.uid)
+        .limit(1)
+        .get();
 
-    if (error) {
-      if (error.code === '23505') {
+      if (!existingRestaurant.empty) {
         return errorResponse('Restaurante já existe para esta conta.', 409);
       }
-      return errorResponse(error.message, 500);
-    }
 
-    return successResponse(restaurant, 201);
+      // Criar novo restaurante
+      const docRef = await adminDb.collection('restaurants').add(restaurantData);
+      const newRestaurant = await docRef.get();
+      const restaurant = { id: newRestaurant.id, ...newRestaurant.data() };
+
+      return successResponse(restaurant, 'Restaurante criado com sucesso', 201);
+    } catch (firestoreError) {
+      console.error('Erro ao criar restaurante no Firestore:', firestoreError);
+      return errorResponse('Erro ao criar restaurante.', 500);
+    }
 
   } catch (error: any) {
     console.error('Erro no servidor ao criar restaurante:', error.message);

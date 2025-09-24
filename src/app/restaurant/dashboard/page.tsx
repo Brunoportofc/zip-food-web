@@ -71,9 +71,9 @@ const RestaurantDashboard = () => {
       
       // Buscar dados reais do restaurante na API
       try {
-        const restaurants = await restaurantService.getRestaurants();
-        const currentRestaurant = restaurants.find(r => r.ownerId === user!.id);
-        setRestaurantData(currentRestaurant || null);
+        const restaurants = await restaurantService.getRestaurantsByOwner(user!.id);
+        const currentRestaurant = restaurants[0] || null;
+        setRestaurantData(currentRestaurant);
       } catch (error) {
         console.log('Restaurante ainda não cadastrado na API principal');
       }
@@ -97,13 +97,22 @@ const RestaurantDashboard = () => {
           id: `ORD-${Date.now()}-1`,
           restaurantId: user!.id,
           customerId: 'customer-1',
-          customer: { id: 'customer-1', name: 'João Silva', phone: '(11) 99999-9999', address: 'Rua A, 123' },
+          customer: { id: 'customer-1', name: 'João Silva', phone: '(11) 99999-9999', email: 'joao@email.com' },
           items: [{ id: '1', name: 'Pizza Margherita', quantity: 1, price: 35.90 }],
           subtotal: 35.90,
           deliveryFee: 5.99,
           total: 41.89,
           status: 'preparing' as const,
-          estimatedDeliveryTime: '35 min',
+          estimatedDeliveryTime: new Date(Date.now() + 35 * 60 * 1000),
+          deliveryAddress: {
+            street: 'Rua B',
+            number: '456',
+            neighborhood: 'Vila Nova',
+            city: 'São Paulo',
+            zipCode: '02000-000'
+          },
+          paymentMethod: 'credit-card' as const,
+          confirmationCode: '5678',
           createdAt: new Date(Date.now() - 15 * 60 * 1000),
           updatedAt: new Date(),
           statusHistory: []
@@ -112,13 +121,21 @@ const RestaurantDashboard = () => {
           id: `ORD-${Date.now()}-2`,
           restaurantId: user!.id,
           customerId: 'customer-2',
-          customer: { id: 'customer-2', name: 'Maria Santos', phone: '(11) 88888-8888', address: 'Rua B, 456' },
+          customer: { id: 'customer-2', name: 'Maria Santos', phone: '(11) 88888-8888', email: 'maria@email.com' },
           items: [{ id: '2', name: 'Hambúrguer Artesanal', quantity: 2, price: 28.50 }],
           subtotal: 57.00,
           deliveryFee: 4.99,
           total: 61.99,
           status: 'delivering' as const,
-          estimatedDeliveryTime: '20 min',
+          estimatedDeliveryTime: new Date(Date.now() + 20 * 60 * 1000),
+          deliveryAddress: {
+            street: 'Rua B',
+            number: '456',
+            neighborhood: 'Vila Nova',
+            city: 'São Paulo',
+            zipCode: '02000-000'
+          },
+          paymentMethod: 'pix' as const,
           confirmationCode: '1234',
           createdAt: new Date(Date.now() - 45 * 60 * 1000),
           updatedAt: new Date(),
@@ -159,15 +176,15 @@ const RestaurantDashboard = () => {
   // Funções para edição das informações do restaurante
   const handleEditStart = () => {
     const dataToEdit = restaurantData || {
-      name: config?.name || '',
+      name: config?.businessName || config?.displayName || '',
       description: config?.description || '',
-      category: config?.category || '',
+      category: (config?.category as any) || 'other',
       phone: config?.phone || '',
       email: config?.email || '',
-      address: config?.address || '',
-      deliveryFee: config?.deliveryFee || 0,
-      minimumOrder: config?.minimumOrder || 0,
-      status: 'active'
+      address: config?.address?.street || '',
+      deliveryFee: 0, // Será usado para exibição, mas não existe na config
+      minimumOrder: config?.minimumDeliveryOrder || 0,
+      status: 'active' as const
     };
     setEditingData(dataToEdit);
     setIsEditing(true);
@@ -186,14 +203,17 @@ const RestaurantDashboard = () => {
       if (config) {
         const updatedConfig = {
           ...config,
-          name: editingData.name || config.name,
+          businessName: editingData.name || config.businessName,
+          displayName: editingData.name || config.displayName,
           description: editingData.description || config.description,
           category: editingData.category || config.category,
           phone: editingData.phone || config.phone,
           email: editingData.email || config.email,
-          address: editingData.address || config.address,
-          deliveryFee: editingData.deliveryFee || config.deliveryFee,
-          minimumOrder: editingData.minimumOrder || config.minimumOrder
+          address: {
+            ...config.address,
+            street: editingData.address || config.address.street
+          },
+          minimumDeliveryOrder: editingData.minimumOrder || config.minimumDeliveryOrder
         };
         
         await restaurantConfigService.updateRestaurantConfig(user!.id, updatedConfig);
@@ -507,7 +527,8 @@ const RestaurantDashboard = () => {
                         <div className="flex items-start space-x-2 py-2">
                           <FaMapMarkerAlt className="w-4 h-4 text-gray-500 mt-1" />
                           <span className="text-gray-900">
-                            {restaurantData?.address || config?.address || 'Não informado'}
+                            {restaurantData?.address || 
+                             (config?.address ? `${config.address.street}, ${config.address.number} - ${config.address.neighborhood}, ${config.address.city}` : 'Não informado')}
                           </span>
                         </div>
                       )}
@@ -538,7 +559,7 @@ const RestaurantDashboard = () => {
                         <div className="flex items-center space-x-2 py-2">
                           <FaDollarSign className="w-4 h-4 text-gray-500" />
                           <span className="text-gray-900">
-                            R$ {(restaurantData?.deliveryFee || config?.deliveryFee || 0).toFixed(2)}
+                            R$ {(restaurantData?.deliveryFee || config?.minimumDeliveryOrder || 0).toFixed(2)}
                           </span>
                         </div>
                       )}
@@ -562,7 +583,7 @@ const RestaurantDashboard = () => {
                         <div className="flex items-center space-x-2 py-2">
                           <FaShoppingBag className="w-4 h-4 text-gray-500" />
                           <span className="text-gray-900">
-                            R$ {(restaurantData?.minimumOrder || config?.minimumOrder || 0).toFixed(2)}
+                            R$ {(restaurantData?.minimumOrder || config?.minimumDeliveryOrder || 0).toFixed(2)}
                           </span>
                         </div>
                       )}
@@ -576,20 +597,24 @@ const RestaurantDashboard = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                         >
                           <option value="active">Ativo</option>
-                          <option value="inactive">Inativo</option>
+                          <option value="suspended">Suspenso</option>
                           <option value="pending">Pendente</option>
+                          <option value="rejected">Rejeitado</option>
                         </select>
                       ) : (
                         <div className="py-2">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             (restaurantData?.status || 'active') === 'active' 
                               ? 'bg-green-100 text-green-800' 
-                              : (restaurantData?.status || 'active') === 'inactive'
+                              : (restaurantData?.status || 'active') === 'suspended'
                               ? 'bg-red-100 text-red-800'
+                              : (restaurantData?.status || 'active') === 'rejected'
+                              ? 'bg-gray-100 text-gray-800'
                               : 'bg-yellow-100 text-yellow-800'
                           }`}>
                             {(restaurantData?.status || 'active') === 'active' ? 'Ativo' : 
-                             (restaurantData?.status || 'active') === 'inactive' ? 'Inativo' : 'Pendente'}
+                             (restaurantData?.status || 'active') === 'suspended' ? 'Suspenso' : 
+                             (restaurantData?.status || 'active') === 'rejected' ? 'Rejeitado' : 'Pendente'}
                           </span>
                         </div>
                       )}
@@ -695,7 +720,9 @@ const RestaurantDashboard = () => {
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                             {getStatusText(order.status)}
                           </span>
-                          <p className="text-sm text-gray-600 mt-1">{order.estimatedDeliveryTime}</p>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {order.estimatedDeliveryTime ? new Date(order.estimatedDeliveryTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
+                          </p>
                         </div>
                       </div>
                     ))}

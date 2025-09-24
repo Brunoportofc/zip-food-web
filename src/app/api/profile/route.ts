@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/api/supabase';
+import { db } from '@/lib/api/firebase';
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse, validationErrorResponse } from '@/lib/api/response';
 
 // Interface para atualização de perfil
@@ -53,54 +53,50 @@ export async function GET(request: NextRequest) {
     };
 
     // Buscar dados específicos baseado no tipo de usuário
-    switch (userType) {
-      case 'customer':
-        const { data: customerData, error: customerError } = await supabaseAdmin
-          .from('customers')
-          .select('*')
-          .eq('id', userId)
-          .single();
+    try {
+      switch (userType) {
+        case 'customer':
+          const customerQuery = await db.collection('customers')
+            .where('user_id', '==', userId)
+            .limit(1)
+            .get();
 
-        if (customerError && customerError.code !== 'PGRST116') {
-          console.error('Erro ao buscar dados do cliente:', customerError);
-          return serverErrorResponse('Erro ao buscar dados do perfil');
-        }
+          if (!customerQuery.empty) {
+            const customerData = customerQuery.docs[0].data();
+            profileData = { ...profileData, ...customerData };
+          }
+          break;
 
-        profileData = { ...profileData, ...customerData };
-        break;
+        case 'restaurant':
+          const restaurantQuery = await db.collection('restaurants')
+            .where('user_id', '==', userId)
+            .limit(1)
+            .get();
 
-      case 'restaurant':
-        const { data: restaurantData, error: restaurantError } = await supabaseAdmin
-          .from('restaurants')
-          .select('*')
-          .eq('id', userId)
-          .single();
+          if (!restaurantQuery.empty) {
+            const restaurantData = restaurantQuery.docs[0].data();
+            profileData = { ...profileData, ...restaurantData };
+          }
+          break;
 
-        if (restaurantError && restaurantError.code !== 'PGRST116') {
-          console.error('Erro ao buscar dados do restaurante:', restaurantError);
-          return serverErrorResponse('Erro ao buscar dados do perfil');
-        }
+        case 'delivery':
+          const deliveryQuery = await db.collection('delivery_drivers')
+            .where('user_id', '==', userId)
+            .limit(1)
+            .get();
 
-        profileData = { ...profileData, ...restaurantData };
-        break;
+          if (!deliveryQuery.empty) {
+            const deliveryData = deliveryQuery.docs[0].data();
+            profileData = { ...profileData, ...deliveryData };
+          }
+          break;
 
-      case 'delivery':
-        const { data: deliveryData, error: deliveryError } = await supabaseAdmin
-          .from('delivery_drivers')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (deliveryError && deliveryError.code !== 'PGRST116') {
-          console.error('Erro ao buscar dados do entregador:', deliveryError);
-          return serverErrorResponse('Erro ao buscar dados do perfil');
-        }
-
-        profileData = { ...profileData, ...deliveryData };
-        break;
-
-      default:
-        return errorResponse('Tipo de usuário inválido');
+        default:
+          return errorResponse('Tipo de usuário inválido');
+      }
+    } catch (firestoreError) {
+      console.error('Erro ao buscar dados no Firestore:', firestoreError);
+      return serverErrorResponse('Erro ao buscar dados do perfil');
     }
 
     return successResponse(profileData, 'Dados do perfil obtidos com sucesso');
@@ -147,17 +143,18 @@ export async function PUT(request: NextRequest) {
     if (body.phone) updateData.phone = body.phone.trim();
     if (body.address) updateData.address = body.address;
 
-    let tableName: string;
     let updatedProfile: any;
 
-    // Atualizar tabela específica baseada no tipo de usuário
+    // Atualizar coleção específica baseada no tipo de usuário
+    let collectionName: string;
+    
     switch (userType) {
       case 'customer':
-        tableName = 'customers';
+        collectionName = 'customers';
         break;
 
       case 'restaurant':
-        tableName = 'restaurants';
+        collectionName = 'restaurants';
         // Campos específicos do restaurante
         if (body.restaurantData) {
           if (body.restaurantData.businessName) updateData.business_name = body.restaurantData.businessName;
@@ -170,7 +167,7 @@ export async function PUT(request: NextRequest) {
         break;
 
       case 'delivery':
-        tableName = 'delivery_drivers';
+        collectionName = 'delivery_drivers';
         // Campos específicos do entregador
         if (body.deliveryData) {
           if (body.deliveryData.vehicleType) updateData.vehicle_type = body.deliveryData.vehicleType;
@@ -183,20 +180,30 @@ export async function PUT(request: NextRequest) {
         return errorResponse('Tipo de usuário inválido');
     }
 
-    // Executar atualização
-    const { data, error } = await supabaseAdmin
-      .from(tableName)
-      .update(updateData)
-      .eq('id', userId)
-      .select()
-      .single();
+    // Executar atualização no Firestore
+    try {
+      // Buscar o documento existente
+      const querySnapshot = await db.collection(collectionName)
+        .where('user_id', '==', userId)
+        .limit(1)
+        .get();
 
-    if (error) {
-      console.error('Erro ao atualizar perfil:', error);
+      if (querySnapshot.empty) {
+        return notFoundResponse('Perfil não encontrado');
+      }
+
+      const docRef = querySnapshot.docs[0].ref;
+      
+      // Atualizar o documento
+      await docRef.update(updateData);
+      
+      // Buscar os dados atualizados
+      const updatedDoc = await docRef.get();
+      updatedProfile = { id: updatedDoc.id, ...updatedDoc.data() };
+    } catch (firestoreError) {
+      console.error('Erro ao atualizar perfil no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao atualizar perfil');
     }
-
-    updatedProfile = data;
 
     return successResponse(updatedProfile, 'Perfil atualizado com sucesso');
   } catch (error) {

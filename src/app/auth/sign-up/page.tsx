@@ -9,11 +9,13 @@ import { MdRestaurant, MdDeliveryDining, MdPerson } from 'react-icons/md';
 import LottieAnimation from '@/components/LottieAnimation';
 
 import { showAlert } from '@/lib/platform';
-import { useAuthStore, UserType } from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
+import { UserType } from '@/types';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { restaurantConfigService } from '@/services/restaurant-config.service';
+import { AuthCacheCleaner } from '@/utils/auth-cache-cleaner';
 
 
 const SignUp = () => {
@@ -100,12 +102,16 @@ const SignUpContent = () => {
       return showAlert('Erro', 'As senhas não coincidem');
     }
 
+    if (password.length < 6) {
+      return showAlert('Erro', 'A senha deve ter pelo menos 6 caracteres');
+    }
+
     setIsSubmitting(true);
     setIsLoading(true);
 
     try {
       // Chama a função signUp com os dados corretos
-      await signUp({
+      const user = await signUp({
         name,
         email,
         password,
@@ -114,16 +120,83 @@ const SignUpContent = () => {
       });
       
       // Mostrar mensagem de sucesso
-      showAlert('Sucesso', 'Conta criada com sucesso! Faça login para continuar.');
+      showAlert('Sucesso', 'Conta criada com sucesso!');
       
-      // Redirecionar para página de login com o tipo de usuário
+      // Importar userTypeService para determinar redirecionamento
+      const { userTypeService } = await import('@/services/user-type.service');
+      
+      // Determinar rota de redirecionamento baseada no perfil do usuário
+      let redirectRoute = '/customer'; // fallback padrão
+      
+      if (user && user.profile) {
+        redirectRoute = userTypeService.getRedirectRoute(user.profile);
+      } else {
+        // Fallback baseado no tipo de usuário
+        switch (userType) {
+          case 'restaurant':
+            redirectRoute = '/restaurant/register';
+            break;
+          case 'delivery':
+            redirectRoute = '/delivery/pending';
+            break;
+          default:
+            redirectRoute = '/customer';
+            break;
+        }
+      }
+      
+      // Redirecionar para a rota apropriada
       setTimeout(() => {
-        router.push(`/auth/sign-in?type=${userType}`);
+        router.push(redirectRoute);
       }, 2000);
       
     } catch (error: any) {
-      showAlert('Erro', error.message || 'Falha no cadastro');
-      console.error(error);
+      let errorMessage = 'Falha no cadastro';
+      
+      // Tratar erro específico de email já em uso
+      if (error.message.includes('email já está em uso') || error.message.includes('email-already-in-use')) {
+        console.log('🔍 Erro de email duplicado detectado, iniciando limpeza de cache...');
+        
+        // Limpar cache automaticamente
+        try {
+          await AuthCacheCleaner.clearAllAuthCache();
+          
+          errorMessage = 'Este email já possui uma conta ou há dados em cache. O cache foi limpo automaticamente. Tente novamente ou faça login se já possui uma conta.';
+          
+          // Oferecer opções ao usuário
+          const userChoice = window.confirm(`${errorMessage}\n\nClique OK para tentar novamente com o mesmo email ou Cancelar para ir para a página de login.`);
+          
+          if (userChoice) {
+            // Usuário quer tentar novamente - apenas mostrar mensagem
+            showAlert('Cache Limpo', 'Cache limpo com sucesso! Tente criar a conta novamente.');
+            return;
+          } else {
+            // Usuário quer ir para login
+            router.push(`/auth/sign-in?type=${userType}&email=${encodeURIComponent(form.email)}`);
+            return;
+          }
+        } catch (cacheError) {
+          console.error('Erro ao limpar cache:', cacheError);
+          
+          // Fallback para o comportamento anterior se a limpeza de cache falhar
+          errorMessage = 'Este email já possui uma conta. Deseja fazer login?';
+          
+          const goToLogin = window.confirm(`${errorMessage}\n\nClique OK para ir para a página de login ou Cancelar para tentar outro email.`);
+          
+          if (goToLogin) {
+            router.push(`/auth/sign-in?type=${userType}&email=${encodeURIComponent(form.email)}`);
+            return;
+          }
+          
+          // Se não quiser ir para login, limpa o campo de email e mostra instruções
+          setForm(prev => ({ ...prev, email: '' }));
+          AuthCacheCleaner.showClearCacheInstructions();
+          return;
+        }
+      }
+      
+      showAlert('Erro', error.message || errorMessage);
+      console.error('Erro no cadastro:', error);
     } finally {
       setIsSubmitting(false);
       setIsLoading(false);

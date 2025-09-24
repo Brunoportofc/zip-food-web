@@ -84,7 +84,7 @@ export default function RestaurantOrders() {
           customer: {
             id: customerId,
             name: `Cliente ${Math.floor(Math.random() * 100)}`,
-            address: `Endereço ${Math.floor(Math.random() * 100)}`,
+            email: `cliente${Math.floor(Math.random() * 100)}@email.com`,
             phone: '(11) 99999-9999',
           },
           items: [
@@ -99,7 +99,16 @@ export default function RestaurantOrders() {
           deliveryFee: 5.0,
           total: 30.0,
           status: 'pending',
-          estimatedDeliveryTime: '30-45 min',
+          estimatedDeliveryTime: new Date(Date.now() + 35 * 60 * 1000), // 35 minutos a partir de agora
+          deliveryAddress: {
+            street: 'Rua Exemplo',
+            number: '123',
+            neighborhood: 'Centro',
+            city: 'São Paulo',
+            zipCode: '01000-000'
+          },
+          paymentMethod: 'credit-card',
+          confirmationCode: Math.random().toString(36).substr(2, 6).toUpperCase(),
           createdAt: new Date(),
           updatedAt: new Date(),
           statusHistory: [{
@@ -504,7 +513,7 @@ export default function RestaurantOrders() {
                         <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 text-xs lg:text-sm text-gray-500">
                           <span className="flex items-center space-x-1">
                             <MdLocationOn size={14} className="lg:w-4 lg:h-4" />
-                            <span className="truncate">{order.customer.address}</span>
+                            <span className="truncate">{`${order.deliveryAddress.street}, ${order.deliveryAddress.number} - ${order.deliveryAddress.neighborhood}`}</span>
                           </span>
                           <span className="flex items-center space-x-1">
                             <MdAccessTime size={14} className="lg:w-4 lg:h-4" />
@@ -597,7 +606,7 @@ export default function RestaurantOrders() {
                       <p className="text-gray-700 font-medium">{selectedOrder.customer.name}</p>
                       <p className="text-gray-600 flex items-center space-x-2">
                         <MdLocationOn size={16} className="text-gray-400" />
-                        <span>{selectedOrder.customer.address}</span>
+                        <span>{`${selectedOrder.deliveryAddress.street}, ${selectedOrder.deliveryAddress.number} - ${selectedOrder.deliveryAddress.neighborhood}, ${selectedOrder.deliveryAddress.city}`}</span>
                       </p>
                       <p className="text-gray-600 flex items-center space-x-2">
                         <MdPhone size={16} className="text-gray-400" />

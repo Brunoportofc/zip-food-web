@@ -116,11 +116,9 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
             const route = directions.routes[0];
             newStatus.actualETA = route.legs[0].duration.text;
             newStatus.distance = route.legs[0].distance.text;
-            // Decodificar polyline usando função personalizada (Geoapify não usa o mesmo formato)
-            // Para uma implementação completa, seria necessário usar uma biblioteca de decodificação
-            newStatus.route = route.overview_polyline?.points ? 
-              this.decodePolyline(route.overview_polyline.points) : 
-              [];
+            // TODO: Implementar decodificação de polyline para mostrar rota no mapa
+            // Por enquanto, deixamos a rota vazia
+            newStatus.route = [];
           }
         } catch (error) {
           console.error('Erro ao calcular rota:', error);
@@ -351,12 +349,9 @@ const DeliveryTracking: React.FC<DeliveryTrackingProps> = ({
           center={deliveryStatus.currentLocation || restaurantLocation}
           zoom={14}
           markers={getMapMarkers()}
-          deliveryRoute={getDeliveryRoute()}
+          route={getDeliveryRoute()}
           className="w-full h-64"
-          showCurrentLocation={false}
-          onLocationUpdate={(position) => {
-            // Atualizar localização do usuário se necessário
-          }}
+          showUserLocation={false}
         />
       </div>
 

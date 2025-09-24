@@ -160,7 +160,7 @@ export const share = async (data: {
 /**
  * Função para obter localização (se permitido)
  */
-export const getCurrentPosition = (): Promise<GeolocationPosition> => {
+export const getCurrentPosition = (): Promise<globalThis.GeolocationPosition> => {
   return new Promise((resolve, reject) => {
     if (typeof window !== 'undefined' && 'geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(

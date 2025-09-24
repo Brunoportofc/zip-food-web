@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/api/supabase';
+import { adminDb } from '@/lib/firebase/admin';
 import { successResponse, errorResponse, unauthorizedResponse, serverErrorResponse } from '@/lib/api/response';
 
 // Interface para criação de pedido
@@ -35,38 +35,70 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse('Informações de usuário não encontradas');
     }
 
-    let query = supabaseAdmin
-      .from('orders')
-      .select(`
-        *,
-        restaurant:restaurants(*),
-        customer:customers(*),
-        delivery_driver:delivery_drivers(*),
-        order_items(*)
-      `);
+    let orders: any[] = [];
+    
+    try {
+      let ordersQuery: any = adminDb.collection('orders');
 
-    // Filtrar pedidos baseado no tipo de usuário
-    switch (userType) {
-      case 'customer':
-        query = query.eq('customer_id', userId);
-        break;
-      case 'restaurant':
-        query = query.eq('restaurant_id', userId);
-        break;
-      case 'delivery':
-        query = query.eq('delivery_driver_id', userId);
-        break;
-      default:
-        return errorResponse('Tipo de usuário inválido');
-    }
+      // Filtrar pedidos baseado no tipo de usuário
+      switch (userType) {
+        case 'customer':
+          ordersQuery = ordersQuery.where('customer_id', '==', userId);
+          break;
+        case 'restaurant':
+          ordersQuery = ordersQuery.where('restaurant_id', '==', userId);
+          break;
+        case 'delivery':
+          ordersQuery = ordersQuery.where('delivery_driver_id', '==', userId);
+          break;
+        default:
+          return errorResponse('Tipo de usuário inválido');
+      }
 
-    // Ordenar por data de criação (mais recentes primeiro)
-    query = query.order('created_at', { ascending: false });
+      // Ordenar por data de criação (mais recentes primeiro)
+      ordersQuery = ordersQuery.orderBy('created_at', 'desc');
 
-    const { data: orders, error } = await query;
+      const ordersSnapshot = await ordersQuery.get();
 
-    if (error) {
-      console.error('Erro ao buscar pedidos:', error);
+      for (const doc of ordersSnapshot.docs) {
+        const orderData = { id: doc.id, ...doc.data() };
+        
+        // Buscar dados relacionados
+        if (orderData.restaurant_id) {
+          const restaurantDoc = await adminDb.collection('restaurants').doc(orderData.restaurant_id).get();
+          if (restaurantDoc.exists) {
+            orderData.restaurant = { id: restaurantDoc.id, ...restaurantDoc.data() };
+          }
+        }
+
+        if (orderData.customer_id) {
+          const customerDoc = await adminDb.collection('customers').doc(orderData.customer_id).get();
+          if (customerDoc.exists) {
+            orderData.customer = { id: customerDoc.id, ...customerDoc.data() };
+          }
+        }
+
+        if (orderData.delivery_driver_id) {
+          const driverDoc = await adminDb.collection('delivery_drivers').doc(orderData.delivery_driver_id).get();
+          if (driverDoc.exists) {
+            orderData.delivery_driver = { id: driverDoc.id, ...driverDoc.data() };
+          }
+        }
+
+        // Buscar itens do pedido
+        const itemsSnapshot = await adminDb.collection('order_items')
+          .where('order_id', '==', doc.id)
+          .get();
+        
+        orderData.order_items = itemsSnapshot.docs.map(itemDoc => ({
+          id: itemDoc.id,
+          ...itemDoc.data()
+        }));
+
+        orders.push(orderData);
+      }
+    } catch (firestoreError) {
+      console.error('Erro ao buscar pedidos no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao buscar pedidos');
     }
 
@@ -100,10 +132,9 @@ export async function POST(request: NextRequest) {
     const deliveryFee = 5.00; // Valor fixo por enquanto
     const total = subtotal + deliveryFee;
 
-    // Iniciar transação
-    const { data: order, error: orderError } = await supabaseAdmin
-      .from('orders')
-      .insert({
+    try {
+      // Criar pedido no Firestore
+      const orderData = {
         customer_id: userId,
         restaurant_id: body.restaurantId,
         status: 'pending',
@@ -113,57 +144,66 @@ export async function POST(request: NextRequest) {
         delivery_address: body.deliveryAddress,
         payment_method: body.paymentMethod,
         notes: body.notes,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+        created_at: new Date(),
+        updated_at: new Date()
+      };
 
-    if (orderError) {
-      console.error('Erro ao criar pedido:', orderError);
+      const orderRef = await adminDb.collection('orders').add(orderData);
+      const orderDoc = await orderRef.get();
+      const order = { id: orderDoc.id, ...orderDoc.data() } as any;
+
+      // Inserir itens do pedido
+      const orderItems = body.items.map(item => ({
+        order_id: order.id,
+        product_id: item.id,
+        product_name: item.name,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total_price: item.price * item.quantity,
+        notes: item.notes
+      }));
+
+      // Adicionar itens do pedido
+      const itemPromises = orderItems.map(item => 
+        adminDb.collection('order_items').add(item)
+      );
+
+      await Promise.all(itemPromises);
+
+      // Buscar dados relacionados para resposta completa
+      let completeOrder = { ...order };
+
+      // Buscar dados do restaurante
+      if (order.restaurant_id) {
+        const restaurantDoc = await adminDb.collection('restaurants').doc(order.restaurant_id).get();
+        if (restaurantDoc.exists) {
+          completeOrder.restaurant = { id: restaurantDoc.id, ...restaurantDoc.data() };
+        }
+      }
+
+      // Buscar dados do cliente
+      if (order.customer_id) {
+        const customerDoc = await adminDb.collection('customers').doc(order.customer_id).get();
+        if (customerDoc.exists) {
+          completeOrder.customer = { id: customerDoc.id, ...customerDoc.data() };
+        }
+      }
+
+      // Buscar itens do pedido
+      const itemsSnapshot = await adminDb.collection('order_items')
+        .where('order_id', '==', order.id)
+        .get();
+      
+      completeOrder.order_items = itemsSnapshot.docs.map(itemDoc => ({
+        id: itemDoc.id,
+        ...itemDoc.data()
+      }));
+
+      return successResponse(completeOrder, 'Pedido criado com sucesso', 201);
+    } catch (firestoreError) {
+      console.error('Erro ao criar pedido no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao criar pedido');
     }
-
-    // Inserir itens do pedido
-    const orderItems = body.items.map(item => ({
-      order_id: order.id,
-      product_id: item.id,
-      product_name: item.name,
-      quantity: item.quantity,
-      unit_price: item.price,
-      total_price: item.price * item.quantity,
-      notes: item.notes
-    }));
-
-    const { error: itemsError } = await supabaseAdmin
-      .from('order_items')
-      .insert(orderItems);
-
-    if (itemsError) {
-      console.error('Erro ao inserir itens do pedido:', itemsError);
-      // Reverter criação do pedido
-      await supabaseAdmin.from('orders').delete().eq('id', order.id);
-      return serverErrorResponse('Erro ao processar itens do pedido');
-    }
-
-    // Buscar pedido completo com relacionamentos
-    const { data: completeOrder, error: fetchError } = await supabaseAdmin
-      .from('orders')
-      .select(`
-        *,
-        restaurant:restaurants(*),
-        customer:customers(*),
-        order_items(*)
-      `)
-      .eq('id', order.id)
-      .single();
-
-    if (fetchError) {
-      console.error('Erro ao buscar pedido completo:', fetchError);
-      return successResponse(order, 'Pedido criado com sucesso');
-    }
-
-    return successResponse(completeOrder, 'Pedido criado com sucesso', 201);
   } catch (error) {
     console.error('Erro interno ao criar pedido:', error);
     return serverErrorResponse('Erro interno do servidor');

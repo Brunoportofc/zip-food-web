@@ -325,7 +325,9 @@ export default function DeliveryOrders() {
                 <h3 className="font-medium mb-2">Cliente</h3>
                 <p className="text-sm">{selectedOrder.customer.name}</p>
                 <p className="text-sm text-gray-600">{selectedOrder.customer.phone}</p>
-                <p className="text-sm text-gray-600">{selectedOrder.customer.address}</p>
+                <p className="text-sm text-gray-600">
+                  {selectedOrder.deliveryAddress.street}, {selectedOrder.deliveryAddress.number} - {selectedOrder.deliveryAddress.neighborhood}
+                </p>
               </div>
 
               <div className="mb-4">
@@ -346,7 +348,12 @@ export default function DeliveryOrders() {
                 </div>
                 <div>
                   <p className="text-sm">Tempo Estimado</p>
-                  <p className="font-medium">{selectedOrder.estimatedDeliveryTime}</p>
+                  <p className="font-medium">
+                    {selectedOrder.estimatedDeliveryTime 
+                      ? selectedOrder.estimatedDeliveryTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                      : '30-45 min'
+                    }
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm">Taxa de Entrega</p>

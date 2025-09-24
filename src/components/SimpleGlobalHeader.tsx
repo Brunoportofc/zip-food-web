@@ -82,9 +82,9 @@ const SimpleGlobalHeader = () => {
                     {user.user_type}
                   </p>
                 </div>
-                {user.profileImage && (
+                {user.avatar && (
                   <img 
-                    src={user.profileImage} 
+                    src={user.avatar} 
                     alt={user.name}
                     className="w-8 h-8 rounded-full object-cover"
                   />

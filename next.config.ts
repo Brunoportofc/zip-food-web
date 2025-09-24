@@ -19,6 +19,18 @@ const nextConfig: NextConfig = {
   
   // Webpack otimizações
   webpack: (config, { dev, isServer }) => {
+    // Configurar fallbacks para módulos Node.js no cliente
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        http2: false,
+      };
+    }
+
     // Otimizações para produção
     if (!dev && !isServer) {
       config.optimization = {

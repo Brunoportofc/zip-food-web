@@ -33,8 +33,8 @@ export default function CustomerDashboard() {
 
   // Separar restaurantes por categoria
   const promotedRestaurants = restaurants.filter(r => r.isPromoted);
-  const fastFoodRestaurants = restaurants.filter(r => r.category === 'hamburger');
-  const pizzaRestaurants = restaurants.filter(r => r.category === 'pizza');
+  const fastFoodRestaurants = restaurants.filter(r => r.category === 'fast_food');
+  const pizzaRestaurants = restaurants.filter(r => r.category === 'italian');
   const allRestaurants = restaurants;
 
   // Gerar lista de categorias disponíveis

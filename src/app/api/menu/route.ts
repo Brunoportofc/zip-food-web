@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/api/supabase';
+import { db as adminDb } from '@/lib/api/firebase';
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse, validationErrorResponse } from '@/lib/api/response';
 
 // Interface para criação/atualização de item do menu
@@ -37,54 +37,54 @@ export async function GET(request: NextRequest) {
       return unauthorizedResponse('Usuário não autenticado');
     }
 
-    let query = supabaseAdmin
-      .from('menu_items')
-      .select('*')
-      .order('category')
-      .order('name');
+    try {
+      let query: any = adminDb.collection('menu_items');
 
-    // Se restaurantId for fornecido, filtrar por ele
-    if (restaurantId) {
-      query = query.eq('restaurant_id', restaurantId);
-    } else if (userType === 'restaurant') {
-      // Se for restaurante e não especificar ID, mostrar apenas seus itens
-      query = query.eq('restaurant_id', userId);
-    } else {
-      return errorResponse('ID do restaurante é obrigatório para este tipo de usuário');
-    }
+      // Se restaurantId for fornecido, filtrar por ele
+      if (restaurantId) {
+        query = query.where('restaurant_id', '==', restaurantId);
+      } else if (userType === 'restaurant') {
+        // Se for restaurante e não especificar ID, mostrar apenas seus itens
+        query = query.where('restaurant_id', '==', userId);
+      } else {
+        return errorResponse('ID do restaurante é obrigatório para este tipo de usuário');
+      }
 
-    // Filtrar por categoria se especificado
-    if (category && category !== 'all') {
-      query = query.eq('category', category);
-    }
+      // Filtrar por categoria se especificado
+      if (category && category !== 'all') {
+        query = query.where('category', '==', category);
+      }
 
-    // Filtrar por disponibilidade se especificado
-    if (available !== null) {
-      const isAvailable = available === 'true';
-      query = query.eq('is_available', isAvailable);
-    }
+      // Filtrar por disponibilidade se especificado
+      if (available !== null) {
+        const isAvailable = available === 'true';
+        query = query.where('is_available', '==', isAvailable);
+      }
 
-    const { data: menuItems, error } = await query;
+      const snapshot = await query.orderBy('category').orderBy('name').get();
+      const menuItems = snapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-    if (error) {
-      console.error('Erro ao buscar itens do menu:', error);
+      // Organizar por categoria
+      const menuByCategory: Record<string, any[]> = {};
+      menuItems.forEach((item: any) => {
+        if (!menuByCategory[item.category]) {
+          menuByCategory[item.category] = [];
+        }
+        menuByCategory[item.category].push(item);
+      });
+
+      return successResponse({
+        items: menuItems,
+        byCategory: menuByCategory,
+        totalItems: menuItems.length
+      }, 'Itens do menu listados com sucesso');
+    } catch (firestoreError) {
+      console.error('Erro ao buscar itens do menu no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao buscar itens do menu');
     }
-
-    // Organizar por categoria
-    const menuByCategory: Record<string, any[]> = {};
-    menuItems.forEach(item => {
-      if (!menuByCategory[item.category]) {
-        menuByCategory[item.category] = [];
-      }
-      menuByCategory[item.category].push(item);
-    });
-
-    return successResponse({
-      items: menuItems,
-      byCategory: menuByCategory,
-      totalItems: menuItems.length
-    }, 'Itens do menu listados com sucesso');
   } catch (error) {
     console.error('Erro interno ao listar menu:', error);
     return serverErrorResponse('Erro interno do servidor');
@@ -123,10 +123,9 @@ export async function POST(request: NextRequest) {
       return validationErrorResponse(errors);
     }
 
-    // Criar item do menu
-    const { data: menuItem, error } = await supabaseAdmin
-      .from('menu_items')
-      .insert({
+    try {
+      // Criar item do menu
+      const menuItemData = {
         restaurant_id: userId,
         name: body.name.trim(),
         description: body.description.trim(),
@@ -138,18 +137,19 @@ export async function POST(request: NextRequest) {
         ingredients: body.ingredients || [],
         allergens: body.allergens || [],
         nutritional_info: body.nutritionalInfo || {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+        created_at: new Date(),
+        updated_at: new Date()
+      };
 
-    if (error) {
-      console.error('Erro ao criar item do menu:', error);
+      const docRef = await adminDb.collection('menu_items').add(menuItemData);
+      const newMenuItem = await docRef.get();
+      const menuItem = { id: newMenuItem.id, ...newMenuItem.data() };
+
+      return successResponse(menuItem, 'Item do menu criado com sucesso', 201);
+    } catch (firestoreError) {
+      console.error('Erro ao criar item do menu no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao criar item do menu');
     }
-
-    return successResponse(menuItem, 'Item do menu criado com sucesso', 201);
   } catch (error) {
     console.error('Erro interno ao criar item do menu:', error);
     return serverErrorResponse('Erro interno do servidor');
@@ -176,49 +176,48 @@ export async function PUT(request: NextRequest) {
 
     const body: Partial<MenuItemRequest> = await request.json();
 
-    // Verificar se o item pertence ao restaurante
-    const { data: existingItem, error: fetchError } = await supabaseAdmin
-      .from('menu_items')
-      .select('id, restaurant_id')
-      .eq('id', itemId)
-      .eq('restaurant_id', userId)
-      .single();
+    try {
+      // Verificar se o item pertence ao restaurante
+      const itemRef = adminDb.collection('menu_items').doc(itemId);
+      const itemDoc = await itemRef.get();
 
-    if (fetchError || !existingItem) {
-      return notFoundResponse('Item do menu não encontrado');
-    }
+      if (!itemDoc.exists) {
+        return notFoundResponse('Item do menu não encontrado');
+      }
 
-    // Preparar dados para atualização
-    const updateData: any = {
-      updated_at: new Date().toISOString()
-    };
+      const itemData = itemDoc.data();
+      if (itemData?.restaurant_id !== userId) {
+        return notFoundResponse('Item do menu não encontrado');
+      }
 
-    if (body.name !== undefined) updateData.name = body.name.trim();
-    if (body.description !== undefined) updateData.description = body.description.trim();
-    if (body.price !== undefined) updateData.price = body.price;
-    if (body.category !== undefined) updateData.category = body.category.trim();
-    if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl;
-    if (body.isAvailable !== undefined) updateData.is_available = body.isAvailable;
-    if (body.preparationTime !== undefined) updateData.preparation_time = body.preparationTime;
-    if (body.ingredients !== undefined) updateData.ingredients = body.ingredients;
-    if (body.allergens !== undefined) updateData.allergens = body.allergens;
-    if (body.nutritionalInfo !== undefined) updateData.nutritional_info = body.nutritionalInfo;
+      // Preparar dados para atualização
+      const updateData: any = {
+        updated_at: new Date()
+      };
 
-    // Atualizar item
-    const { data: updatedItem, error } = await supabaseAdmin
-      .from('menu_items')
-      .update(updateData)
-      .eq('id', itemId)
-      .eq('restaurant_id', userId)
-      .select()
-      .single();
+      if (body.name !== undefined) updateData.name = body.name.trim();
+      if (body.description !== undefined) updateData.description = body.description.trim();
+      if (body.price !== undefined) updateData.price = body.price;
+      if (body.category !== undefined) updateData.category = body.category.trim();
+      if (body.imageUrl !== undefined) updateData.image_url = body.imageUrl;
+      if (body.isAvailable !== undefined) updateData.is_available = body.isAvailable;
+      if (body.preparationTime !== undefined) updateData.preparation_time = body.preparationTime;
+      if (body.ingredients !== undefined) updateData.ingredients = body.ingredients;
+      if (body.allergens !== undefined) updateData.allergens = body.allergens;
+      if (body.nutritionalInfo !== undefined) updateData.nutritional_info = body.nutritionalInfo;
 
-    if (error) {
-      console.error('Erro ao atualizar item do menu:', error);
+      // Atualizar item
+      await itemRef.update(updateData);
+      
+      // Buscar dados atualizados
+      const updatedDoc = await itemRef.get();
+      const updatedItem = { id: updatedDoc.id, ...updatedDoc.data() };
+
+      return successResponse(updatedItem, 'Item do menu atualizado com sucesso');
+    } catch (firestoreError) {
+      console.error('Erro ao atualizar item do menu no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao atualizar item do menu');
     }
-
-    return successResponse(updatedItem, 'Item do menu atualizado com sucesso');
   } catch (error) {
     console.error('Erro interno ao atualizar item do menu:', error);
     return serverErrorResponse('Erro interno do servidor');
@@ -243,31 +242,28 @@ export async function DELETE(request: NextRequest) {
       return errorResponse('ID do item é obrigatório');
     }
 
-    // Verificar se o item pertence ao restaurante
-    const { data: existingItem, error: fetchError } = await supabaseAdmin
-      .from('menu_items')
-      .select('id, restaurant_id')
-      .eq('id', itemId)
-      .eq('restaurant_id', userId)
-      .single();
+    try {
+      // Verificar se o item pertence ao restaurante
+      const itemRef = adminDb.collection('menu_items').doc(itemId);
+      const itemDoc = await itemRef.get();
 
-    if (fetchError || !existingItem) {
-      return notFoundResponse('Item do menu não encontrado');
-    }
+      if (!itemDoc.exists) {
+        return notFoundResponse('Item do menu não encontrado');
+      }
 
-    // Remover item
-    const { error } = await supabaseAdmin
-      .from('menu_items')
-      .delete()
-      .eq('id', itemId)
-      .eq('restaurant_id', userId);
+      const itemData = itemDoc.data();
+      if (itemData?.restaurant_id !== userId) {
+        return notFoundResponse('Item do menu não encontrado');
+      }
 
-    if (error) {
-      console.error('Erro ao remover item do menu:', error);
+      // Remover item
+      await itemRef.delete();
+
+      return successResponse(null, 'Item do menu removido com sucesso');
+    } catch (firestoreError) {
+      console.error('Erro ao remover item do menu no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao remover item do menu');
     }
-
-    return successResponse(null, 'Item do menu removido com sucesso');
   } catch (error) {
     console.error('Erro interno ao remover item do menu:', error);
     return serverErrorResponse('Erro interno do servidor');

@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { useAuthStore, User } from '@/store/auth.store';
+import { useAuthStore } from '@/store/auth.store';
+import { User } from '@/types';
 import { toast } from 'react-hot-toast';
 import { showSuccessAlert, showErrorAlert, showWarningAlert } from '@/components/AlertSystem';
 
@@ -46,7 +47,7 @@ interface RestaurantSettings {
 }
 
 export default function RestaurantSettings() {
-  const { user, login } = useAuthStore();
+  const { user, setUser } = useAuthStore();
 
   
   const [settings, setSettings] = useState<RestaurantSettings>({
@@ -71,7 +72,7 @@ export default function RestaurantSettings() {
     setSettings({
       name: user?.name || 'Usuário de Desenvolvimento',
       description: 'Restaurante especializado em hambúrgueres artesanais e comida caseira',
-      address: user?.address || 'Rua de Desenvolvimento, 123 - São Paulo, SP',
+      address: 'Rua de Desenvolvimento, 123 - São Paulo, SP',
       phone: user?.phone || '(11) 99999-9999',
       openingHours: 'Segunda a Domingo: 18:00 - 23:00',
       deliveryFee: 5,
@@ -121,11 +122,10 @@ export default function RestaurantSettings() {
         const updatedUser: User = {
           ...user,
           name: settings.name,
-          address: settings.address,
           phone: settings.phone,
         };
         
-        login(updatedUser, user.id); // Reusa o ID como token para simplificar
+        setUser(updatedUser); // Atualiza o usuário no store
       }
       
       showSuccessAlert(

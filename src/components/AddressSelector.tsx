@@ -43,7 +43,7 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(initialAddress || null);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+
   const [error, setError] = useState<string | null>(null);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -124,7 +124,7 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
 
   // Obter localização atual
   const getCurrentLocationAddress = useCallback(async () => {
-    if (!allowCurrentLocation || !isGoogleLoaded || !geocoder.current) {
+    if (!allowCurrentLocation || !geoapifyLoaded) {
       toast.error('Localização não disponível');
       return;
     }
@@ -134,33 +134,51 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
     
     try {
       const position = await getCurrentPosition();
-      const latLng = {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      };
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
 
-      geocoder.current.geocode({ location: latLng }, (results, status) => {
-        if (status === 'OK' && results && results[0]) {
-          const address = parseGoogleAddress(results[0]);
-          if (address) {
-            setSelectedAddress(address);
-            setSearchQuery(address.formattedAddress);
-            onAddressSelect(address, address.coordinates);
-            toast.success('Localização obtida com sucesso!');
-          }
-        } else {
-          setError('Não foi possível obter o endereço da localização atual');
-          toast.error('Não foi possível obter o endereço da localização atual');
-        }
+      // Usar Geoapify Reverse Geocoding
+      const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
+      if (!apiKey || apiKey === 'SUA_CHAVE_GEOAPIFY_AQUI') {
+        console.warn('Geoapify API key não configurada');
+        toast.error('Serviço de localização não configurado');
         setIsLoading(false);
-      });
+        return;
+      }
+
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${lat}&lon=${lng}&apiKey=${apiKey}&format=json`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.results && data.results[0]) {
+        const result = data.results[0];
+        const address: Address = {
+          id: result.place_id || Math.random().toString(),
+          street: result.street || '',
+          number: result.housenumber || '',
+          neighborhood: result.suburb || result.district || '',
+          city: result.city || result.town || '',
+          state: result.state || '',
+          zipCode: result.postcode || '',
+          coordinates: { lat, lng },
+          formattedAddress: result.formatted || `${result.street || ''} ${result.housenumber || ''}, ${result.city || ''}`
+        };
+        
+        selectAddress(address);
+        toast.success('Localização obtida com sucesso!');
+      } else {
+        setError('Não foi possível obter o endereço da localização atual');
+        toast.error('Não foi possível obter o endereço da localização atual');
+      }
     } catch (error) {
       console.error('Erro ao obter localização:', error);
       setError('Erro ao obter localização atual');
       toast.error('Erro ao obter localização atual');
+    } finally {
       setIsLoading(false);
     }
-  }, [allowCurrentLocation, isGoogleLoaded, onAddressSelect]);
+  }, [allowCurrentLocation, geoapifyLoaded]);
 
   // Selecionar endereço
   const selectAddress = (address: Address) => {
@@ -173,23 +191,51 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
 
   // Selecionar posição no mapa
   const handleMapClick = async (position: { lat: number; lng: number }) => {
-    if (!isGoogleLoaded || !geocoder.current) return;
+    if (!geoapifyLoaded) return;
 
     setIsLoading(true);
     setError(null);
     
-    geocoder.current.geocode({ location: position }, (results, status) => {
-      if (status === 'OK' && results && results[0]) {
-        const address = parseGoogleAddress(results[0]);
-        if (address) {
-          selectAddress(address);
-        }
+    try {
+      // Usar Geoapify Reverse Geocoding
+      const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
+      if (!apiKey || apiKey === 'SUA_CHAVE_GEOAPIFY_AQUI') {
+        console.warn('Geoapify API key não configurada');
+        setIsLoading(false);
+        return;
+      }
+
+      const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${position.lat}&lon=${position.lng}&apiKey=${apiKey}&format=json`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.results && data.results[0]) {
+        const result = data.results[0];
+        const address: Address = {
+          id: result.place_id || Math.random().toString(),
+          street: result.street || '',
+          number: result.housenumber || '',
+          neighborhood: result.suburb || result.district || '',
+          city: result.city || result.town || '',
+          state: result.state || '',
+          zipCode: result.postcode || '',
+          coordinates: position,
+          formattedAddress: result.formatted || `${result.street || ''} ${result.housenumber || ''}, ${result.city || ''}`
+        };
+        
+        selectAddress(address);
       } else {
         setError('Não foi possível obter o endereço desta localização');
         toast.error('Não foi possível obter o endereço desta localização');
       }
+    } catch (error) {
+      console.error('Erro ao obter endereço:', error);
+      setError('Não foi possível obter o endereço desta localização');
+      toast.error('Não foi possível obter o endereço desta localização');
+    } finally {
       setIsLoading(false);
-    });
+    }
   };
 
   // Debounce para busca
@@ -233,7 +279,7 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
           <button
             type="button"
             onClick={getCurrentLocationAddress}
-            disabled={isLoading || !isGoogleLoaded || locationLoading}
+            disabled={isLoading || !geoapifyLoaded || locationLoading}
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary disabled:opacity-50"
           >
             <MdMyLocation className={`h-5 w-5 ${locationLoading ? 'animate-spin' : ''}`} />
@@ -298,7 +344,6 @@ const AddressSelector: React.FC<AddressSelectorProps> = ({
             zoom={16}
             markers={[
               {
-                id: 'selected',
                 position: selectedAddress.coordinates,
                 title: 'Endereço selecionado'
               }

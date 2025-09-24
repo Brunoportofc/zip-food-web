@@ -1,220 +1,488 @@
 // src/services/auth.service.ts
-import { createClient } from '@/lib/supabase/client';
-import { type SignUpData, type SignInData, type User } from '@/types';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+  onAuthStateChanged,
+  User,
+  UserCredential,
+  AuthError,
+} from 'firebase/auth';
+import {
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+} from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase/config';
+
+// Tipos de usuário permitidos
+export type UserType = 'customer' | 'restaurant' | 'delivery_driver';
+
+// Interface para dados do usuário
+export interface UserData {
+  id: string;
+  email: string;
+  name: string;
+  user_type: UserType;
+  phone?: string;
+  status: 'active' | 'inactive' | 'pending';
+  created_at: any;
+  updated_at: any;
+}
+
+// Interface para dados de cadastro
+export interface SignUpData {
+  email: string;
+  password: string;
+  name: string;
+  user_type: UserType;
+  phone?: string;
+}
+
+// Interface para dados de login
+export interface SignInData {
+  email: string;
+  password: string;
+}
+
+// Interface para resposta de autenticação
+export interface AuthResponse {
+  success: boolean;
+  user?: UserData;
+  message?: string;
+  error?: string;
+}
 
 class AuthService {
-  private supabase = createClient();
+  private currentUser: User | null = null;
+  private userProfile: UserData | null = null;
 
-  /**
-   * Realiza o login de um usuário usando o Supabase Auth.
-   * @param credentials - Email e senha do usuário.
-   * @returns Os dados do usuário logado.
-   */
-  async signIn(credentials: SignInData): Promise<User> {
-    const { data, error } = await this.supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
-
-    if (error) {
-      console.error('Supabase SignIn Error:', error.message);
-      // Lança um erro com uma mensagem amigável
-      throw new Error('Email ou senha inválidos.');
-    }
-
-    if (!data.user) {
-      throw new Error('Login falhou, nenhum usuário retornado.');
-    }
-
-    // Mapeia os dados do Supabase para o seu tipo User
-    return {
-      id: data.user.id,
-      email: data.user.email || '',
-      name: data.user.user_metadata.name || 'Usuário',
-      user_type: data.user.user_metadata.user_type || 'customer',
-    };
-  }
-
-  /**
-   * Registra um novo usuário no Supabase Auth.
-   * @param userData - Dados para o registro.
-   * @returns Os dados do novo usuário.
-   */
-  async signUp(userData: SignUpData): Promise<User> {
-    const { data, error } = await this.supabase.auth.signUp({
-      email: userData.email,
-      password: userData.password,
-      options: {
-        // Armazena dados extras no Supabase
-        data: {
-          name: userData.name,
-          user_type: userData.userType,
-          phone: userData.phone,
-        },
-      },
-    });
-
-    if (error) {
-      console.error('Supabase SignUp Error:', error.message);
-      throw new Error('Falha ao registrar. O email pode já estar em uso.');
-    }
-    
-    if (!data.user) {
-        throw new Error('Registro falhou, nenhum usuário retornado.');
-    }
-
-    // Sincronizar com a tabela public.users
-    try {
-      await this.syncUserToPublicTable(data.user, userData);
-    } catch (syncError) {
-      console.error('Erro ao sincronizar usuário com tabela public.users:', syncError);
-      // Não falha o registro se a sincronização falhar, mas loga o erro
-    }
-
-    return {
-      id: data.user.id,
-      email: data.user.email || '',
-      name: data.user.user_metadata.name,
-      user_type: data.user.user_metadata.user_type,
-    };
-  }
-
-  /**
-   * Sincroniza o usuário criado no auth.users com a tabela public.users
-   * @param authUser - Usuário do Supabase Auth
-   * @param userData - Dados originais do registro
-   */
-  private async syncUserToPublicTable(authUser: any, userData: SignUpData): Promise<void> {
-    // Preparar dados para inserção na tabela public.users
-    const publicUserData = {
-      id: authUser.id,
-      email: authUser.email,
-      user_type: userData.userType === 'delivery_driver' ? 'delivery' : userData.userType,
-      name: userData.name,
-      phone: userData.phone || null,
-      password_hash: '$2b$10$synced.from.auth.users', // Hash placeholder para usuários sincronizados
-      created_at: authUser.created_at,
-      updated_at: authUser.updated_at || authUser.created_at
-    };
-
-    // Inserir na tabela public.users
-    const { error: insertError } = await this.supabase
-      .from('users')
-      .insert(publicUserData);
-
-    if (insertError) {
-      console.error('Erro ao inserir usuário na tabela public.users:', insertError.message);
-      throw insertError;
-    }
-
-    // Se for restaurante, criar entrada na tabela restaurants
-    if (userData.userType === 'restaurant') {
-      await this.createRestaurantEntry(authUser, userData);
-    }
-
-    // Se for entregador, criar entrada na tabela delivery_drivers
-    if (userData.userType === 'delivery') {
-      await this.createDeliveryDriverEntry(authUser, userData);
-    }
-  }
-
-  /**
-   * Cria entrada na tabela restaurants para usuários do tipo restaurant
-   */
-  private async createRestaurantEntry(authUser: any, userData: SignUpData): Promise<void> {
-    const restaurantData = {
-      user_id: authUser.id,
-      name: userData.name,
-      description: 'Restaurante criado automaticamente',
-      address: 'Endereço a ser definido', // Endereço padrão para evitar erro de NOT NULL
-      city: 'Cidade a ser definida',
-      cuisine_type: 'Variada',
-      phone: userData.phone,
-      email: authUser.email,
-      created_by: authUser.id,
-      created_at: authUser.created_at,
-      updated_at: authUser.updated_at || authUser.created_at
-    };
-
-    const { error } = await this.supabase
-      .from('restaurants')
-      .insert(restaurantData);
-
-    if (error && !error.message.includes('duplicate key')) {
-      console.error('Erro ao criar entrada de restaurante:', error.message);
-    }
-  }
-
-  /**
-   * Cria entrada na tabela delivery_drivers para usuários do tipo delivery_driver
-   */
-  private async createDeliveryDriverEntry(authUser: any, userData: SignUpData): Promise<void> {
-    const driverData = {
-      user_id: authUser.id,
-      vehicle_type: 'moto' // Tipo padrão
-    };
-
-    const { error } = await this.supabase
-      .from('delivery_drivers')
-      .insert(driverData);
-
-    if (error && !error.message.includes('duplicate key')) {
-      console.error('Erro ao criar entrada de entregador:', error.message);
-    }
-  }
-
-  /**
-   * Realiza o logout do usuário.
-   */
-  async signOut(): Promise<void> {
-    const { error } = await this.supabase.auth.signOut();
-    if (error) {
-      console.error('Supabase SignOut Error:', error.message);
-      throw new Error('Falha ao fazer logout.');
-    }
-  }
-
-  /**
-   * Observa mudanças no estado de autenticação (login, logout).
-   * @param callback - Função a ser chamada quando o estado mudar.
-   * @returns Um objeto com o método `unsubscribe`.
-   */
-  onAuthStateChange(
-    callback: (user: User | null) => void
-  ) {
-    // Verifica o estado inicial
-    this.supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        const user: User = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata.name || 'Usuário',
-          user_type: session.user.user_metadata.user_type || 'customer',
-        };
-        callback(user);
+  constructor() {
+    // Monitorar mudanças no estado de autenticação
+    onAuthStateChanged(auth, async (user) => {
+      this.currentUser = user;
+      if (user) {
+        await this.loadUserProfile(user.uid);
       } else {
+        this.userProfile = null;
+      }
+    });
+  }
+
+  /**
+   * Cadastrar novo usuário
+   */
+  async signUp(data: SignUpData): Promise<AuthResponse> {
+    try {
+      console.log('🚀 Iniciando cadastro de usuário:', { email: data.email, user_type: data.user_type });
+
+      // Validar dados de entrada
+      const validation = this.validateSignUpData(data);
+      if (!validation.isValid) {
+        return {
+          success: false,
+          error: validation.message,
+        };
+      }
+
+      // Verificar se o email já existe no Firestore
+      const emailExists = await this.checkEmailExists(data.email);
+      if (emailExists) {
+        return {
+          success: false,
+          error: 'Este email já está cadastrado no sistema.',
+        };
+      }
+
+      // Criar usuário no Firebase Auth
+      console.log('📝 Criando usuário no Firebase Auth...');
+      const userCredential: UserCredential = await createUserWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+
+      const user = userCredential.user;
+      console.log('✅ Usuário criado no Firebase Auth:', user.uid);
+
+      // Atualizar perfil do usuário
+      console.log('👤 Atualizando perfil do usuário...');
+      await updateProfile(user, {
+        displayName: data.name,
+      });
+
+      // Criar documento do usuário no Firestore diretamente (sem Admin SDK)
+       console.log('📄 Criando documento do usuário no Firestore...');
+       try {
+         // Aguardar um pouco para garantir que o usuário está autenticado
+         await new Promise(resolve => setTimeout(resolve, 1000));
+         
+         // Verificar se o usuário ainda está autenticado
+         if (!auth.currentUser) {
+           throw new Error('Usuário não está autenticado');
+         }
+         
+         console.log('🔐 Usuário autenticado:', auth.currentUser.uid);
+         
+         const userData: UserData = {
+           id: user.uid,
+           email: user.email || '',
+           name: data.name,
+           user_type: data.user_type,
+           phone: data.phone,
+           status: 'active',
+           created_at: serverTimestamp(),
+           updated_at: serverTimestamp(),
+         };
+
+         await setDoc(doc(db, 'users', user.uid), userData);
+         console.log('✅ Documento do usuário criado com sucesso');
+
+         // Criar documento específico do tipo de usuário
+         await this.createUserTypeDocument(user.uid, data.user_type, userData);
+         console.log(`✅ Documento criado na coleção ${data.user_type}s`);
+       } catch (error) {
+         console.error('❌ Erro ao criar documentos no Firestore:', error);
+         throw error;
+       }
+
+      // Carregar perfil do usuário
+      try {
+        await this.loadUserProfile(user.uid);
+        console.log('✅ Perfil do usuário carregado');
+      } catch (error) {
+        console.warn('⚠️ Não foi possível carregar o perfil do usuário:', error);
+      }
+
+      console.log('🎉 Cadastro realizado com sucesso!');
+      return {
+        success: true,
+        user: this.userProfile || {
+          id: user.uid,
+          email: user.email || '',
+          name: data.name,
+          user_type: data.user_type,
+          phone: data.phone,
+          status: 'active',
+          created_at: serverTimestamp(),
+          updated_at: serverTimestamp(),
+        },
+        message: 'Usuário cadastrado com sucesso!',
+      };
+
+    } catch (error) {
+      console.error('❌ Erro durante o cadastro:', error);
+      return this.handleAuthError(error as AuthError);
+    }
+  }
+
+  /**
+   * Fazer login
+   */
+  async signIn(data: SignInData): Promise<AuthResponse> {
+    try {
+      console.log('🔐 Iniciando login:', { email: data.email });
+
+      // Validar dados de entrada
+      if (!data.email || !data.password) {
+        return {
+          success: false,
+          error: 'Email e senha são obrigatórios.',
+        };
+      }
+
+      // Fazer login no Firebase Auth
+      const userCredential: UserCredential = await signInWithEmailAndPassword(
+        auth,
+        data.email,
+        data.password
+      );
+
+      const user = userCredential.user;
+      console.log('✅ Login realizado no Firebase Auth:', user.uid);
+
+      // Carregar perfil do usuário
+      await this.loadUserProfile(user.uid);
+
+      if (!this.userProfile) {
+        return {
+          success: false,
+          error: 'Perfil do usuário não encontrado.',
+        };
+      }
+
+      console.log('🎉 Login realizado com sucesso!');
+      return {
+        success: true,
+        user: this.userProfile,
+        message: 'Login realizado com sucesso!',
+      };
+
+    } catch (error) {
+      console.error('❌ Erro durante o login:', error);
+      return this.handleAuthError(error as AuthError);
+    }
+  }
+
+  /**
+   * Fazer logout
+   */
+  async signOutUser(): Promise<AuthResponse> {
+    try {
+      console.log('🚪 Fazendo logout...');
+      await signOut(auth);
+      this.currentUser = null;
+      this.userProfile = null;
+      console.log('✅ Logout realizado com sucesso!');
+      
+      return {
+        success: true,
+        message: 'Logout realizado com sucesso!',
+      };
+    } catch (error) {
+      console.error('❌ Erro durante o logout:', error);
+      return {
+        success: false,
+        error: 'Erro ao fazer logout.',
+      };
+    }
+  }
+
+  /**
+   * Obter usuário atual
+   */
+  getCurrentUser(): User | null {
+    return this.currentUser;
+  }
+
+  /**
+   * Obter perfil do usuário atual
+   */
+  getCurrentUserProfile(): UserData | null {
+    return this.userProfile;
+  }
+
+  /**
+   * Verificar se o usuário está autenticado
+   */
+  isAuthenticated(): boolean {
+    return !!this.currentUser;
+  }
+
+  /**
+   * Monitorar mudanças no estado de autenticação
+   */
+  onAuthStateChange(callback: (user: UserData | null) => void): () => void {
+    return onAuthStateChanged(auth, async (firebaseUser) => {
+      this.currentUser = firebaseUser;
+      if (firebaseUser) {
+        await this.loadUserProfile(firebaseUser.uid);
+        callback(this.userProfile);
+      } else {
+        this.userProfile = null;
         callback(null);
       }
     });
+  }
 
-    const { data: { subscription } } = this.supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
-          const user: User = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata.name || 'Usuário',
-            user_type: session.user.user_metadata.user_type || 'customer',
-          };
-          callback(user);
-        } else if (event === 'SIGNED_OUT') {
-          callback(null);
-        }
+  /**
+   * Carregar perfil do usuário do Firestore
+   */
+  private async loadUserProfile(uid: string): Promise<void> {
+    try {
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      if (userDoc.exists()) {
+        this.userProfile = userDoc.data() as UserData;
+        console.log('✅ Perfil do usuário carregado:', this.userProfile.user_type);
+      } else {
+        console.warn('⚠️ Documento do usuário não encontrado no Firestore');
+        this.userProfile = null;
       }
-    );
+    } catch (error) {
+      console.error('❌ Erro ao carregar perfil do usuário:', error);
+      this.userProfile = null;
+    }
+  }
 
-    return subscription;
+  /**
+   * Validar dados de cadastro
+   */
+  private validateSignUpData(data: SignUpData): { isValid: boolean; message?: string } {
+    if (!data.email || !data.password || !data.name || !data.user_type) {
+      return {
+        isValid: false,
+        message: 'Todos os campos obrigatórios devem ser preenchidos.',
+      };
+    }
+
+    if (!['customer', 'restaurant', 'delivery_driver'].includes(data.user_type)) {
+      return {
+        isValid: false,
+        message: 'Tipo de usuário inválido.',
+      };
+    }
+
+    if (data.password.length < 6) {
+      return {
+        isValid: false,
+        message: 'A senha deve ter pelo menos 6 caracteres.',
+      };
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      return {
+        isValid: false,
+        message: 'Email inválido.',
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  /**
+   * Verificar se o email já existe no Firestore
+   */
+  private async checkEmailExists(email: string): Promise<boolean> {
+    try {
+      // Temporariamente desabilitado para evitar problemas de permissão durante cadastro
+      // const usersRef = collection(db, 'users');
+      // const q = query(usersRef, where('email', '==', email));
+      // const querySnapshot = await getDocs(q);
+      // return !querySnapshot.empty;
+      return false; // Permitir cadastro sem verificação prévia
+    } catch (error) {
+      console.error('❌ Erro ao verificar email:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Criar documento específico do tipo de usuário
+   */
+  private async createUserTypeDocument(
+    uid: string,
+    userType: UserType,
+    userData: UserData
+  ): Promise<void> {
+    try {
+      switch (userType) {
+        case 'customer':
+          await setDoc(doc(db, 'customers', uid), {
+            user_id: uid,
+            email: userData.email,
+            name: userData.name,
+            phone: userData.phone || '',
+            addresses: [],
+            preferences: {},
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp(),
+          });
+          console.log('✅ Documento criado na coleção customers');
+          break;
+
+        case 'restaurant':
+          await setDoc(doc(db, 'restaurants', uid), {
+            user_id: uid,
+            email: userData.email,
+            name: userData.name,
+            phone: userData.phone || '',
+            address: '',
+            cuisine_type: '',
+            description: '',
+            status: 'pending',
+            rating: 0,
+            total_reviews: 0,
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp(),
+          });
+          console.log('✅ Documento criado na coleção restaurants');
+          break;
+
+        case 'delivery_driver':
+          await setDoc(doc(db, 'delivery_drivers', uid), {
+            user_id: uid,
+            email: userData.email,
+            name: userData.name,
+            phone: userData.phone || '',
+            vehicle_type: '',
+            license_plate: '',
+            status: 'offline',
+            rating: 0,
+            total_deliveries: 0,
+            created_at: serverTimestamp(),
+            updated_at: serverTimestamp(),
+          });
+          console.log('✅ Documento criado na coleção delivery_drivers');
+          break;
+
+        default:
+          throw new Error(`Tipo de usuário não suportado: ${userType}`);
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao criar documento para ${userType}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Tratar erros de autenticação
+   */
+  private handleAuthError(error: AuthError): AuthResponse {
+    console.error('Código do erro:', error.code);
+    console.error('Mensagem do erro:', error.message);
+
+    switch (error.code) {
+      case 'auth/email-already-in-use':
+        return {
+          success: false,
+          error: 'Este email já está sendo usado por outra conta.',
+        };
+      case 'auth/weak-password':
+        return {
+          success: false,
+          error: 'A senha é muito fraca. Use pelo menos 6 caracteres.',
+        };
+      case 'auth/invalid-email':
+        return {
+          success: false,
+          error: 'Email inválido.',
+        };
+      case 'auth/user-not-found':
+        return {
+          success: false,
+          error: 'Usuário não encontrado.',
+        };
+      case 'auth/wrong-password':
+        return {
+          success: false,
+          error: 'Senha incorreta.',
+        };
+      case 'auth/too-many-requests':
+        return {
+          success: false,
+          error: 'Muitas tentativas de login. Tente novamente mais tarde.',
+        };
+      case 'auth/network-request-failed':
+        return {
+          success: false,
+          error: 'Erro de conexão. Verifique sua internet.',
+        };
+      default:
+        return {
+          success: false,
+          error: 'Erro inesperado. Tente novamente.',
+        };
+    }
   }
 }
 
+// Exportar instância única do serviço
 export const authService = new AuthService();
+export default authService;

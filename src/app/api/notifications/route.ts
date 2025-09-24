@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { supabaseAdmin } from '@/lib/api/supabase';
+import { adminDb } from '@/lib/firebase/admin';
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse } from '@/lib/api/response';
 
 // Interface para criação de notificação
@@ -32,42 +32,38 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let query = supabaseAdmin
-      .from('notifications')
-      .select(`
-        id,
-        order_id,
-        type,
-        title,
-        message,
-        is_read,
-        created_at
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    let notifications: any[] = [];
+    let unreadCount = 0;
+    
+    try {
+      let notificationsQuery = adminDb.collection('notifications')
+        .where('user_id', '==', userId)
+        .orderBy('created_at', 'desc');
 
-    // Filtrar apenas não lidas se solicitado
-    if (unreadOnly) {
-      query = query.eq('is_read', false);
-    }
+      // Filtrar apenas não lidas se solicitado
+      if (unreadOnly) {
+        notificationsQuery = notificationsQuery.where('is_read', '==', false);
+      }
 
-    const { data: notifications, error } = await query;
+      // Aplicar paginação
+      notificationsQuery = notificationsQuery.offset(offset).limit(limit);
 
-    if (error) {
-      console.error('Erro ao buscar notificações:', error);
+      const notificationsSnapshot = await notificationsQuery.get();
+      notifications = notificationsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
+      // Contar total de notificações não lidas
+      const unreadQuery = adminDb.collection('notifications')
+        .where('user_id', '==', userId)
+        .where('is_read', '==', false);
+      
+      const unreadSnapshot = await unreadQuery.get();
+      unreadCount = unreadSnapshot.size;
+    } catch (firestoreError) {
+      console.error('Erro ao buscar notificações no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao buscar notificações');
-    }
-
-    // Contar total de notificações não lidas
-    const { count: unreadCount, error: countError } = await supabaseAdmin
-      .from('notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('is_read', false);
-
-    if (countError) {
-      console.error('Erro ao contar notificações não lidas:', countError);
     }
 
     return successResponse({
@@ -110,26 +106,27 @@ export async function POST(request: NextRequest) {
       return unauthorizedResponse('Não é possível criar notificação para outro usuário');
     }
 
-    // Criar notificação
-    const { data: notification, error } = await supabaseAdmin
-      .from('notifications')
-      .insert({
+    try {
+      // Criar notificação
+      const notificationData = {
         user_id: targetUserId,
         order_id: body.orderId,
         type: body.type,
         title: body.title,
         message: body.message,
-        is_read: false
-      })
-      .select()
-      .single();
+        is_read: false,
+        created_at: new Date()
+      };
 
-    if (error) {
-      console.error('Erro ao criar notificação:', error);
+      const docRef = await adminDb.collection('notifications').add(notificationData);
+      const newNotification = await docRef.get();
+      const notification = { id: newNotification.id, ...newNotification.data() };
+
+      return successResponse(notification, 'Notificação criada com sucesso', 201);
+    } catch (firestoreError) {
+      console.error('Erro ao criar notificação no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao criar notificação');
     }
-
-    return successResponse(notification, 'Notificação criada com sucesso', 201);
 
   } catch (error) {
     console.error('Erro interno ao criar notificação:', error);
@@ -153,58 +150,58 @@ export async function PATCH(request: NextRequest) {
 
     const body: UpdateNotificationRequest = await request.json();
 
-    if (markAllAsRead) {
-      // Marcar todas as notificações como lidas
-      const { error } = await supabaseAdmin
-        .from('notifications')
-        .update({ is_read: true })
-        .eq('user_id', userId)
-        .eq('is_read', false);
-
-      if (error) {
-        console.error('Erro ao marcar todas como lidas:', error);
-        return serverErrorResponse('Erro ao atualizar notificações');
+    try {
+      if (markAllAsRead) {
+        // Marcar todas as notificações como lidas
+        const unreadQuery = adminDb.collection('notifications')
+          .where('user_id', '==', userId)
+          .where('is_read', '==', false);
+        
+        const unreadSnapshot = await unreadQuery.get();
+        const batch = adminDb.batch();
+        
+        unreadSnapshot.docs.forEach(doc => {
+          batch.update(doc.ref, { is_read: true });
+        });
+        
+        await batch.commit();
+        return successResponse(null, 'Todas as notificações foram marcadas como lidas');
       }
 
-      return successResponse(null, 'Todas as notificações foram marcadas como lidas');
-    }
+      if (!notificationId) {
+        return errorResponse('ID da notificação é obrigatório');
+      }
 
-    if (!notificationId) {
-      return errorResponse('ID da notificação é obrigatório');
-    }
+      // Verificar se a notificação pertence ao usuário
+      const notificationRef = adminDb.collection('notifications').doc(notificationId);
+      const notificationDoc = await notificationRef.get();
 
-    // Verificar se a notificação pertence ao usuário
-    const { data: existingNotification, error: fetchError } = await supabaseAdmin
-      .from('notifications')
-      .select('id, user_id')
-      .eq('id', notificationId)
-      .eq('user_id', userId)
-      .single();
+      if (!notificationDoc.exists) {
+        return notFoundResponse('Notificação não encontrada');
+      }
 
-    if (fetchError || !existingNotification) {
-      return notFoundResponse('Notificação não encontrada');
-    }
+      const notificationData = notificationDoc.data();
+      if (notificationData?.user_id !== userId) {
+        return notFoundResponse('Notificação não encontrada');
+      }
 
-    // Atualizar notificação
-    const updateData: any = {};
-    if (body.isRead !== undefined) {
-      updateData.is_read = body.isRead;
-    }
+      // Atualizar notificação
+      const updateData: any = {};
+      if (body.isRead !== undefined) {
+        updateData.is_read = body.isRead;
+      }
 
-    const { data: updatedNotification, error } = await supabaseAdmin
-      .from('notifications')
-      .update(updateData)
-      .eq('id', notificationId)
-      .eq('user_id', userId)
-      .select()
-      .single();
+      await notificationRef.update(updateData);
+      
+      // Buscar dados atualizados
+      const updatedDoc = await notificationRef.get();
+      const updatedNotification = { id: updatedDoc.id, ...updatedDoc.data() };
 
-    if (error) {
-      console.error('Erro ao atualizar notificação:', error);
+      return successResponse(updatedNotification, 'Notificação atualizada com sucesso');
+    } catch (firestoreError) {
+      console.error('Erro ao atualizar notificação no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao atualizar notificação');
     }
-
-    return successResponse(updatedNotification, 'Notificação atualizada com sucesso');
 
   } catch (error) {
     console.error('Erro interno ao atualizar notificação:', error);
@@ -226,51 +223,49 @@ export async function DELETE(request: NextRequest) {
     const notificationId = searchParams.get('id');
     const deleteAll = searchParams.get('deleteAll') === 'true';
 
-    if (deleteAll) {
-      // Deletar todas as notificações lidas do usuário
-      const { error } = await supabaseAdmin
-        .from('notifications')
-        .delete()
-        .eq('user_id', userId)
-        .eq('is_read', true);
-
-      if (error) {
-        console.error('Erro ao deletar todas as notificações:', error);
-        return serverErrorResponse('Erro ao deletar notificações');
+    try {
+      if (deleteAll) {
+        // Deletar todas as notificações lidas do usuário
+        const readQuery = adminDb.collection('notifications')
+          .where('user_id', '==', userId)
+          .where('is_read', '==', true);
+        
+        const readSnapshot = await readQuery.get();
+        const batch = adminDb.batch();
+        
+        readSnapshot.docs.forEach(doc => {
+          batch.delete(doc.ref);
+        });
+        
+        await batch.commit();
+        return successResponse(null, 'Todas as notificações lidas foram removidas');
       }
 
-      return successResponse(null, 'Todas as notificações lidas foram removidas');
-    }
+      if (!notificationId) {
+        return errorResponse('ID da notificação é obrigatório');
+      }
 
-    if (!notificationId) {
-      return errorResponse('ID da notificação é obrigatório');
-    }
+      // Verificar se a notificação pertence ao usuário
+      const notificationRef = adminDb.collection('notifications').doc(notificationId);
+      const notificationDoc = await notificationRef.get();
 
-    // Verificar se a notificação pertence ao usuário
-    const { data: existingNotification, error: fetchError } = await supabaseAdmin
-      .from('notifications')
-      .select('id, user_id')
-      .eq('id', notificationId)
-      .eq('user_id', userId)
-      .single();
+      if (!notificationDoc.exists) {
+        return notFoundResponse('Notificação não encontrada');
+      }
 
-    if (fetchError || !existingNotification) {
-      return notFoundResponse('Notificação não encontrada');
-    }
+      const notificationData = notificationDoc.data();
+      if (notificationData?.user_id !== userId) {
+        return notFoundResponse('Notificação não encontrada');
+      }
 
-    // Deletar notificação
-    const { error } = await supabaseAdmin
-      .from('notifications')
-      .delete()
-      .eq('id', notificationId)
-      .eq('user_id', userId);
+      // Deletar notificação
+      await notificationRef.delete();
 
-    if (error) {
-      console.error('Erro ao deletar notificação:', error);
+      return successResponse(null, 'Notificação removida com sucesso');
+    } catch (firestoreError) {
+      console.error('Erro ao deletar notificação no Firestore:', firestoreError);
       return serverErrorResponse('Erro ao deletar notificação');
     }
-
-    return successResponse(null, 'Notificação removida com sucesso');
 
   } catch (error) {
     console.error('Erro interno ao deletar notificação:', error);

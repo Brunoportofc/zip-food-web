@@ -153,16 +153,27 @@ export function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-// Upload para Supabase Storage (simulado)
+// Upload para Firebase Storage
 export async function uploadToStorage(blob: Blob, path: string): Promise<string> {
-  // Em produção, implementar upload real para Supabase Storage
-  // Por enquanto, retorna uma URL simulada
-  const base64 = await blobToBase64(blob);
-  
-  // Simular delay de upload
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  return `https://storage.supabase.co/v1/object/public/restaurant-images/${path}`;
+  try {
+    // Importar Firebase Storage dinamicamente para evitar problemas de SSR
+    const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    const app = (await import('@/lib/firebase/config')).default;
+    
+    const storage = getStorage(app);
+    const storageRef = ref(storage, `restaurant-images/${path}`);
+    
+    // Upload do blob para Firebase Storage
+    const snapshot = await uploadBytes(storageRef, blob);
+    
+    // Obter URL de download
+    const downloadURL = await getDownloadURL(snapshot.ref);
+    
+    return downloadURL;
+  } catch (error) {
+    console.error('Erro ao fazer upload da imagem:', error);
+    throw new Error('Falha no upload da imagem');
+  }
 }
 
 // Gerar nome único para arquivo

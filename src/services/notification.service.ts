@@ -318,9 +318,9 @@ class NotificationService {
       orderId: order.id,
       restaurantName: 'Nome do Restaurante', // Vem do serviço de restaurante
       pickupAddress: 'Endereço do Restaurante', // Vem do serviço de restaurante
-      deliveryAddress: order.customer.address,
+      deliveryAddress: `${order.deliveryAddress.street}, ${order.deliveryAddress.number}`,
       estimatedDistance: this.calculateDistance(
-        { street: order.customer.address, number: '' },
+        order.deliveryAddress,
         { lat: -23.5505, lng: -46.6333 } // Coordenadas do restaurante
       ),
       deliveryFee: order.deliveryFee,

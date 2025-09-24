@@ -15,38 +15,37 @@ export default function AuthCheck({ children }: AuthCheckProps) {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
-  // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/', '/auth/sign-in', '/auth/sign-up'];
-  const isPublicRoute = publicRoutes.includes(pathname);
+  // Rotas que não precisam de verificação de autenticação
+  const publicRoutes = [
+    '/', 
+    '/auth/sign-in', 
+    '/auth/sign-up',
+    '/customer',
+    '/restaurant', 
+    '/delivery',
+    '/restaurant/pending',
+    '/delivery/pending',
+    '/restaurant/register'
+  ];
+  
+  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    // Só redireciona se estiver montado, não estiver carregando, não for rota pública e não estiver autenticado
-    if (mounted && !isLoading && !isPublicRoute && !isAuthenticated) {
-      router.push('/auth/sign-in');
-    }
-  }, [mounted, isLoading, isPublicRoute, isAuthenticated, router]);
+  // Remover redirecionamento automático - deixar que cada página gerencie sua própria autenticação
+  // useEffect(() => {
+  //   if (mounted && !isLoading && !isPublicRoute && !isAuthenticated) {
+  //     router.push('/auth/sign-in');
+  //   }
+  // }, [mounted, isLoading, isPublicRoute, isAuthenticated, router]);
 
   // Enquanto não estiver montado, renderiza uma div vazia para evitar hidratação
   if (!mounted) {
     return <div style={{ minHeight: '100vh' }}></div>;
   }
 
-  // Se está carregando e não é rota pública, mostra loading
-  if (isLoading && !isPublicRoute) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Sempre renderiza os children
+  // Sempre renderiza os children - deixar que cada página gerencie sua autenticação
   return <>{children}</>;
 }

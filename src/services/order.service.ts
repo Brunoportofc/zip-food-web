@@ -7,11 +7,64 @@ import { notificationService } from './notification.service';
 // import { authService } from './auth.service';
 
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivering' | 'delivered' | 'cancelled';
-// ... (interfaces OrderItem, Customer, etc. permanecem as mesmas)
 
-// ... (definição da interface Order permanece a mesma)
+export interface OrderItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  notes?: string;
+}
 
-// ... (definição da interface DeliveryDriver permanece a mesma)
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  avatar?: string;
+}
+
+export interface DeliveryDriver {
+  id: string;
+  name: string;
+  phone: string;
+  vehicle: string;
+  rating: number;
+}
+
+export interface Order {
+  id: string;
+  restaurantId: string;
+  customerId: string;
+  deliveryDriverId?: string;
+  items: OrderItem[];
+  status: OrderStatus;
+  total: number;
+  deliveryFee: number;
+  subtotal: number;
+  createdAt: Date;
+  updatedAt: Date;
+  estimatedDeliveryTime?: Date;
+  deliveryAddress: {
+    street: string;
+    number: string;
+    complement?: string;
+    neighborhood: string;
+    city: string;
+    zipCode: string;
+  };
+  paymentMethod: 'credit-card' | 'debit-card' | 'pix' | 'cash';
+  notes?: string;
+  confirmationCode: string;
+  statusHistory: Array<{
+    status: OrderStatus;
+    timestamp: Date;
+    updatedBy: string;
+  }>;
+  customer: Customer;
+  restaurant?: Restaurant;
+  deliveryDriver?: DeliveryDriver;
+}
 
 class OrderService {
   private readonly API_BASE_URL = '/api/orders';
@@ -103,10 +156,76 @@ class OrderService {
     await this.handleStatusChange(updatedOrder, previousStatus, newStatus);
     return updatedOrder;
   }
-  
-  // ... (O restante da classe, como handleStatusChange, transformOrderFromAPI, etc., permanece o mesmo)
-  
-  // ... (Cole o restante da sua classe OrderService aqui, sem alterações nos outros métodos)
+
+  async assignDriverToOrder(orderId: string, driverId: string): Promise<Order | null> {
+    const updatedOrderData = await this.makeRequest(`${this.API_BASE_URL}/${orderId}/assign-driver`, {
+      method: 'PUT',
+      body: JSON.stringify({ driverId }),
+    });
+
+    if (!updatedOrderData) return null;
+
+    return this.transformOrderFromAPI(updatedOrderData);
+  }
+
+  // Listeners para novos pedidos
+  onNewOrder(callback: (order: Order) => void): void {
+    this.orderListeners.push(callback);
+  }
+
+  removeOrderListener(callback: (order: Order) => void): void {
+    const index = this.orderListeners.indexOf(callback);
+    if (index > -1) {
+      this.orderListeners.splice(index, 1);
+    }
+  }
+
+  onStatusUpdate(callback: (orderId: string, status: OrderStatus, updatedBy: string) => void): void {
+    this.statusUpdateListeners.push(callback);
+  }
+
+  removeStatusUpdateListener(callback: (orderId: string, status: OrderStatus, updatedBy: string) => void): void {
+    const index = this.statusUpdateListeners.indexOf(callback);
+    if (index > -1) {
+      this.statusUpdateListeners.splice(index, 1);
+    }
+  }
+
+  // Transformar dados da API para o formato interno
+  private transformOrderFromAPI(apiData: any): Order {
+    return {
+      id: apiData.id,
+      restaurantId: apiData.restaurant_id || apiData.restaurantId,
+      customerId: apiData.customer_id || apiData.customerId,
+      deliveryDriverId: apiData.delivery_driver_id || apiData.deliveryDriverId,
+      items: apiData.items || [],
+      status: apiData.status,
+      total: apiData.total,
+      deliveryFee: apiData.delivery_fee || apiData.deliveryFee || 0,
+      subtotal: apiData.subtotal || (apiData.total - (apiData.delivery_fee || 0)),
+      createdAt: new Date(apiData.created_at || apiData.createdAt),
+      updatedAt: new Date(apiData.updated_at || apiData.updatedAt),
+      estimatedDeliveryTime: apiData.estimated_delivery_time ? new Date(apiData.estimated_delivery_time) : undefined,
+      deliveryAddress: apiData.delivery_address || apiData.deliveryAddress,
+      paymentMethod: apiData.payment_method || apiData.paymentMethod,
+      notes: apiData.notes,
+      confirmationCode: apiData.confirmation_code || apiData.confirmationCode || '',
+      statusHistory: apiData.status_history || apiData.statusHistory || [],
+      customer: apiData.customer || { id: apiData.customer_id, name: '', email: '', phone: '' },
+      restaurant: apiData.restaurant,
+      deliveryDriver: apiData.delivery_driver || apiData.deliveryDriver,
+    };
+  }
+
+  // Manipular mudanças de status
+  private async handleStatusChange(order: Order, previousStatus: OrderStatus, newStatus: OrderStatus): Promise<void> {
+    try {
+      // Enviar notificações baseadas no status
+      notificationService.notifyCustomer(order.customer.id, order, previousStatus);
+    } catch (error) {
+      console.error('Erro ao enviar notificação de status:', error);
+    }
+  }
 }
 
 export const orderService = new OrderService();

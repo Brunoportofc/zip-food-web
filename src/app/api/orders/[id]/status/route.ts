@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { adminDb } from '@/lib/firebase/admin';
 import jwt from 'jsonwebtoken';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 // Função para verificar token JWT
 function verifyToken(request: NextRequest) {
@@ -47,50 +42,57 @@ export async function PATCH(
       );
     }
 
-    // Buscar pedido atual
-    const { data: currentOrder, error: fetchError } = await supabase
-      .from('orders')
-      .select(`
-        *,
-        restaurant:restaurants!orders_restaurant_id_fkey(user_id),
-        customer:users!orders_customer_id_fkey(name)
-      `)
-      .eq('id', orderId)
-      .single();
+    try {
+      // Buscar pedido atual
+      const orderRef = adminDb.collection('orders').doc(orderId);
+      const orderDoc = await orderRef.get();
 
-    if (fetchError || !currentOrder) {
-      return NextResponse.json(
-        { error: 'Pedido não encontrado' },
-        { status: 404 }
-      );
-    }
+      if (!orderDoc.exists) {
+        return NextResponse.json(
+          { error: 'Pedido não encontrado' },
+          { status: 404 }
+        );
+      }
 
-    // Verificar permissões
-    let canUpdate = false;
-    
-    if (user.userType === 'restaurant') {
-      // Restaurante pode atualizar seus próprios pedidos
-      canUpdate = currentOrder.restaurant.user_id === user.userId;
-    } else if (user.userType === 'delivery') {
-      // Entregador pode atualizar pedidos atribuídos a ele
-      const { data: driver } = await supabase
-        .from('delivery_drivers')
-        .select('id')
-        .eq('user_id', user.userId)
-        .single();
+      const currentOrder = { id: orderDoc.id, ...orderDoc.data() } as any;
+
+      // Buscar dados do restaurante
+      const restaurantRef = adminDb.collection('restaurants').doc(currentOrder.restaurant_id);
+      const restaurantDoc = await restaurantRef.get();
+      const restaurant = restaurantDoc.exists ? restaurantDoc.data() : null;
+
+      // Buscar dados do cliente
+      const customerRef = adminDb.collection('users').doc(currentOrder.customer_id);
+      const customerDoc = await customerRef.get();
+      const customer = customerDoc.exists ? customerDoc.data() : null;
+
+      // Verificar permissões
+      let canUpdate = false;
       
-      canUpdate = Boolean(driver && (
-        currentOrder.delivery_driver_id === driver.id ||
-        (status === 'out_for_delivery' && deliveryDriverId === driver.id)
-      ));
-    }
+      if (user.userType === 'restaurant') {
+        // Restaurante pode atualizar seus próprios pedidos
+        canUpdate = restaurant?.user_id === user.userId;
+      } else if (user.userType === 'delivery') {
+        // Entregador pode atualizar pedidos atribuídos a ele
+        const driverSnapshot = await adminDb.collection('delivery_drivers')
+          .where('user_id', '==', user.userId)
+          .limit(1)
+          .get();
+        
+        const driver = driverSnapshot.docs[0]?.data();
+        
+        canUpdate = Boolean(driver && (
+          currentOrder.delivery_driver_id === driverSnapshot.docs[0]?.id ||
+          (status === 'out_for_delivery' && deliveryDriverId === driverSnapshot.docs[0]?.id)
+        ));
+      }
 
-    if (!canUpdate) {
-      return NextResponse.json(
-        { error: 'Sem permissão para atualizar este pedido' },
-        { status: 403 }
-      );
-    }
+      if (!canUpdate) {
+        return NextResponse.json(
+          { error: 'Sem permissão para atualizar este pedido' },
+          { status: 403 }
+        );
+      }
 
     // Preparar dados para atualização
     const updateData: any = {
@@ -113,21 +115,12 @@ export async function PATCH(
       updateData.delivered_at = new Date().toISOString();
     }
 
-    // Atualizar pedido
-    const { data: updatedOrder, error: updateError } = await supabase
-      .from('orders')
-      .update(updateData)
-      .eq('id', orderId)
-      .select()
-      .single();
-
-    if (updateError) {
-      console.error('Erro ao atualizar pedido:', updateError);
-      return NextResponse.json(
-        { error: 'Erro ao atualizar pedido' },
-        { status: 500 }
-      );
-    }
+      // Atualizar pedido
+      await orderRef.update(updateData);
+      
+      // Buscar pedido atualizado
+      const updatedOrderDoc = await orderRef.get();
+      const updatedOrder = { id: updatedOrderDoc.id, ...updatedOrderDoc.data() };
 
     // Criar notificações baseadas no status
     const notifications = [];
@@ -194,16 +187,32 @@ export async function PATCH(
         break;
     }
 
-    // Inserir notificações
-    if (notifications.length > 0) {
-      await supabase.from('notifications').insert(notifications);
+      // Inserir notificações
+      if (notifications.length > 0) {
+        const batch = adminDb.batch();
+        notifications.forEach(notification => {
+          const notificationRef = adminDb.collection('notifications').doc();
+          batch.set(notificationRef, {
+            ...notification,
+            created_at: new Date().toISOString(),
+            is_read: false
+          });
+        });
+        await batch.commit();
+      }
+
+      return NextResponse.json({
+        message: 'Status do pedido atualizado com sucesso',
+        order: updatedOrder
+      });
+
+    } catch (firestoreError) {
+      console.error('Erro ao atualizar status do pedido no Firestore:', firestoreError);
+      return NextResponse.json(
+        { error: 'Erro interno do servidor' },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json({
-      message: 'Status do pedido atualizado com sucesso',
-      order: updatedOrder
-    });
-
   } catch (error) {
     console.error('Erro ao atualizar status do pedido:', error);
     return NextResponse.json(

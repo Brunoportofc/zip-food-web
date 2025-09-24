@@ -27,9 +27,9 @@ const RestaurantPage = () => {
     if (user && user.user_type === 'restaurant') {
       const fetchConfig = async () => {
         try {
-          const fetchedConfig = await restaurantConfigService.getConfiguration(user.id);
+          const fetchedConfig = await restaurantConfigService.getRestaurantConfig(user.id);
           setConfig(fetchedConfig);
-          if (fetchedConfig && fetchedConfig.isSetupComplete) {
+          if (fetchedConfig && fetchedConfig.isConfigured) {
             setWizardComplete(true);
           }
         } catch (error) {
@@ -64,11 +64,10 @@ const RestaurantPage = () => {
   if (isWizardComplete) {
     return (
       <div className="container mx-auto p-4">
-        <WelcomeMessage userType="restaurant" />
-        <SuccessMessage message="Configuração do restaurante concluída com sucesso!" />
-        <button onClick={() => router.push('/restaurant/dashboard')} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded">
-          Ir para o Dashboard
-        </button>
+        <WelcomeMessage 
+          restaurantName={config?.businessName || user?.name || 'Restaurante'} 
+          onContinue={() => router.push('/restaurant/dashboard')} 
+        />
       </div>
     );
   }

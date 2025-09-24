@@ -40,6 +40,16 @@ const SignInContent = () => {
 
 
   useEffect(() => {
+    // Preencher email se vier da URL (redirecionamento do sign-up)
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailFromUrl = urlParams.get('email');
+    
+    if (emailFromUrl) {
+      setForm(prev => ({ ...prev, email: decodeURIComponent(emailFromUrl) }));
+    }
+  }, []);
+
+  useEffect(() => {
     if (type && (type === 'customer' || type === 'restaurant' || type === 'delivery')) {
       setUserType(type as UserType);
     }
@@ -75,7 +85,7 @@ const SignInContent = () => {
 
     try {
       // Chama a função signIn com os dados corretos
-      await signIn({
+      const user = await signIn({
         email,
         password,
         userType
@@ -84,36 +94,36 @@ const SignInContent = () => {
       // Mostrar mensagem de sucesso
       showSuccessAlert('Sucesso', 'Login realizado com sucesso!');
       
-      // Redirecionamentos baseados no tipo de usuário
-      setTimeout(() => {
+      // Importar userTypeService para determinar redirecionamento
+      const { userTypeService } = await import('@/services/user-type.service');
+      
+      // Determinar rota de redirecionamento baseada no perfil do usuário
+      let redirectRoute = '/customer'; // fallback padrão
+      
+      if (user.profile) {
+        redirectRoute = userTypeService.getRedirectRoute(user.profile);
+      } else {
+        // Fallback baseado no tipo de usuário
         switch (userType) {
           case 'restaurant':
-            // Verificar se o restaurante já tem configuração completa
-            import('@/services/restaurant-config.service').then(async ({ restaurantConfigService }) => {
-              try {
-                const hasConfig = await restaurantConfigService.isRestaurantConfigured('current_restaurant');
-                
-                if (hasConfig) {
-                  router.push('/restaurant');
-                } else {
-                  router.push('/restaurant/register');
-                }
-              } catch (error) {
-                router.push('/restaurant/register');
-              }
-            });
+            redirectRoute = '/restaurant/register';
             break;
           case 'delivery':
-            router.push('/delivery');
+            redirectRoute = '/delivery/pending';
             break;
           default:
-            router.push('/customer');
+            redirectRoute = '/customer';
             break;
         }
+      }
+      
+      // Redirecionar para a rota apropriada
+      setTimeout(() => {
+        router.push(redirectRoute);
       }, 1500);
     } catch (error: any) {
       showErrorAlert('Erro', error.message || 'Falha no login');
-      console.error(error);
+      console.error('Erro no login:', error);
     } finally {
       setIsSubmitting(false);
       setIsLoading(false);

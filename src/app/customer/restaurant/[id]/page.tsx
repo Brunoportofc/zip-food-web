@@ -204,9 +204,20 @@ export default function RestaurantPage() {
         customer: {
           id: user.id,
           name: user.name,
+          email: user.email,
           phone: user.phone || '(11) 99999-9999',
           address: selectedAddress?.formattedAddress || 'Endereço não informado'
         },
+        deliveryAddress: {
+          street: selectedAddress?.street || 'Rua não informada',
+          number: selectedAddress?.number || 'S/N',
+          neighborhood: selectedAddress?.neighborhood || 'Bairro não informado',
+          city: selectedAddress?.city || 'Cidade não informada',
+          state: selectedAddress?.state || 'Estado não informado',
+          zipCode: selectedAddress?.zipCode || '00000-000',
+          complement: selectedAddress?.complement || ''
+        },
+        paymentMethod: 'credit-card' as const,
         items: cart.map(item => ({
           id: item.id,
           name: item.name,
@@ -217,7 +228,7 @@ export default function RestaurantPage() {
         deliveryFee: restaurant?.deliveryFee || 0,
         total: getTotalPrice(),
         status: 'pending' as const,
-        estimatedDeliveryTime: restaurant?.deliveryTime || '30-45 min'
+        estimatedDeliveryTime: new Date(Date.now() + 45 * 60 * 1000) // 45 minutos a partir de agora
       };
 
       const newOrder = await orderService.createOrder(orderData);

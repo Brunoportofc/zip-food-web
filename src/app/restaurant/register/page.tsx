@@ -210,11 +210,7 @@ export default function RestaurantRegisterPage() {
       // Verificar se a API do Geoapify está configurada
         const apiKey = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
         if (!apiKey || apiKey === 'SUA_CHAVE_GEOAPIFY_AQUI') {
-          toast({
-            title: "⚠️ API do Geoapify não configurada",
-            description: "O sistema está usando endereços simulados. Configure a chave da API para obter seu endereço real. Consulte o arquivo COMO_OBTER_ENDERECO_REAL.md",
-            variant: "destructive",
-          });
+          toast.error("⚠️ API do Geoapify não configurada. O sistema está usando endereços simulados.");
         }
       
       // Solicitar permissão e obter coordenadas com maior precisão
@@ -224,21 +220,14 @@ export default function RestaurantRegisterPage() {
         throw new Error('Não foi possível obter a localização');
       }
       
-      const { lat, lng } = position;
-      const accuracy = position.accuracy;
+      const lat = position.lat;
+      const lng = position.lng;
       
       console.log('📍 Coordenadas obtidas:', {
         latitude: lat,
         longitude: lng,
-        accuracy: accuracy ? `${accuracy}m` : 'N/A',
         timestamp: new Date().toISOString()
       });
-      
-      // Validar precisão da localização
-      if (accuracy && accuracy > 100) {
-        console.warn(`⚠️ Precisão da localização: ${accuracy}m - pode não ser muito precisa`);
-        toast.warning(`Precisão da localização: ${Math.round(accuracy)}m. Para melhor precisão, ative o GPS.`);
-      }
       
       console.log('🌍 Iniciando geocodificação reversa...');
       

@@ -259,8 +259,8 @@ export default function CustomerProfilePage() {
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                 <div className="flex flex-col items-center">
                   <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center mb-4">
-                    {user.profileImage ? (
-                      <img src={user.profileImage} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                    {user.avatar ? (
+                      <img src={user.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <span className="text-3xl text-gray-800">👤</span>
                     )}

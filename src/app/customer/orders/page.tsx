@@ -2,25 +2,17 @@
 
 import React, { useState, useEffect } from 'react';
 import { MdReceipt, MdAccessTime, MdDeliveryDining, MdRestaurant, MdKeyboardArrowDown, MdKeyboardArrowUp, MdLocationOn } from 'react-icons/md';
-import { orderService } from '@/services/order.service';
+import { orderService, Order } from '@/services/order.service';
 import { useAuthStore } from '@/store/auth.store';
 import { toast } from 'react-hot-toast';
 import Link from 'next/link';
 import DeliveryTracking from '@/components/DeliveryTracking';
 
-
-
-interface OrderItem {
-  name: string;
-  quantity: number;
-  price: number;
-}
-
-interface Order {
+interface DisplayOrder {
   id: string;
   date: string;
   restaurant: string;
-  items: OrderItem[];
+  items: { name: string; quantity: number; price: number; }[];
   total: number;
   status: string;
   deliveryTime: string;
@@ -29,14 +21,14 @@ interface Order {
 
 export default function OrdersPage() {
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<DisplayOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [trackingOrderId, setTrackingOrderId] = useState<string | null>(null);
   const { user } = useAuthStore();
 
   // Carregar pedidos do usuário
   useEffect(() => {
-    const loadUserOrders = async () => {
+    const loadOrders = async () => {
       if (!user?.id) {
         setIsLoading(false);
         return;
@@ -47,11 +39,11 @@ export default function OrdersPage() {
         const userOrders = await orderService.getOrdersByCustomer(user.id);
         
         // Mapear dados dos pedidos para o formato da interface
-        const mappedOrders: Order[] = userOrders.map(order => ({
+        const mappedOrders: DisplayOrder[] = userOrders.map(order => ({
           id: order.id,
           date: new Date(order.createdAt).toLocaleDateString('pt-BR'),
-          restaurant: 'Restaurante', // Temporário até implementar busca de restaurante
-          items: order.items.map(item => ({
+          restaurant: order.restaurant?.name || 'Restaurante', // Usar nome do restaurante se disponível
+          items: order.items.map((item: any) => ({
             name: item.name,
             quantity: item.quantity,
             price: item.price
@@ -61,8 +53,10 @@ export default function OrdersPage() {
                  order.status === 'preparing' ? 'Preparando' :
                  order.status === 'delivering' ? 'Em entrega' :
                  order.status === 'cancelled' ? 'Cancelado' : 'Pendente',
-          deliveryTime: order.estimatedDeliveryTime || '30-45 min',
-          address: order.customer?.address || 'Endereço não informado'
+          deliveryTime: order.estimatedDeliveryTime ? 
+            new Date(order.estimatedDeliveryTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 
+            '30-45 min',
+          address: `${order.deliveryAddress.street}, ${order.deliveryAddress.number} - ${order.deliveryAddress.neighborhood}`
         }));
         
         setOrders(mappedOrders);
@@ -70,8 +64,8 @@ export default function OrdersPage() {
         console.error('Erro ao carregar pedidos:', error);
         toast.error('Erro ao carregar seus pedidos');
         
-        // Fallback para dados de desenvolvimento
-        const fallbackOrders: Order[] = [
+        // Fallback para dados de desenvolvimento se não houver pedidos
+        const fallbackOrders: DisplayOrder[] = [
           {
             id: 'dev-1001',
             date: new Date().toLocaleDateString('pt-BR'),
@@ -92,7 +86,7 @@ export default function OrdersPage() {
       }
     };
 
-    loadUserOrders();
+    loadOrders();
   }, [user]);
 
   const toggleOrderDetails = (orderId: string) => {

@@ -8,7 +8,7 @@ const useConnectivity = () => {
   // ... (o restante do arquivo permanece exatamente o mesmo)
   const [isOnline, setIsOnline] = useState(true);
   const { user } = useAuthStore(); // O uso do hook já estava correto
-  const { addNotification } = useNotification();
+  const { showNotification } = useNotification();
 
   const updateOnlineStatus = useCallback(() => {
     const online = navigator.onLine;
@@ -16,17 +16,14 @@ const useConnectivity = () => {
       setIsOnline(online);
       
       if (user) {
-        addNotification({
-          id: `connectivity-${Date.now()}`,
-          title: online ? 'Conexão Restaurada' : 'Você está Offline',
-          message: online 
-            ? 'Sua conexão com a internet foi reestabelecida.'
-            : 'Parece que você perdeu a conexão. Algumas funcionalidades podem não estar disponíveis.',
-          type: online ? 'success' : 'warning',
-        });
+        const message = online 
+          ? 'Sua conexão com a internet foi reestabelecida.'
+          : 'Parece que você perdeu a conexão. Algumas funcionalidades podem não estar disponíveis.';
+        
+        showNotification(message, online ? 'success' : 'warning');
       }
     }
-  }, [isOnline, addNotification, user]);
+  }, [isOnline, showNotification, user]);
 
   useEffect(() => {
     window.addEventListener('online', updateOnlineStatus);
