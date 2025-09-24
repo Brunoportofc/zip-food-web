@@ -1,24 +1,13 @@
 // src/services/auth.service.ts
 import {
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
-  updateProfile,
   onAuthStateChanged,
   User,
   UserCredential,
   AuthError,
 } from 'firebase/auth';
-import {
-  doc,
-  setDoc,
-  getDoc,
-  serverTimestamp,
-  collection,
-  query,
-  where,
-  getDocs,
-} from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/config';
 
 // Tipos de usuário permitidos
@@ -32,7 +21,7 @@ export interface UserData {
   user_type: UserType;
   phone?: string;
   status: 'active' | 'inactive' | 'pending';
-  created_at: any;
+  created_at: any; // Mantido como 'any' para compatibilidade com serverTimestamp() e Timestamp
   updated_at: any;
 }
 
@@ -64,124 +53,59 @@ class AuthService {
   private userProfile: UserData | null = null;
 
   constructor() {
-    // Monitorar mudanças no estado de autenticação
-    onAuthStateChanged(auth, async (user) => {
-      this.currentUser = user;
-      if (user) {
-        await this.loadUserProfile(user.uid);
-      } else {
-        this.userProfile = null;
-      }
-    });
+    // Monitorar mudanças no estado de autenticação (APENAS NO CLIENT-SIDE)
+    if (typeof window !== 'undefined') {
+      onAuthStateChanged(auth, async (user) => {
+        this.currentUser = user;
+        if (user) {
+          await this.loadUserProfile(user.uid);
+        } else {
+          this.userProfile = null;
+        }
+      });
+    }
   }
 
   /**
-   * Cadastrar novo usuário
+   * Cadastrar novo usuário (VERSÃO PARA CLIENT-SIDE - SERÁ CHAMADA VIA API)
    */
   async signUp(data: SignUpData): Promise<AuthResponse> {
     try {
-      console.log('🚀 Iniciando cadastro de usuário:', { email: data.email, user_type: data.user_type });
+      console.log('🚀 Iniciando cadastro de usuário via API:', { email: data.email, user_type: data.user_type });
 
       // Validar dados de entrada
       const validation = this.validateSignUpData(data);
       if (!validation.isValid) {
-        return {
-          success: false,
-          error: validation.message,
-        };
+        return { success: false, error: validation.message };
       }
 
-      // Verificar se o email já existe no Firestore
-      const emailExists = await this.checkEmailExists(data.email);
-      if (emailExists) {
-        return {
-          success: false,
-          error: 'Este email já está cadastrado no sistema.',
-        };
-      }
-
-      // Criar usuário no Firebase Auth
-      console.log('📝 Criando usuário no Firebase Auth...');
-      const userCredential: UserCredential = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-
-      const user = userCredential.user;
-      console.log('✅ Usuário criado no Firebase Auth:', user.uid);
-
-      // Atualizar perfil do usuário
-      console.log('👤 Atualizando perfil do usuário...');
-      await updateProfile(user, {
-        displayName: data.name,
+      // Fazer requisição para a API route que usa o Admin SDK
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
 
-      // Criar documento do usuário no Firestore diretamente (sem Admin SDK)
-       console.log('📄 Criando documento do usuário no Firestore...');
-       try {
-         // Aguardar um pouco para garantir que o usuário está autenticado
-         await new Promise(resolve => setTimeout(resolve, 1000));
-         
-         // Verificar se o usuário ainda está autenticado
-         if (!auth.currentUser) {
-           throw new Error('Usuário não está autenticado');
-         }
-         
-         console.log('🔐 Usuário autenticado:', auth.currentUser.uid);
-         
-         const userData: UserData = {
-           id: user.uid,
-           email: user.email || '',
-           name: data.name,
-           user_type: data.user_type,
-           phone: data.phone,
-           status: 'active',
-           created_at: serverTimestamp(),
-           updated_at: serverTimestamp(),
-         };
+      const result = await response.json();
 
-         await setDoc(doc(db, 'users', user.uid), userData);
-         console.log('✅ Documento do usuário criado com sucesso');
-
-         // Criar documento específico do tipo de usuário
-         await this.createUserTypeDocument(user.uid, data.user_type, userData);
-         console.log(`✅ Documento criado na coleção ${data.user_type}s`);
-       } catch (error) {
-         console.error('❌ Erro ao criar documentos no Firestore:', error);
-         throw error;
-       }
-
-      // Carregar perfil do usuário
-      try {
-        await this.loadUserProfile(user.uid);
-        console.log('✅ Perfil do usuário carregado');
-      } catch (error) {
-        console.warn('⚠️ Não foi possível carregar o perfil do usuário:', error);
+      if (!response.ok) {
+        return { success: false, error: result.error || 'Erro durante o cadastro' };
       }
 
-      console.log('🎉 Cadastro realizado com sucesso!');
-      return {
-        success: true,
-        user: this.userProfile || {
-          id: user.uid,
-          email: user.email || '',
-          name: data.name,
-          user_type: data.user_type,
-          phone: data.phone,
-          status: 'active',
-          created_at: serverTimestamp(),
-          updated_at: serverTimestamp(),
-        },
-        message: 'Usuário cadastrado com sucesso!',
-      };
+      console.log('✅ Cadastro realizado com sucesso via API!');
+      return result;
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Erro durante o cadastro:', error);
-      return this.handleAuthError(error as AuthError);
+      return { success: false, error: 'Ocorreu um erro inesperado durante o cadastro.' };
     }
   }
 
+  // ... (mantenha os outros métodos como signIn, signOutUser, etc., pois eles são usados no client-side)
+  // O signIn, por exemplo, está correto usando o SDK do cliente, pois ele é chamado do navegador.
+  
   /**
    * Fazer login
    */
@@ -346,88 +270,46 @@ class AuthService {
     return { isValid: true };
   }
 
-  /**
-   * Verificar se o email já existe no Firestore
-   */
-  private async checkEmailExists(email: string): Promise<boolean> {
-    try {
-      // Temporariamente desabilitado para evitar problemas de permissão durante cadastro
-      // const usersRef = collection(db, 'users');
-      // const q = query(usersRef, where('email', '==', email));
-      // const querySnapshot = await getDocs(q);
-      // return !querySnapshot.empty;
-      return false; // Permitir cadastro sem verificação prévia
-    } catch (error) {
-      console.error('❌ Erro ao verificar email:', error);
-      return false;
-    }
-  }
+  // Função auxiliar para criar os dados específicos de cada tipo de usuário
+  private createUserTypeData(uid: string, userType: UserType, userData: UserData): any {
+    const now = serverTimestamp();
+    const baseData = {
+      user_id: uid,
+      email: userData.email,
+      name: userData.name,
+      phone: userData.phone || '',
+      created_at: now,
+      updated_at: now,
+    };
 
-  /**
-   * Criar documento específico do tipo de usuário
-   */
-  private async createUserTypeDocument(
-    uid: string,
-    userType: UserType,
-    userData: UserData
-  ): Promise<void> {
-    try {
-      switch (userType) {
-        case 'customer':
-          await setDoc(doc(db, 'customers', uid), {
-            user_id: uid,
-            email: userData.email,
-            name: userData.name,
-            phone: userData.phone || '',
-            addresses: [],
-            preferences: {},
-            created_at: serverTimestamp(),
-            updated_at: serverTimestamp(),
-          });
-          console.log('✅ Documento criado na coleção customers');
-          break;
-
-        case 'restaurant':
-          await setDoc(doc(db, 'restaurants', uid), {
-            user_id: uid,
-            email: userData.email,
-            name: userData.name,
-            phone: userData.phone || '',
-            address: '',
-            cuisine_type: '',
-            description: '',
-            status: 'pending',
-            rating: 0,
-            total_reviews: 0,
-            created_at: serverTimestamp(),
-            updated_at: serverTimestamp(),
-          });
-          console.log('✅ Documento criado na coleção restaurants');
-          break;
-
-        case 'delivery_driver':
-          await setDoc(doc(db, 'delivery_drivers', uid), {
-            user_id: uid,
-            email: userData.email,
-            name: userData.name,
-            phone: userData.phone || '',
-            vehicle_type: '',
-            license_plate: '',
-            status: 'offline',
-            rating: 0,
-            total_deliveries: 0,
-            created_at: serverTimestamp(),
-            updated_at: serverTimestamp(),
-          });
-          console.log('✅ Documento criado na coleção delivery_drivers');
-          break;
-
-        default:
-          throw new Error(`Tipo de usuário não suportado: ${userType}`);
-      }
-    } catch (error) {
-      console.error(`❌ Erro ao criar documento para ${userType}:`, error);
-      throw error;
+    switch (userType) {
+      case 'customer':
+        return {
+          ...baseData,
+          addresses: [],
+          preferences: {},
+        };
+      case 'restaurant':
+        return {
+          ...baseData,
+          address: '',
+          cuisine_type: '',
+          description: '',
+          status: 'pending',
+          rating: 0,
+          total_reviews: 0,
+        };
+      case 'delivery_driver':
+        return {
+          ...baseData,
+          vehicle_type: '',
+          license_plate: '',
+          status: 'offline',
+          rating: 0,
+          total_deliveries: 0,
+        };
+      default:
+        throw new Error(`Tipo de usuário não suportado: ${userType}`);
     }
   }
 

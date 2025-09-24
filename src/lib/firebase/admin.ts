@@ -19,6 +19,11 @@ function initializeFirebaseAdmin(): App {
     const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
     const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
+    console.log('🔍 Debug - Variáveis de ambiente:');
+    console.log('- FIREBASE_PROJECT_ID:', projectId);
+    console.log('- FIREBASE_CLIENT_EMAIL:', clientEmail ? 'DEFINIDO' : 'NÃO DEFINIDO');
+    console.log('- FIREBASE_PRIVATE_KEY:', privateKey ? 'DEFINIDO' : 'NÃO DEFINIDO');
+
     if (clientEmail && privateKey) {
       console.log('📝 Usando credenciais das variáveis de ambiente');
       
@@ -38,16 +43,13 @@ function initializeFirebaseAdmin(): App {
         storageBucket: `${projectId}.firebasestorage.app`,
       });
     } else {
-      console.log('📁 Usando arquivo de credenciais JSON');
+      console.log('❌ Variáveis de ambiente não encontradas, tentando arquivo JSON...');
+
+      // Fallback para arquivo JSON - comentado pois o arquivo não existe
+      // const serviceAccount = require('../../../zip-food-delivery-f5b4f-firebase-adminsdk-fbsvc-5d1ee4728d.json');
       
-      // Fallback para arquivo JSON
-      const serviceAccount = require('../../../zip-food-delivery-f5b4f-firebase-adminsdk-fbsvc-5d1ee4728d.json');
-      
-      return initializeApp({
-        credential: cert(serviceAccount),
-        projectId: serviceAccount.project_id,
-        storageBucket: `${serviceAccount.project_id}.firebasestorage.app`,
-      });
+      // Se chegou aqui, não há credenciais válidas
+      throw new Error('Credenciais do Firebase Admin SDK não encontradas. Configure as variáveis de ambiente FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY.');
     }
   } catch (error) {
     console.error('❌ Erro ao inicializar Firebase Admin:', error);

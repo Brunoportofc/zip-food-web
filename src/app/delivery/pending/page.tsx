@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDeliveryAuth } from '@/hooks/useAuth';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import { MdDeliveryDining, MdHourglassEmpty, MdEmail, MdPhone, MdMotorcycle } from 'react-icons/md';
+import { MdDeliveryDining, MdHourglassEmpty, MdEmail, MdPhone, MdTwoWheeler } from 'react-icons/md';
 
 export default function DeliveryPendingPage() {
   const router = useRouter();
@@ -73,7 +73,7 @@ export default function DeliveryPendingPage() {
             )}
             {user?.profile?.vehicle_type && (
               <div className="flex items-center justify-center mt-2 text-sm text-gray-600">
-                <MdMotorcycle className="w-4 h-4 mr-2" />
+                <MdTwoWheeler className="w-4 h-4 mr-2" />
                 Veículo: {user.profile.vehicle_type === 'bike' ? 'Bicicleta' : 
                          user.profile.vehicle_type === 'motorcycle' ? 'Moto' : 'Carro'}
               </div>

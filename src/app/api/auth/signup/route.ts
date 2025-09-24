@@ -1,6 +1,29 @@
 // src/app/api/auth/signup/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { authService, SignUpData } from '@/services/auth.service';
+import { adminAuth, adminDb } from '@/lib/firebase/admin';
+import { Timestamp } from 'firebase-admin/firestore';
+
+// Tipos
+export type UserType = 'customer' | 'restaurant' | 'delivery_driver';
+
+export interface SignUpData {
+  email: string;
+  password: string;
+  name: string;
+  user_type: UserType;
+  phone?: string;
+}
+
+export interface UserData {
+  id: string;
+  email: string;
+  name: string;
+  user_type: UserType;
+  phone?: string;
+  status: 'active' | 'inactive' | 'pending';
+  created_at: any;
+  updated_at: any;
+}
 
 // Force Node.js runtime for Firebase Admin SDK
 export const runtime = 'nodejs';
@@ -78,58 +101,137 @@ export async function POST(request: NextRequest) {
       hasPhone: !!signUpData.phone,
     });
 
-    // Executar cadastro
-    const result = await authService.signUp(signUpData);
+    // --- LÓGICA DE CADASTRO COM ADMIN SDK ---
 
-    if (result.success) {
-      console.log('✅ Cadastro realizado com sucesso via API');
-      return NextResponse.json(
-        {
-          success: true,
-          message: result.message,
-          user: {
-            id: result.user!.id,
-            email: result.user!.email,
-            name: result.user!.name,
-            user_type: result.user!.user_type,
-            status: result.user!.status,
-          },
+    // 1. Criar usuário no Firebase Auth com Admin SDK
+    console.log('📝 Criando usuário no Firebase Auth (Admin)...');
+    const userRecord = await adminAuth.createUser({
+      email: signUpData.email,
+      password: signUpData.password,
+      displayName: signUpData.name,
+    });
+    console.log('✅ Usuário criado no Firebase Auth:', userRecord.uid);
+
+    // 2. Preparar dados para o Firestore
+    const userData: UserData = {
+      id: userRecord.uid,
+      email: userRecord.email || '',
+      name: signUpData.name,
+      user_type: signUpData.user_type,
+      phone: signUpData.phone || '',
+      status: 'active',
+      created_at: Timestamp.now(),
+      updated_at: Timestamp.now(),
+    };
+
+    // 3. Criar documentos no Firestore com Admin SDK
+    console.log('📄 Criando documentos no Firestore (Admin)...');
+    const userDocRef = adminDb.collection('users').doc(userRecord.uid);
+    const userTypeDocRef = adminDb.collection(`${signUpData.user_type}s`).doc(userRecord.uid);
+    
+    const batch = adminDb.batch();
+    
+    batch.set(userDocRef, userData);
+    batch.set(userTypeDocRef, createUserTypeData(userRecord.uid, signUpData.user_type, userData));
+    
+    await batch.commit();
+    console.log('✅ Documentos criados com sucesso no Firestore');
+
+    console.log('✅ Cadastro realizado com sucesso via API');
+    return NextResponse.json(
+      {
+        success: true,
+        message: 'Usuário cadastrado com sucesso!',
+        user: {
+          id: userData.id,
+          email: userData.email,
+          name: userData.name,
+          user_type: userData.user_type,
+          status: userData.status,
         },
-        { status: 201 }
-      );
-    } else {
-      console.log('❌ Falha no cadastro via API:', result.error);
-      
-      // Determinar status code baseado no tipo de erro
-      let statusCode = 400;
-      if (result.error?.includes('já está sendo usado') || result.error?.includes('já está cadastrado')) {
-        statusCode = 409; // Conflict
-      } else if (result.error?.includes('senha é muito fraca')) {
-        statusCode = 422; // Unprocessable Entity
-      } else if (result.error?.includes('Email inválido')) {
-        statusCode = 422; // Unprocessable Entity
-      }
+      },
+      { status: 201 }
+    );
 
+  } catch (error: any) {
+    console.error('❌ Erro interno na API de cadastro:', error);
+    
+    // Tratamento específico de erros do Firebase Admin SDK
+    if (error.code === 'auth/email-already-exists') {
       return NextResponse.json(
         {
           success: false,
-          error: result.error,
+          error: 'Este email já está sendo usado por outra conta.',
         },
-        { status: statusCode }
+        { status: 409 }
       );
     }
-
-  } catch (error) {
-    console.error('❌ Erro interno na API de cadastro:', error);
+    
+    if (error.code === 'auth/invalid-password') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'A senha é muito fraca. Use pelo menos 6 caracteres.',
+        },
+        { status: 422 }
+      );
+    }
     
     return NextResponse.json(
       {
         success: false,
-        error: 'Erro interno do servidor',
-        details: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined,
+        error: 'Ocorreu um erro inesperado durante o cadastro.',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined,
       },
       { status: 500 }
     );
+  }
+}
+
+// Função auxiliar para criar os dados específicos de cada tipo de usuário
+function createUserTypeData(uid: string, userType: UserType, userData: UserData): any {
+  const now = Timestamp.now();
+  const baseData = {
+    user_id: uid,
+    email: userData.email,
+    name: userData.name,
+    phone: userData.phone || '',
+    created_at: now,
+    updated_at: now,
+  };
+
+  switch (userType) {
+    case 'customer':
+      return {
+        ...baseData,
+        addresses: [],
+        preferences: {},
+      };
+    case 'restaurant':
+      return {
+        ...baseData,
+        address: '',
+        cuisine_type: '',
+        description: '',
+        status: 'pending',
+        rating: 0,
+        total_reviews: 0,
+        menu_items: [],
+        operating_hours: {},
+      };
+    case 'delivery_driver':
+      return {
+        ...baseData,
+        vehicle_type: '',
+        license_plate: '',
+        status: 'pending',
+        rating: 0,
+        total_deliveries: 0,
+        current_location: null,
+        is_available: false,
+      };
+    default:
+      return baseData;
   }
 }
 
