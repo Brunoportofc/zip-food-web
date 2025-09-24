@@ -1,6 +1,6 @@
 'use client';
 
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { CustomerProtectedRoute } from '@/components/auth/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import { MdPerson, MdShoppingCart, MdFavorite, MdLocationOn } from 'react-icons/md';
 import { useState } from 'react';
@@ -16,7 +16,7 @@ export default function CustomerLayout({
 
 
   return (
-    <ProtectedRoute>
+    <CustomerProtectedRoute>
       <div className="min-h-screen bg-white">
         {/* Top Navigation Bar */}
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
@@ -90,6 +90,6 @@ export default function CustomerLayout({
           {children}
         </main>
       </div>
-    </ProtectedRoute>
+    </CustomerProtectedRoute>
   );
 }

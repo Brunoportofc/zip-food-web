@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 // Componentes
 import AuthCheck from '@/components/AuthCheck';
 import ClientLayout from '@/components/ClientLayout';
+import { AuthProvider } from '@/hooks/useAuth';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,11 +38,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthCheck>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </AuthCheck>
+        <AuthProvider>
+          <AuthCheck>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </AuthCheck>
+        </AuthProvider>
         <Toaster
           position="top-right"
           toastOptions={{

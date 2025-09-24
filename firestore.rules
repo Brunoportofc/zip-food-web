@@ -1,0 +1,84 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regras para a coleção de usuários
+    match /users/{userId} {
+      // Permitir leitura e escrita para o próprio usuário autenticado
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Permitir criação de novos usuários durante o cadastro
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // Permitir leitura para verificar se o usuário existe (para limpeza de contas órfãs)
+      allow read: if request.auth != null;
+    }
+    
+    // Regras para a coleção de restaurantes
+    match /restaurants/{restaurantId} {
+      // Permitir leitura para usuários autenticados
+      allow read: if request.auth != null;
+      
+      // Permitir escrita apenas para o dono do restaurante
+      allow write: if request.auth != null && 
+        (resource == null || resource.data.owner_id == request.auth.uid);
+    }
+    
+    // Regras para a coleção de pedidos
+    match /orders/{orderId} {
+      // Permitir leitura e escrita para o cliente que fez o pedido
+      allow read, write: if request.auth != null && 
+        (resource == null || resource.data.customer_id == request.auth.uid);
+      
+      // Permitir leitura para o restaurante do pedido
+      allow read: if request.auth != null && 
+        exists(/databases/$(database)/documents/restaurants/$(resource.data.restaurant_id)) &&
+        get(/databases/$(database)/documents/restaurants/$(resource.data.restaurant_id)).data.owner_id == request.auth.uid;
+    }
+    
+    // Regras para a coleção de itens do menu
+    match /menu_items/{itemId} {
+      // Permitir leitura para usuários autenticados
+      allow read: if request.auth != null;
+      
+      // Permitir escrita apenas para o dono do restaurante
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/restaurants/$(resource.data.restaurant_id)) &&
+        get(/databases/$(database)/documents/restaurants/$(resource.data.restaurant_id)).data.owner_id == request.auth.uid;
+    }
+    
+    // Regras para a coleção de notificações
+    match /notifications/{notificationId} {
+      // Permitir leitura apenas para o usuário destinatário
+      allow read: if request.auth != null && 
+        (resource == null || resource.data.user_id == request.auth.uid);
+      
+      // Permitir criação de notificações
+      allow create: if request.auth != null;
+      
+      // Permitir atualização apenas para marcar como lida
+      allow update: if request.auth != null && 
+        resource.data.user_id == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['is_read', 'read_at']);
+    }
+    
+    // Regras para subcoleções de configurações de restaurante
+    match /restaurants/{restaurantId}/configurations/{configId} {
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/restaurants/$(restaurantId)) &&
+        get(/databases/$(database)/documents/restaurants/$(restaurantId)).data.owner_id == request.auth.uid;
+    }
+    
+    // Regras para subcoleções de itens de pedido
+    match /orders/{orderId}/items/{itemId} {
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/orders/$(orderId)) &&
+        get(/databases/$(database)/documents/orders/$(orderId)).data.customer_id == request.auth.uid;
+    }
+    
+    // Regra padrão: negar acesso a outras coleções
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

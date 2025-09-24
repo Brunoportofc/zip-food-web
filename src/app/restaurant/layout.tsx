@@ -1,6 +1,6 @@
 'use client';
 
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { RestaurantProtectedRoute } from '@/components/auth/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { usePathname } from 'next/navigation';
@@ -70,7 +70,7 @@ export default function RestaurantLayout({
   ];
 
   return (
-    <ProtectedRoute requiredUserType="restaurant">
+    <RestaurantProtectedRoute>
       <div className="flex h-screen bg-gray-50">
         {/* Mobile Menu Overlay */}
         {showMobileMenu && (
@@ -202,6 +202,6 @@ export default function RestaurantLayout({
         <AlertSystem />
         </main>
       </div>
-    </ProtectedRoute>
+    </RestaurantProtectedRoute>
   );
 }

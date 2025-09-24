@@ -6,15 +6,17 @@ import Link from 'next/link';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import AnimatedContainer from '@/components/AnimatedContainer';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SignInPage() {
   const router = useRouter();
+  const { signIn, loading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,23 +28,27 @@ export default function SignInPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     try {
-      // TODO: Implementar lógica de login quando o backend estiver pronto
-      toast.success('Funcionalidade em desenvolvimento');
+      const result = await signIn(formData.email, formData.password);
       
-      // Simulação de redirecionamento (remover quando implementar)
-      // router.push('/customer/dashboard');
+      if (result.success) {
+        toast.success('Login realizado com sucesso!');
+        // O middleware cuidará do redirecionamento baseado no papel do usuário
+        router.push('/');
+      } else {
+        toast.error(result.error || 'Erro ao fazer login');
+      }
     } catch (error) {
-      toast.error('Erro ao fazer login');
+      toast.error('Erro inesperado ao fazer login');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <AnimatedContainer className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Header */}
@@ -70,9 +76,10 @@ export default function SignInPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-500"
                   placeholder="seu@email.com"
                   required
+                  disabled={loading || isSubmitting}
                 />
               </div>
             </div>
@@ -90,14 +97,16 @@ export default function SignInPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-500"
                   placeholder="Sua senha"
                   required
+                  disabled={loading || isSubmitting}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={loading || isSubmitting}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -117,10 +126,10 @@ export default function SignInPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full bg-orange-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-orange-700 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={loading || isSubmitting}
+              className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 focus:ring-4 focus:ring-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
             >
-              {isLoading ? (
+              {loading || isSubmitting ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>

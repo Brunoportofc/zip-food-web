@@ -1,6 +1,6 @@
 'use client';
 
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { DeliveryProtectedRoute } from '@/components/auth/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
@@ -63,7 +63,7 @@ export default function DeliveryLayout({
   ];
 
   return (
-    <ProtectedRoute requiredUserType="delivery">
+    <DeliveryProtectedRoute>
       <div className="flex h-screen bg-gray-50">
         {/* Mobile Menu Overlay */}
         {showMobileMenu && (
@@ -187,6 +187,6 @@ export default function DeliveryLayout({
           </main>
         </div>
       </div>
-    </ProtectedRoute>
+    </DeliveryProtectedRoute>
   );
 }
