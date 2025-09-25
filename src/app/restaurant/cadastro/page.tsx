@@ -39,7 +39,7 @@ const categories = [
   'Mexicana', 'Chinesa', 'Vegetariana', 'Doces e Sobremesas', 'Lanches'
 ];
 
-const menuCategories = [
+const defaultMenuCategories = [
   'Entradas', 'Pratos Principais', 'Sobremesas', 'Bebidas', 'Especiais'
 ];
 
@@ -50,6 +50,7 @@ export default function RestaurantCadastro() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showMenuModal, setShowMenuModal] = useState(false);
   const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
 
   const [formData, setFormData] = useState<RestaurantData>({
     name: '',
@@ -96,6 +97,14 @@ export default function RestaurantCadastro() {
       ...prev,
       [field]: value
     }));
+
+    // Se o campo for categoria e a categoria não existir nas listas, adiciona às categorias personalizadas
+    if (field === 'category' && value && typeof value === 'string') {
+      const allCategories = [...defaultMenuCategories, ...customCategories];
+      if (!allCategories.includes(value)) {
+        setCustomCategories(prev => [...prev, value]);
+      }
+    }
   };
 
   const addMenuItem = () => {
@@ -311,6 +320,70 @@ export default function RestaurantCadastro() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Imagem de Capa do Restaurante *
+                  </label>
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <FaImage className="w-8 h-8 mb-4 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Clique para enviar</span> a imagem de capa
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG ou JPEG (MAX. 5MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Aqui você implementaria a lógica de upload
+                            handleInputChange('coverImage', file.name);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  {formData.coverImage && (
+                    <p className="mt-2 text-sm text-green-600">✓ {formData.coverImage}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Logo do Restaurante *
+                  </label>
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <FaImage className="w-8 h-8 mb-4 text-gray-500" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Clique para enviar</span> o logo
+                        </p>
+                        <p className="text-xs text-gray-500">PNG, JPG ou JPEG (MAX. 5MB)</p>
+                      </div>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            // Aqui você implementaria a lógica de upload
+                            handleInputChange('logo', file.name);
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                  {formData.logo && (
+                    <p className="mt-2 text-sm text-green-600">✓ {formData.logo}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Telefone
                   </label>
                   <input
@@ -385,7 +458,7 @@ export default function RestaurantCadastro() {
                     min="0"
                     value={formData.minimumOrder}
                     onChange={(e) => handleInputChange('minimumOrder', parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                   />
                 </div>
               </div>
@@ -457,14 +530,14 @@ export default function RestaurantCadastro() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-4">Informações do Restaurante</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Nome:</strong> {formData.name}</p>
-                    <p><strong>Categoria:</strong> {formData.category}</p>
-                    <p><strong>Endereço:</strong> {formData.address}, {formData.city}</p>
-                    <p><strong>Telefone:</strong> {formData.phone}</p>
-                    <p><strong>E-mail:</strong> {formData.email}</p>
-                    <p><strong>Taxa de Entrega:</strong> R$ {formData.deliveryFee.toFixed(2)}</p>
-                    <p><strong>Pedido Mínimo:</strong> R$ {formData.minimumOrder.toFixed(2)}</p>
+                  <div className="space-y-2 text-sm text-black">
+                    <p><strong className="text-black">Nome:</strong> <span className="text-black">{formData.name}</span></p>
+                    <p><strong className="text-black">Categoria:</strong> <span className="text-black">{formData.category}</span></p>
+                    <p><strong className="text-black">Endereço:</strong> <span className="text-black">{formData.address}, {formData.city}</span></p>
+                    <p><strong className="text-black">Telefone:</strong> <span className="text-black">{formData.phone}</span></p>
+                    <p><strong className="text-black">E-mail:</strong> <span className="text-black">{formData.email}</span></p>
+                    <p><strong className="text-black">Taxa de Entrega:</strong> <span className="text-black">R$ {formData.deliveryFee.toFixed(2)}</span></p>
+                    <p><strong className="text-black">Pedido Mínimo:</strong> <span className="text-black">R$ {formData.minimumOrder.toFixed(2)}</span></p>
                   </div>
                 </div>
 
@@ -473,8 +546,8 @@ export default function RestaurantCadastro() {
                   <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
                     {formData.menuItems.map((item) => (
                       <div key={item.id} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                        <span>{item.name}</span>
-                        <span className="font-semibold">R$ {item.price.toFixed(2)}</span>
+                        <span className="text-black">{item.name}</span>
+                        <span className="font-semibold text-black">R$ {item.price.toFixed(2)}</span>
                       </div>
                     ))}
                   </div>
@@ -484,15 +557,7 @@ export default function RestaurantCadastro() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-            <button
-              onClick={prevStep}
-              disabled={currentStep === 1}
-              className="flex items-center space-x-2 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span>Anterior</span>
-            </button>
-
+          <div className="flex items-center justify-end mt-8 pt-6 border-t border-gray-200">
             {currentStep < 3 ? (
               <button
                 onClick={nextStep}
@@ -525,78 +590,76 @@ export default function RestaurantCadastro() {
 
       {/* Menu Item Modal */}
       {showMenuModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 modal-backdrop">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 modal-content">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">
               {editingMenuItem ? 'Editar Item' : 'Adicionar Item ao Cardápio'}
             </h3>
             
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Nome *</label>
                 <input
                   type="text"
                   value={menuItemForm.name}
                   onChange={(e) => handleMenuItemChange('name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-all duration-200 hover:border-gray-400"
                   placeholder="Nome do item"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Descrição</label>
                 <textarea
                   value={menuItemForm.description}
                   onChange={(e) => handleMenuItemChange('description', e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-all duration-200 hover:border-gray-400 resize-none"
                   placeholder="Descrição do item"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Preço (R$) *</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Preço (R$) *</label>
                   <input
                     type="number"
                     step="0.01"
                     min="0"
                     value={menuItemForm.price}
                     onChange={(e) => handleMenuItemChange('price', parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-all duration-200 hover:border-gray-400"
+                    placeholder="0,00"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Categoria *</label>
-                  <select
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Categoria *</label>
+                  <input
+                    type="text"
                     value={menuItemForm.category}
                     onChange={(e) => handleMenuItemChange('category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
-                  >
-                    <option value="">Selecione</option>
-                    {menuCategories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
+                    placeholder="Digite o nome da categoria"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black transition-all duration-200 hover:border-gray-400"
+                  />
                 </div>
               </div>
 
-              <div className="flex items-center">
+              <div className="flex items-center bg-gray-50 p-3 rounded-xl">
                 <input
                   type="checkbox"
                   id="available"
                   checked={menuItemForm.available}
                   onChange={(e) => handleMenuItemChange('available', e.target.checked)}
-                  className="mr-2 rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  className="mr-3 rounded border-gray-300 text-red-600 focus:ring-red-500 w-4 h-4"
                 />
-                <label htmlFor="available" className="text-sm text-gray-700">
-                  Item disponível
+                <label htmlFor="available" className="text-sm font-medium text-gray-700">
+                  Item disponível para venda
                 </label>
               </div>
             </div>
 
-            <div className="flex items-center justify-end space-x-3 mt-6">
+            <div className="flex items-center justify-end space-x-3 mt-8">
               <button
                 onClick={() => {
                   setShowMenuModal(false);
@@ -609,13 +672,13 @@ export default function RestaurantCadastro() {
                     available: true
                   });
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                className="px-6 py-3 border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium"
               >
                 Cancelar
               </button>
               <button
                 onClick={addMenuItem}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
               >
                 {editingMenuItem ? 'Atualizar' : 'Adicionar'}
               </button>
