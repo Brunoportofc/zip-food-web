@@ -30,39 +30,120 @@ export default function SignInPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // [FASE 2 - LOG 1] Registrar início da tentativa de login
+    console.log('[SIGN_IN_PAGE] 🚀 Tentativa de login iniciada', {
+      email: formData.email,
+      passwordLength: formData.password.length,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent.substring(0, 50) + '...'
+    });
+
     try {
+      // [FASE 2 - LOG 2] Chamando serviço de autenticação
+      console.log('[SIGN_IN_PAGE] 📞 Chamando authService.signIn...', {
+        email: formData.email,
+        timestamp: new Date().toISOString()
+      });
+
       const result = await signIn(formData.email, formData.password);
       
+      // [FASE 2 - LOG 3] Resultado da autenticação
+      console.log('[SIGN_IN_PAGE] 📋 Resposta do authService.signIn:', {
+        success: result.success,
+        userRole: result.userRole,
+        hasError: !!result.error,
+        errorMessage: result.error,
+        timestamp: new Date().toISOString()
+      });
+      
       if (result.success) {
+        // [FASE 2 - LOG 4] Login bem-sucedido
+        console.log('[SIGN_IN_PAGE] ✅ LOGIN BEM-SUCEDIDO! Preparando redirecionamento...', {
+          userRole: result.userRole,
+          timestamp: new Date().toISOString()
+        });
+
         toast.success('Login realizado com sucesso!');
         
         // Redirecionar baseado no tipo de usuário
         // O middleware também cuidará do redirecionamento, mas fazemos aqui para ser mais rápido
         if (result.userRole) {
+          // [FASE 2 - LOG 5] Determinando rota de redirecionamento
+          console.log('[SIGN_IN_PAGE] 🎯 Determinando rota de redirecionamento...', {
+            userRole: result.userRole,
+            timestamp: new Date().toISOString()
+          });
+
+          // Aguardar um pequeno delay para garantir que o estado seja atualizado
+          await new Promise(resolve => setTimeout(resolve, 100));
+
+          let redirectPath = '/';
           switch (result.userRole) {
             case 'customer':
-              router.push('/customer');
+              redirectPath = '/customer';
+              console.log('[SIGN_IN_PAGE] 🛍️ Redirecionando cliente para /customer');
               break;
             case 'delivery':
-              router.push('/delivery');
+              redirectPath = '/delivery';
+              console.log('[SIGN_IN_PAGE] 🚚 Redirecionando entregador para /delivery');
               break;
             case 'restaurant':
+              redirectPath = '/restaurant';
               // Para restaurantes, o middleware verificará se já está cadastrado
-              router.push('/restaurant');
+              console.log('[SIGN_IN_PAGE] 🍽️ Redirecionando restaurante para /restaurant (middleware verificará cadastro)');
               break;
             default:
-              router.push('/');
+              console.log('[SIGN_IN_PAGE] ❓ Tipo de usuário desconhecido, redirecionando para raiz');
+          }
+
+          // [DIAGNÓSTICO] Tentar diferentes métodos de redirecionamento
+          console.log('[SIGN_IN_PAGE] 🔄 Tentando redirecionamento para:', redirectPath);
+          
+          try {
+            // Método 1: Next.js router
+            console.log('[SIGN_IN_PAGE] 📍 Método 1: router.push()');
+            router.push(redirectPath);
+            
+            // Aguardar um momento e verificar se o redirecionamento funcionou
+            setTimeout(() => {
+              if (window.location.pathname === '/auth/sign-in') {
+                console.warn('[SIGN_IN_PAGE] ⚠️ router.push() falhou, tentando window.location');
+                window.location.href = redirectPath;
+              }
+            }, 500);
+            
+          } catch (routerError) {
+            console.error('[SIGN_IN_PAGE] ❌ Erro no router.push, usando window.location:', routerError);
+            window.location.href = redirectPath;
           }
         } else {
           // Se não conseguir determinar o tipo, deixar o middleware cuidar
+          console.log('[SIGN_IN_PAGE] ⚠️ Tipo de usuário não determinado, deixando middleware cuidar');
           router.push('/');
         }
       } else {
+        // [FASE 2 - LOG 6] Falha no login
+        console.error('[SIGN_IN_PAGE] ❌ FALHA NO LOGIN:', {
+          error: result.error,
+          email: formData.email,
+          timestamp: new Date().toISOString()
+        });
         toast.error(result.error || 'Erro ao fazer login');
       }
     } catch (error) {
-      toast.error('Erro inesperado ao fazer login');
+      // [FASE 2 - LOG 7] Erro durante o processo de login
+      console.error('[SIGN_IN_PAGE] 💥 ERRO DURANTE LOGIN:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        email: formData.email,
+        timestamp: new Date().toISOString()
+      });
+      toast.error('Erro inesperado durante o login');
     } finally {
+      // [FASE 2 - LOG 8] Finalizando processo
+      console.log('[SIGN_IN_PAGE] 🏁 Processo de login finalizado', {
+        timestamp: new Date().toISOString()
+      });
       setIsSubmitting(false);
     }
   };

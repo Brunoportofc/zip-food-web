@@ -25,6 +25,7 @@ export interface UserData {
   email: string;
   displayName?: string;
   role: UserRole;
+  user_type: UserRole; // Adicionar para compatibilidade
   createdAt: any;
   updatedAt: any;
 }
@@ -72,6 +73,7 @@ class AuthService {
         email: user.email || '',
         displayName: data.displayName,
         role: data.role,
+        user_type: data.role, // Adicionar user_type para compatibilidade
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };

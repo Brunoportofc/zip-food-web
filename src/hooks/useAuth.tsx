@@ -31,37 +31,89 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // [FASE 3 - LOG 1] Hook inicializado
+  console.log('[useAuth] 🚀 Hook inicializado', {
+    timestamp: new Date().toISOString(),
+    initialLoadingState: loading
+  });
+
   useEffect(() => {
-    console.log('🔄 Configurando listener de autenticação...');
+    // [FASE 3 - LOG 2] useEffect de verificação de sessão disparado
+    console.log('[useAuth] 🔄 useEffect de verificação de sessão disparado', {
+      timestamp: new Date().toISOString()
+    });
     
     const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
-      console.log('🔄 Estado de autenticação mudou:', firebaseUser?.uid || 'null');
+      // [FASE 3 - LOG 3] Estado de autenticação mudou
+      console.log('[useAuth] 📡 Estado de autenticação mudou:', {
+        hasUser: !!firebaseUser,
+        uid: firebaseUser?.uid || 'null',
+        email: firebaseUser?.email || 'null',
+        timestamp: new Date().toISOString()
+      });
       
       setUser(firebaseUser);
       
       if (firebaseUser) {
-        // Usuário logado - buscar dados do Firestore
+        // [FASE 3 - LOG 4] Usuário logado - buscar dados do Firestore
+        console.log('[useAuth] 👤 Usuário logado detectado, buscando dados no Firestore...', {
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          timestamp: new Date().toISOString()
+        });
+
         try {
           const data = await authService.getUserData(firebaseUser.uid);
+          
+          // [FASE 3 - LOG 5] Dados do usuário obtidos
+          console.log('[useAuth] ✅ Dados do usuário obtidos do Firestore:', {
+            hasData: !!data,
+            role: data?.role || 'null',
+            user_type: data?.user_type || 'null',
+            displayName: data?.displayName || 'null',
+            timestamp: new Date().toISOString()
+          });
+
           setUserData(data);
           setUserRole(data?.role || null);
-          console.log('✅ Dados do usuário carregados:', data?.role);
         } catch (error) {
-          console.error('❌ Erro ao carregar dados do usuário:', error);
+          // [FASE 3 - LOG 6] Erro ao carregar dados do usuário
+          console.error('[useAuth] ❌ Erro ao carregar dados do usuário:', {
+            error: error instanceof Error ? error.message : String(error),
+            uid: firebaseUser.uid,
+            timestamp: new Date().toISOString()
+          });
           setUserData(null);
           setUserRole(null);
         }
       } else {
-        // Usuário deslogado
+        // [FASE 3 - LOG 7] Usuário deslogado
+        console.log('[useAuth] 🚪 Usuário deslogado detectado', {
+          timestamp: new Date().toISOString()
+        });
         setUserData(null);
         setUserRole(null);
       }
       
+      // [FASE 3 - LOG 8] Finalizando verificação de sessão
+      // Use setTimeout to ensure state updates are reflected in logs
+      setTimeout(() => {
+        console.log('[useAuth] 🏁 Verificação de sessão finalizada', {
+          hasUser: !!firebaseUser,
+          hasUserData: !!firebaseUser ? 'will_be_set' : false,
+          userRole: firebaseUser ? 'will_be_set' : null,
+          loadingState: false,
+          timestamp: new Date().toISOString()
+        });
+      }, 0);
       setLoading(false);
     });
 
     return () => {
-      console.log('🔄 Removendo listener de autenticação');
+      // [FASE 3 - LOG 9] Removendo listener
+      console.log('[useAuth] 🧹 Removendo listener de autenticação', {
+        timestamp: new Date().toISOString()
+      });
       unsubscribe();
     };
   }, []);
@@ -76,11 +128,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const user = authService.getCurrentUser();
         if (user) {
           const idToken = await user.getIdToken();
-          await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-          });
+          try {
+            const sessionResponse = await fetch('/api/auth/session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ idToken }),
+            });
+
+            const sessionData = await sessionResponse.json();
+            
+            if (!sessionResponse.ok) {
+              console.warn('⚠️ Aviso ao criar sessão:', sessionData.details || sessionData.error);
+              // Não falhar o login se apenas o cookie de sessão falhou
+            } else {
+              console.log('✅ Cookie de sessão criado com sucesso');
+            }
+          } catch (sessionError) {
+            console.warn('⚠️ Erro ao criar cookie de sessão:', sessionError);
+            // Não falhar o login se apenas o cookie de sessão falhou
+          }
         }
         
         // O onAuthStateChanged vai atualizar o estado automaticamente
@@ -106,11 +174,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const user = authService.getCurrentUser();
         if (user) {
           const idToken = await user.getIdToken();
-          await fetch('/api/auth/session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ idToken }),
-          });
+          try {
+            const sessionResponse = await fetch('/api/auth/session', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ idToken }),
+            });
+
+            const sessionData = await sessionResponse.json();
+            
+            if (!sessionResponse.ok) {
+              console.warn('⚠️ Aviso ao criar sessão:', sessionData.details || sessionData.error);
+              // Não falhar o login se apenas o cookie de sessão falhou
+            } else {
+              console.log('✅ Cookie de sessão criado com sucesso');
+            }
+          } catch (sessionError) {
+            console.warn('⚠️ Erro ao criar cookie de sessão:', sessionError);
+            // Não falhar o login se apenas o cookie de sessão falhou
+          }
         }
         
         // O onAuthStateChanged vai atualizar o estado automaticamente
