@@ -275,7 +275,7 @@ export default function RestaurantCadastro() {
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                     placeholder="Nome do seu restaurante"
                   />
                 </div>
@@ -287,7 +287,7 @@ export default function RestaurantCadastro() {
                   <select
                     value={formData.category}
                     onChange={(e) => handleInputChange('category', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                   >
                     <option value="">Selecione uma categoria</option>
                     {categories.map(cat => (
@@ -304,7 +304,7 @@ export default function RestaurantCadastro() {
                     value={formData.description}
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                     placeholder="Descreva seu restaurante"
                   />
                 </div>
@@ -317,7 +317,7 @@ export default function RestaurantCadastro() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                     placeholder="(11) 99999-9999"
                   />
                 </div>
@@ -330,7 +330,7 @@ export default function RestaurantCadastro() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                     placeholder="contato@restaurante.com"
                   />
                 </div>
@@ -343,7 +343,7 @@ export default function RestaurantCadastro() {
                     type="text"
                     value={formData.address}
                     onChange={(e) => handleInputChange('address', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                     placeholder="Rua, número, bairro"
                   />
                 </div>
@@ -356,7 +356,7 @@ export default function RestaurantCadastro() {
                     type="text"
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                     placeholder="Sua cidade"
                   />
                 </div>
@@ -371,7 +371,7 @@ export default function RestaurantCadastro() {
                     min="0"
                     value={formData.deliveryFee}
                     onChange={(e) => handleInputChange('deliveryFee', parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                   />
                 </div>
 
@@ -572,7 +572,7 @@ export default function RestaurantCadastro() {
                   <select
                     value={menuItemForm.category}
                     onChange={(e) => handleMenuItemChange('category', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                   >
                     <option value="">Selecione</option>
                     {menuCategories.map(cat => (
