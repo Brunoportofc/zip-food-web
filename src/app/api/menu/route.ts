@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
-import { db as adminDb } from '@/lib/api/firebase';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse, validationErrorResponse } from '@/lib/api/response';
+import { getSessionCookieFromRequest } from '@/utils/session-utils';
 
 // Interface para criação/atualização de item do menu
 interface MenuItemRequest {
@@ -29,12 +30,32 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category');
     const available = searchParams.get('available');
 
-    // Obter informações do usuário do middleware
-    const userId = request.headers.get('x-user-id');
-    const userType = request.headers.get('x-user-type');
+    // Verificar autenticação via cookie de sessão
+    const sessionCookie = await getSessionCookieFromRequest(request);
+    if (!sessionCookie) {
+      return unauthorizedResponse('Sessão não encontrada. Faça login novamente.');
+    }
 
-    if (!userId) {
-      return unauthorizedResponse('Usuário não autenticado');
+    let userId: string;
+    let userType: string;
+    
+    try {
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+      userId = decodedClaims.uid;
+      
+      // Buscar tipo de usuário no Firestore
+      const userDoc = await adminDb.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        return unauthorizedResponse('Usuário não encontrado');
+      }
+      
+      userType = userDoc.data()?.user_type || userDoc.data()?.role;
+      if (!userType) {
+        return unauthorizedResponse('Tipo de usuário não definido');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar sessão:', error);
+      return unauthorizedResponse('Sessão inválida. Faça login novamente.');
     }
 
     try {
@@ -44,8 +65,17 @@ export async function GET(request: NextRequest) {
       if (restaurantId) {
         query = query.where('restaurant_id', '==', restaurantId);
       } else if (userType === 'restaurant') {
-        // Se for restaurante e não especificar ID, mostrar apenas seus itens
-        query = query.where('restaurant_id', '==', userId);
+        // Para restaurantes, usar o restaurantId dos custom claims ou buscar pelo owner_id
+        const restaurantQuery = await adminDb.collection('restaurants')
+          .where('owner_id', '==', userId)
+          .get();
+        
+        if (restaurantQuery.empty) {
+          return errorResponse('Restaurante não encontrado para este usuário');
+        }
+        
+        const actualRestaurantId = restaurantQuery.docs[0].id;
+        query = query.where('restaurant_id', '==', actualRestaurantId);
       } else {
         return errorResponse('ID do restaurante é obrigatório para este tipo de usuário');
       }
@@ -61,11 +91,19 @@ export async function GET(request: NextRequest) {
         query = query.where('is_available', '==', isAvailable);
       }
 
-      const snapshot = await query.orderBy('category').orderBy('name').get();
+      const snapshot = await query.get();
       const menuItems = snapshot.docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data()
       }));
+
+      // Ordenar no lado cliente por categoria e nome
+      menuItems.sort((a: any, b: any) => {
+        if (a.category !== b.category) {
+          return a.category.localeCompare(b.category);
+        }
+        return a.name.localeCompare(b.name);
+      });
 
       // Organizar por categoria
       const menuByCategory: Record<string, any[]> = {};
@@ -94,12 +132,32 @@ export async function GET(request: NextRequest) {
 // POST - Criar novo item do menu
 export async function POST(request: NextRequest) {
   try {
-    // Obter informações do usuário do middleware
-    const userId = request.headers.get('x-user-id');
-    const userType = request.headers.get('x-user-type');
+    // Verificar autenticação via cookie de sessão
+    const sessionCookie = await getSessionCookieFromRequest(request);
+    if (!sessionCookie) {
+      return unauthorizedResponse('Sessão não encontrada. Faça login novamente.');
+    }
 
-    if (!userId || userType !== 'restaurant') {
-      return unauthorizedResponse('Apenas restaurantes podem criar itens do menu');
+    let userId: string;
+    let userType: string;
+    
+    try {
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+      userId = decodedClaims.uid;
+      
+      // Buscar tipo de usuário no Firestore
+      const userDoc = await adminDb.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        return unauthorizedResponse('Usuário não encontrado');
+      }
+      
+      userType = userDoc.data()?.user_type || userDoc.data()?.role;
+      if (userType !== 'restaurant') {
+        return unauthorizedResponse('Apenas restaurantes podem criar itens do menu');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar sessão:', error);
+      return unauthorizedResponse('Sessão inválida. Faça login novamente.');
     }
 
     const body: MenuItemRequest = await request.json();
@@ -124,9 +182,20 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      // Buscar o restaurantId real
+      const restaurantQuery = await adminDb.collection('restaurants')
+        .where('owner_id', '==', userId)
+        .get();
+      
+      if (restaurantQuery.empty) {
+        return errorResponse('Restaurante não encontrado para este usuário');
+      }
+      
+      const actualRestaurantId = restaurantQuery.docs[0].id;
+      
       // Criar item do menu
       const menuItemData = {
-        restaurant_id: userId,
+        restaurant_id: actualRestaurantId,
         name: body.name.trim(),
         description: body.description.trim(),
         price: body.price,
@@ -159,12 +228,32 @@ export async function POST(request: NextRequest) {
 // PUT - Atualizar item do menu
 export async function PUT(request: NextRequest) {
   try {
-    // Obter informações do usuário do middleware
-    const userId = request.headers.get('x-user-id');
-    const userType = request.headers.get('x-user-type');
+    // Verificar autenticação via cookie de sessão
+    const sessionCookie = await getSessionCookieFromRequest(request);
+    if (!sessionCookie) {
+      return unauthorizedResponse('Sessão não encontrada. Faça login novamente.');
+    }
 
-    if (!userId || userType !== 'restaurant') {
-      return unauthorizedResponse('Apenas restaurantes podem atualizar itens do menu');
+    let userId: string;
+    let userType: string;
+    
+    try {
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+      userId = decodedClaims.uid;
+      
+      // Buscar tipo de usuário no Firestore
+      const userDoc = await adminDb.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        return unauthorizedResponse('Usuário não encontrado');
+      }
+      
+      userType = userDoc.data()?.user_type || userDoc.data()?.role;
+      if (userType !== 'restaurant') {
+        return unauthorizedResponse('Apenas restaurantes podem atualizar itens do menu');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar sessão:', error);
+      return unauthorizedResponse('Sessão inválida. Faça login novamente.');
     }
 
     const { searchParams } = new URL(request.url);
@@ -186,7 +275,18 @@ export async function PUT(request: NextRequest) {
       }
 
       const itemData = itemDoc.data();
-      if (itemData?.restaurant_id !== userId) {
+      
+      // Para restaurantes, verificar se o item pertence ao seu restaurante
+      const restaurantQuery = await adminDb.collection('restaurants')
+        .where('owner_id', '==', userId)
+        .get();
+      
+      if (restaurantQuery.empty) {
+        return unauthorizedResponse('Restaurante não encontrado para este usuário');
+      }
+      
+      const actualRestaurantId = restaurantQuery.docs[0].id;
+      if (itemData?.restaurant_id !== actualRestaurantId) {
         return notFoundResponse('Item do menu não encontrado');
       }
 
@@ -227,12 +327,32 @@ export async function PUT(request: NextRequest) {
 // DELETE - Remover item do menu
 export async function DELETE(request: NextRequest) {
   try {
-    // Obter informações do usuário do middleware
-    const userId = request.headers.get('x-user-id');
-    const userType = request.headers.get('x-user-type');
+    // Verificar autenticação via cookie de sessão
+    const sessionCookie = await getSessionCookieFromRequest(request);
+    if (!sessionCookie) {
+      return unauthorizedResponse('Sessão não encontrada. Faça login novamente.');
+    }
 
-    if (!userId || userType !== 'restaurant') {
-      return unauthorizedResponse('Apenas restaurantes podem remover itens do menu');
+    let userId: string;
+    let userType: string;
+    
+    try {
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+      userId = decodedClaims.uid;
+      
+      // Buscar tipo de usuário no Firestore
+      const userDoc = await adminDb.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        return unauthorizedResponse('Usuário não encontrado');
+      }
+      
+      userType = userDoc.data()?.user_type || userDoc.data()?.role;
+      if (userType !== 'restaurant') {
+        return unauthorizedResponse('Apenas restaurantes podem remover itens do menu');
+      }
+    } catch (error) {
+      console.error('Erro ao verificar sessão:', error);
+      return unauthorizedResponse('Sessão inválida. Faça login novamente.');
     }
 
     const { searchParams } = new URL(request.url);
@@ -252,7 +372,18 @@ export async function DELETE(request: NextRequest) {
       }
 
       const itemData = itemDoc.data();
-      if (itemData?.restaurant_id !== userId) {
+      
+      // Para restaurantes, verificar se o item pertence ao seu restaurante
+      const restaurantQuery = await adminDb.collection('restaurants')
+        .where('owner_id', '==', userId)
+        .get();
+      
+      if (restaurantQuery.empty) {
+        return unauthorizedResponse('Restaurante não encontrado para este usuário');
+      }
+      
+      const actualRestaurantId = restaurantQuery.docs[0].id;
+      if (itemData?.restaurant_id !== actualRestaurantId) {
         return notFoundResponse('Item do menu não encontrado');
       }
 

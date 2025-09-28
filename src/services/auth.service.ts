@@ -26,6 +26,7 @@ export interface UserData {
   displayName?: string;
   role: UserRole;
   user_type: UserRole; // Adicionar para compatibilidade
+  phone?: string;
   createdAt: any;
   updatedAt: any;
 }
@@ -35,6 +36,7 @@ export interface SignUpData {
   password: string;
   displayName: string;
   role: UserRole;
+  phone?: string;
 }
 
 export interface SignInData {
@@ -74,6 +76,7 @@ class AuthService {
         displayName: data.displayName,
         role: data.role,
         user_type: data.role, // Adicionar user_type para compatibilidade
+        phone: data.phone || '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };

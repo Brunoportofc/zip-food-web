@@ -95,7 +95,8 @@ export default function SignUpPage() {
         formData.email,
         formData.password,
         formData.name,
-        formData.user_type
+        formData.user_type,
+        formData.phone
       );
       
       if (result.success) {

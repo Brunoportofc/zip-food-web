@@ -3,21 +3,23 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaUserAlt, FaMapMarkerAlt, FaSignOutAlt, FaEdit, FaTrash, FaPlus, FaSave, FaTimes, FaBell } from 'react-icons/fa';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
 import { profileService, Address, PaymentMethod, PersonalData } from '@/services/profile.service';
 import NotificationManager from '@/components/NotificationManager';
 
 export default function CustomerProfilePage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading, signOut } = useAuthStore();
+  const { user, userData, userRole, loading, signOut } = useAuth();
+  const isAuthenticated = !!(user && userData);
+  const isLoading = loading;
   
   // Estados para edição
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [personalData, setPersonalData] = useState({
-    name: user?.name || '',
+    name: user?.displayName || '',
     email: user?.email || '',
-    phone: user?.phone || ''
+    phone: userData?.phone || ''
   });
   
   // Estados para endereços
@@ -47,13 +49,13 @@ export default function CustomerProfilePage() {
 
   
   const loadProfileData = async () => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     
     try {
       setLoading(true);
       const [userAddresses, userPaymentMethods] = await Promise.all([
-        profileService.getUserAddresses(user.id),
-        profileService.getUserPaymentMethods(user.id)
+        profileService.getUserAddresses(user.uid),
+        profileService.getUserPaymentMethods(user.uid)
       ]);
       
       setAddresses(userAddresses);
@@ -67,7 +69,7 @@ export default function CustomerProfilePage() {
   };
 
   useEffect(() => {
-    // Não redirecionar se ainda estiver carregando
+    // Aguardar o carregamento da autenticação antes de fazer qualquer redirecionamento
     if (isLoading) {
       return;
     }
@@ -78,21 +80,21 @@ export default function CustomerProfilePage() {
     }
     
     // Atualizar dados pessoais quando o usuário mudar
-    if (user) {
+    if (user && userData) {
       setPersonalData({
-        name: user.name,
-        email: user.email,
-        phone: user.phone || ''
+        name: user.displayName || '',
+        email: user.email || '',
+        phone: userData.phone || ''
       });
       loadProfileData();
     }
   }, [user, isAuthenticated, isLoading, router]);
   
   const handleSavePersonalData = async () => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     
     try {
-      await profileService.updatePersonalData(user.id, personalData);
+      await profileService.updatePersonalData(user.uid, personalData);
       toast.success('Dados pessoais atualizados com sucesso');
       setIsEditingPersonal(false);
     } catch (error) {
@@ -102,10 +104,10 @@ export default function CustomerProfilePage() {
   };
   
   const handleAddAddress = async () => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     
     try {
-      await profileService.addAddress(user.id, newAddress);
+      await profileService.addAddress(user.uid, newAddress);
       await loadProfileData(); // Recarregar dados
       setNewAddress({
         label: '',
@@ -124,10 +126,10 @@ export default function CustomerProfilePage() {
   };
   
   const handleRemoveAddress = async (id: string) => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     
     try {
-      await profileService.removeAddress(user.id, id);
+      await profileService.removeAddress(user.uid, id);
       await loadProfileData(); // Recarregar dados
       toast.success('Endereço removido com sucesso');
     } catch (error) {
@@ -137,10 +139,10 @@ export default function CustomerProfilePage() {
   };
   
   const handleAddPayment = async () => {
-    if (!user?.id) return;
+    if (!user?.uid) return;
     
     try {
-      await profileService.addPaymentMethod(user.id, newPayment);
+      await profileService.addPaymentMethod(user.uid, newPayment);
       await loadProfileData(); // Recarregar dados
       setNewPayment({
          type: 'credit',
@@ -156,11 +158,11 @@ export default function CustomerProfilePage() {
      }
    };
 
-   const handleRemovePayment = async (id: string) => {
-     if (!user?.id) return;
-     
-     try {
-       await profileService.removePaymentMethod(user.id, id);
+  const handleRemovePayment = async (id: string) => {
+    if (!user?.uid) return;
+    
+    try {
+      await profileService.removePaymentMethod(user.uid, id);
        await loadProfileData(); // Recarregar dados
        toast.success('Método de pagamento removido com sucesso');
      } catch (error) {
@@ -467,7 +469,7 @@ export default function CustomerProfilePage() {
                     Notificações
                   </h2>
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                    <NotificationManager userId={user.id} />
+                    <NotificationManager userId={user.uid} />
                   </div>
                 </div>
               )}

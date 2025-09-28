@@ -13,7 +13,7 @@ interface AuthContextType {
   userRole: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; userRole?: UserRole }>;
-  signUp: (email: string, password: string, displayName: string, role: UserRole) => Promise<{ success: boolean; error?: string; userRole?: UserRole }>;
+  signUp: (email: string, password: string, displayName: string, role: UserRole, phone?: string) => Promise<{ success: boolean; error?: string; userRole?: UserRole }>;
   signOut: () => Promise<void>;
   isUserType: (requiredType: UserRole | UserRole[]) => boolean;
   hasPermission: (permission: string) => boolean;
@@ -149,6 +149,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.warn('⚠️ Erro ao criar cookie de sessão:', sessionError);
             // Não falhar o login se apenas o cookie de sessão falhou
           }
+
+          // ✨ REMOVIDO: Sincronização de custom claims no login
+          // O middleware agora sempre verifica via API para garantir dados atualizados
+          console.log('✅ [Auth] Login concluído. Middleware cuidará da verificação de restaurante.');
         }
         
         // O onAuthStateChanged vai atualizar o estado automaticamente
@@ -164,10 +168,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const signUp = async (email: string, password: string, displayName: string, role: UserRole) => {
+  const signUp = async (email: string, password: string, displayName: string, role: UserRole, phone?: string) => {
     try {
       setLoading(true);
-      const result = await authService.signUp({ email, password, displayName, role });
+      const result = await authService.signUp({ email, password, displayName, role, phone });
       
       if (result.success) {
         // Criar cookie de sessão no servidor
@@ -213,22 +217,48 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       setLoading(true);
+      console.log('🚪 [useAuth] Iniciando processo de logout...');
       
-      // Remover cookie de sessão no servidor
-      await fetch('/api/auth/session', {
-        method: 'DELETE',
-      });
+      // 1. Remover cookie de sessão no servidor
+      try {
+        const response = await fetch('/api/auth/session', {
+          method: 'DELETE',
+        });
+        
+        if (response.ok) {
+          console.log('✅ [useAuth] Cookie de sessão removido do servidor');
+        } else {
+          console.warn('⚠️ [useAuth] Falha ao remover cookie do servidor');
+        }
+      } catch (cookieError) {
+        console.warn('⚠️ [useAuth] Erro ao remover cookie:', cookieError);
+        // Não falhar o logout se apenas o cookie falhar
+      }
       
-      // Fazer logout no Firebase
-      await authService.signOut();
+      // 2. Fazer logout no Firebase
+      const result = await authService.signOut();
+      if (!result.success) {
+        throw new Error(result.error);
+      }
       
-      // Limpar estados locais
+      // 3. Limpar estados locais
       setUser(null);
       setUserData(null);
       setUserRole(null);
       
+      // 4. Limpar localStorage
+      try {
+        localStorage.clear();
+        console.log('✅ [useAuth] localStorage limpo');
+      } catch (storageError) {
+        console.warn('⚠️ [useAuth] Erro ao limpar localStorage:', storageError);
+      }
+      
+      console.log('✅ [useAuth] Logout completo realizado com sucesso');
+      
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('❌ [useAuth] Erro ao fazer logout:', error);
+      throw error; // Propagar erro para ser tratado pelo componente
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,31 @@
+<svg width="1200" height="400" viewBox="0 0 1200 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="400" fill="#F9FAFB"/>
+  <rect x="0" y="0" width="1200" height="400" fill="url(#gradient)"/>
+  
+  <!-- Background pattern -->
+  <pattern id="dots" x="0" y="0" width="50" height="50" patternUnits="userSpaceOnUse">
+    <circle cx="25" cy="25" r="2" fill="#E5E7EB" opacity="0.5"/>
+  </pattern>
+  <rect width="1200" height="400" fill="url(#dots)"/>
+  
+  <!-- Gradient overlay -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444;stop-opacity:0.1" />
+      <stop offset="100%" style="stop-color:#DC2626;stop-opacity:0.2" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Center icon -->
+  <g transform="translate(575, 175)">
+    <circle r="25" fill="#EF4444" opacity="0.2"/>
+    <path d="M-10 -5h20v15h-20z" fill="#EF4444" opacity="0.4"/>
+    <circle cx="-5" cy="-10" r="2" fill="#EF4444" opacity="0.6"/>
+    <circle cx="5" cy="-10" r="2" fill="#EF4444" opacity="0.6"/>
+  </g>
+  
+  <!-- Text placeholder -->
+  <text x="600" y="250" text-anchor="middle" fill="#6B7280" font-size="24" font-family="Arial, sans-serif">
+    Adicione uma imagem de capa
+  </text>
+</svg>

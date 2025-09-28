@@ -40,6 +40,7 @@ class MenuService {
     const response = await fetch(url, {
       ...options,
       headers,
+      credentials: 'include', // Incluir cookies automaticamente
     });
 
     if (!response.ok) {
@@ -134,7 +135,7 @@ class MenuService {
 
   async deleteMenuItem(itemId: string): Promise<boolean> {
     try {
-      await this.makeRequest(`${this.baseUrl}/${itemId}`, {
+      await this.makeRequest(`${this.baseUrl}?id=${itemId}`, {
         method: 'DELETE',
       });
       

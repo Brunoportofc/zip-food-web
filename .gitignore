@@ -41,3 +41,6 @@ yarn-error.log*
 next-env.d.ts
 
 zip-food-delivery-f5b4f-firebase-adminsdk-fbsvc-d2b8b4a779.json
+
+# uploads
+/public/uploads/

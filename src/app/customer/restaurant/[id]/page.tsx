@@ -1,18 +1,27 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect, use } from 'react';
+import Link from 'next/link';
+import { 
+  MdArrowBack,
+  MdStar, 
+  MdAccessTime, 
+  MdDeliveryDining,
+  MdFavorite,
+  MdShare,
+  MdLocationOn,
+  MdPhone,
+  MdInfo,
+  MdAdd,
+  MdRemove
+} from 'react-icons/md';
+import { Restaurant, RestaurantCategory, categoryDisplayNames } from '@/types';
+import restaurantService from '@/services/restaurant.service';
+import { categoryConfig } from '@/constants';
 
-import { MdArrowBack, MdStar, MdAccessTime, MdAdd, MdRemove, MdShoppingCart, MdLocationOn } from 'react-icons/md';
-import AnimatedContainer from '@/components/AnimatedContainer';
-import Button from '@/components/ui/Button';
-import { showSuccessAlert, showErrorAlert } from '@/components/AlertSystem';
-import { orderService } from '@/services/order.service';
-import { restaurantService } from '@/services/restaurant.service';
-import { menuService } from '@/services/menu.service';
-import { useAuthStore } from '@/store/auth.store';
-import { toast } from 'react-hot-toast';
-import AddressSelector, { Address } from '@/components/AddressSelector';
+interface RestaurantPageProps {
+  params: Promise<{ id: string }>;
+}
 
 interface MenuItem {
   id: string;
@@ -24,238 +33,205 @@ interface MenuItem {
   available: boolean;
 }
 
-interface Restaurant {
-  id: string;
-  name: string;
-  image: string;
-  rating: number;
-  deliveryTime: string;
-  deliveryFee: number;
-  category: string;
-  description: string;
-  address: string;
-  phone: string;
-}
-
 interface CartItem extends MenuItem {
   quantity: number;
 }
 
-export default function RestaurantPage() {
-  const params = useParams();
-  const router = useRouter();
-  const { user } = useAuthStore();
-
+export default function RestaurantPage({ params }: RestaurantPageProps) {
+  const resolvedParams = use(params);
+  const restaurantId = resolvedParams.id;
+  
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
-  const [showAddressSelector, setShowAddressSelector] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [showCart, setShowCart] = useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  const restaurantId = params.id as string;
-
-  // Carregar dados reais do restaurante e menu
+  // Carregar dados do restaurante
   useEffect(() => {
-    const loadRestaurantData = async () => {
-      setIsLoading(true);
-      
+    const loadRestaurant = async () => {
       try {
-        // Carregar dados do restaurante
-        const restaurantData = await restaurantService.getRestaurantById(restaurantId);
+        setLoading(true);
+        // Buscar dados específicos do restaurante via API
+        const restaurantResponse = await fetch(`/api/restaurants/${restaurantId}`, {
+          credentials: 'include'
+        });
         
-        if (restaurantData) {
-          // Mapear dados do restaurante para o formato da interface
-          const mappedRestaurant: Restaurant = {
-            id: restaurantData.id,
-            name: restaurantData.name,
-            image: restaurantData.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
-            rating: restaurantData.rating || 0,
-            deliveryTime: restaurantData.estimatedDeliveryTime || '30-45 min',
-            deliveryFee: restaurantData.deliveryFee || 0,
-            category: restaurantData.category,
-            description: restaurantData.description,
-            address: restaurantData.address,
-            phone: restaurantData.phone
-          };
+        if (!restaurantResponse.ok) {
+          throw new Error('Restaurante não encontrado');
+        }
+        
+        const restaurantData = await restaurantResponse.json();
+        const foundRestaurant = restaurantData.data;
+        
+        if (foundRestaurant) {
+          console.log('🍔 [CUSTOMER RESTAURANT] Dados do restaurante carregados:', foundRestaurant);
+          setRestaurant(foundRestaurant);
           
-          setRestaurant(mappedRestaurant);
-          
-          // Carregar itens do menu
-          const menuData = await menuService.getMenuItems(restaurantId);
-          
-          // Mapear dados do menu para o formato da interface
-          const mappedMenuItems: MenuItem[] = menuData.map(item => ({
-            id: item.id,
-            name: item.name,
-            description: item.description,
-            price: item.price,
-            image: item.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
-            category: item.category,
-            available: item.available
-          }));
-          
-          setMenuItems(mappedMenuItems);
-        } else {
-          // Fallback para dados de desenvolvimento se restaurante não encontrado
-          const fallbackRestaurant: Restaurant = {
-            id: restaurantId,
-            name: 'Restaurante em Configuração',
-            image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&h=600&fit=crop',
-            rating: 0,
-            deliveryTime: 'A definir',
-            deliveryFee: 0,
-            category: 'Geral',
-            description: 'Este restaurante está sendo configurado. Em breve estará disponível com cardápio completo.',
-            address: 'Endereço a ser definido',
-            phone: 'Telefone a ser definido'
-          };
-          
-          setRestaurant(fallbackRestaurant);
-          setMenuItems([]);
+          // Carregar menu real da API
+          try {
+            const menuResponse = await fetch(`/api/menu?restaurantId=${restaurantId}`, {
+              credentials: 'include'
+            });
+            
+            if (menuResponse.ok) {
+              const menuData = await menuResponse.json();
+              // Transformar dados da API para o formato esperado
+              const items = menuData.data.items.map((item: any) => ({
+                id: item.id,
+                name: item.name,
+                description: item.description,
+                price: item.price,
+                image: item.image_url || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&h=200&fit=crop',
+                category: item.category,
+                available: item.is_available
+              }));
+              setMenuItems(items.filter((item: MenuItem) => item.available));
+            } else {
+              setMenuItems([]);
+            }
+          } catch (menuError) {
+            console.error('Erro ao carregar menu:', menuError);
+            setMenuItems([]);
+          }
         }
       } catch (error) {
-        console.error('Erro ao carregar dados do restaurante:', error);
-        toast.error('Erro ao carregar dados do restaurante');
+        console.error('Erro ao carregar restaurante:', error);
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
-    loadRestaurantData();
+    if (restaurantId) {
+      loadRestaurant();
+    }
   }, [restaurantId]);
 
-  const categories = ['all', ...Array.from(new Set(menuItems.map(item => item.category)))];
-  
-  const filteredItems = selectedCategory === 'all' 
+  // Categorias do menu
+  const menuCategories = ['all', ...Array.from(new Set(menuItems.map(item => item.category)))];
+  const filteredMenuItems = selectedCategory === 'all' 
     ? menuItems 
     : menuItems.filter(item => item.category === selectedCategory);
 
+  // Funções do carrinho
   const addToCart = (item: MenuItem) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
+    setCart(prev => {
+      const existingItem = prev.find(cartItem => cartItem.id === item.id);
       if (existingItem) {
-        return prevCart.map(cartItem => 
+        return prev.map(cartItem =>
           cartItem.id === item.id 
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
             : cartItem
         );
-      } else {
-        return [...prevCart, { ...item, quantity: 1 }];
       }
+      return [...prev, { ...item, quantity: 1 }];
     });
-    showSuccessAlert('Item adicionado', `${item.name} foi adicionado ao carrinho`);
   };
 
   const removeFromCart = (itemId: string) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(cartItem => cartItem.id === itemId);
+    setCart(prev => {
+      const existingItem = prev.find(cartItem => cartItem.id === itemId);
       if (existingItem && existingItem.quantity > 1) {
-        return prevCart.map(cartItem => 
+        return prev.map(cartItem =>
           cartItem.id === itemId 
             ? { ...cartItem, quantity: cartItem.quantity - 1 }
             : cartItem
         );
-      } else {
-        return prevCart.filter(cartItem => cartItem.id !== itemId);
       }
+      return prev.filter(cartItem => cartItem.id !== itemId);
     });
   };
 
   const getItemQuantity = (itemId: string) => {
-    const item = cart.find(cartItem => cartItem.id === itemId);
-    return item ? item.quantity : 0;
+    return cart.find(item => item.id === itemId)?.quantity || 0;
   };
 
   const getTotalPrice = () => {
-    const subtotal = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-    return subtotal + (restaurant?.deliveryFee || 0);
+    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
   };
 
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
-  };
-
-  const handlePlaceOrder = async () => {
-    if (!user) {
-      toast.error('Você precisa estar logado para fazer um pedido');
-      router.push('/auth/sign-in');
-      return;
-    }
-
-    if (cart.length === 0) {
-      toast.error('Adicione itens ao carrinho antes de finalizar o pedido');
-      return;
-    }
-
-    if (!selectedAddress) {
-      setShowAddressSelector(true);
-      return;
-    }
-
-    setIsPlacingOrder(true);
-
+  const handleCheckout = async () => {
+    if (!restaurant) return;
+    
     try {
+      setCheckingOut(true);
+      
       const orderData = {
-        restaurantId: restaurantId,
-        customerId: user.id,
-        customer: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone || '(11) 99999-9999',
-          address: selectedAddress?.formattedAddress || 'Endereço não informado'
-        },
-        deliveryAddress: {
-          street: selectedAddress?.street || 'Rua não informada',
-          number: selectedAddress?.number || 'S/N',
-          neighborhood: selectedAddress?.neighborhood || 'Bairro não informado',
-          city: selectedAddress?.city || 'Cidade não informada',
-          state: selectedAddress?.state || 'Estado não informado',
-          zipCode: selectedAddress?.zipCode || '00000-000',
-          complement: selectedAddress?.complement || ''
-        },
-        paymentMethod: 'credit-card' as const,
+        restaurantId: restaurant.id,
         items: cart.map(item => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price
         })),
-        subtotal: cart.reduce((total, item) => total + (item.price * item.quantity), 0),
-        deliveryFee: restaurant?.deliveryFee || 0,
-        total: getTotalPrice(),
-        status: 'pending' as const,
-        estimatedDeliveryTime: new Date(Date.now() + 45 * 60 * 1000) // 45 minutos a partir de agora
+        deliveryAddress: {
+          street: 'Rua Exemplo',
+          number: '123',
+          neighborhood: 'Centro',
+          city: 'São Paulo',
+          zipCode: '01234-567'
+        },
+        paymentMethod: 'credit-card' as const,
+        notes: ''
       };
 
-      const newOrder = await orderService.createOrder(orderData);
-      
-      // Limpar carrinho
-      setCart([]);
-      
-      toast.success(`Pedido ${newOrder.id} realizado com sucesso!`);
-      showSuccessAlert('Pedido Confirmado', `Seu pedido ${newOrder.id} foi enviado para o restaurante. Acompanhe o status na página de pedidos.`);
-      
-      // Redirecionar para página de pedidos
-      router.push('/customer/orders');
-      
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(orderData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        alert('Pedido realizado com sucesso! Número: ' + result.data.id);
+        setCart([]);
+        setShowCart(false);
+      } else {
+        const error = await response.json();
+        alert(error.message || 'Erro ao realizar pedido');
+      }
     } catch (error) {
-      console.error('Erro ao criar pedido:', error);
-      toast.error('Não foi possível finalizar o pedido. Tente novamente.');
+      console.error('Erro ao realizar pedido:', error);
+      alert('Erro ao realizar pedido');
     } finally {
-      setIsPlacingOrder(false);
+      setCheckingOut(false);
     }
   };
 
-  if (isLoading) {
+  const getTotalItems = () => {
+    return cart.reduce((total, item) => total + item.quantity, 0);
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando restaurante...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center mb-4">
+              <div className="w-8 h-8 bg-gray-200 animate-pulse rounded-full mr-4"></div>
+              <div className="w-32 h-6 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="bg-gray-200 animate-pulse h-64 rounded-2xl mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
+                <div className="bg-gray-200 h-32 rounded-lg mb-4"></div>
+                <div className="bg-gray-200 h-4 rounded mb-2"></div>
+                <div className="bg-gray-200 h-3 rounded mb-4"></div>
+                <div className="bg-gray-200 h-6 rounded"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -265,209 +241,361 @@ export default function RestaurantPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Restaurante não encontrado</p>
-          <Button
-            onClick={() => router.back()}
-            variant="primary"
+          <div className="text-6xl mb-4">🏪</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Restaurante não encontrado</h1>
+          <p className="text-gray-600 mb-4">O restaurante solicitado não existe ou foi removido.</p>
+          <Link
+            href="/customer"
+            className="bg-red-600 text-white px-6 py-2 rounded-full font-medium hover:bg-red-700 transition-colors duration-200"
           >
-            Voltar
-          </Button>
+            Voltar ao Início
+          </Link>
         </div>
       </div>
     );
   }
 
+  const MenuItemCard = ({ item }: { item: MenuItem }) => {
+    const quantity = getItemQuantity(item.id);
+    
+    return (
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="relative">
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-full h-40 object-cover"
+          />
+          {!item.available && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="bg-white text-gray-900 px-3 py-1 rounded-full text-sm font-bold">
+                Indisponível
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4">
+          <h3 className="font-bold text-lg text-gray-900 mb-2">{item.name}</h3>
+          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-xl font-bold text-gray-900">
+              R$ {item.price.toFixed(2)}
+            </span>
+            
+            {item.available && (
+              <div className="flex items-center">
+                {quantity > 0 ? (
+                  <div className="flex items-center bg-red-50 rounded-full">
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                    >
+                      <MdRemove size={16} />
+                    </button>
+                    <span className="px-3 py-1 font-bold text-red-600">{quantity}</span>
+                    <button
+                      onClick={() => addToCart(item)}
+                      className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                    >
+                      <MdAdd size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => addToCart(item)}
+                    className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors duration-200"
+                  >
+                    <MdAdd size={16} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <button
-              onClick={() => router.back()}
-              className="flex items-center text-gray-600 hover:text-gray-900"
-            >
-              <MdArrowBack size={24} className="mr-2" />
-              Voltar
-            </button>
-            
-            {getTotalItems() > 0 && (
-              <button
-                onClick={() => showSuccessAlert('Carrinho', 'Funcionalidade em desenvolvimento')}
-                className="flex items-center bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Link 
+                href="/customer"
+                className="mr-4 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
               >
-                <MdShoppingCart size={20} className="mr-2" />
-                {getTotalItems()} itens - R$ {getTotalPrice().toFixed(2)}
+                <MdArrowBack size={24} className="text-gray-700" />
+              </Link>
+              
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">{restaurant.name}</h1>
+                <p className="text-gray-600 text-sm flex items-center">
+                  <span className="mr-2">{categoryConfig[restaurant.category].icon}</span>
+                  {categoryDisplayNames[restaurant.category]}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsFavorite(!isFavorite)}
+                className={`p-2 rounded-full transition-colors duration-200 ${
+                  isFavorite ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600'
+                }`}
+              >
+                <MdFavorite size={20} />
               </button>
-            )}
+              
+              <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200">
+                <MdShare size={20} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Restaurant Info */}
-      <AnimatedContainer animationType="fadeInUp">
-        <div className="bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex flex-col md:flex-row gap-6">
-              <img
-                src={restaurant.image}
-                alt={restaurant.name}
-                className="w-full md:w-48 h-48 object-cover rounded-xl"
-              />
-              <div className="flex-1">
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                  {restaurant.name}
-                </h1>
-                <p className="text-gray-600 mb-4">{restaurant.description}</p>
-                
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <MdStar className="text-yellow-400 mr-1" />
-                    {restaurant.rating.toFixed(1)}
-                  </div>
-                  <div className="flex items-center">
-                    <MdAccessTime className="mr-1" />
-                    {restaurant.deliveryTime}
-                  </div>
-                  <div className="text-red-600 font-medium">
-                    Taxa de entrega: R$ {restaurant.deliveryFee.toFixed(2)}
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+          <div className="relative">
+            <img
+              src={restaurant.image}
+              alt={restaurant.name}
+              className="w-full h-64 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            
+            {/* Restaurant Info Overlay */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold mb-2">{restaurant.name}</h1>
+                  <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center">
+                      <MdStar className="mr-1 text-yellow-400" size={16} />
+                      <span className="font-bold">{restaurant.rating.toFixed(1)}</span>
+                      <span className="ml-1 opacity-80">(150+ avaliações)</span>
+                    </div>
+                    <div className="flex items-center">
+                      <MdAccessTime className="mr-1" size={16} />
+                      <span>{restaurant.estimatedDeliveryTime}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <MdDeliveryDining className="mr-1" size={16} />
+                      <span>{restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </AnimatedContainer>
-
-      {/* Categories */}
-      <div className="bg-white border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-2 py-4 overflow-x-auto">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors ${
-                  selectedCategory === category
-                    ? 'bg-red-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category === 'all' ? 'Todos' : category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Menu Items */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item, index) => (
-            <AnimatedContainer key={item.id} animationType="fadeInUp" delay={index * 100}>
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-full h-48 object-cover"
-                />
-                <div className="p-4">
-                  <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                    {item.name}
-                  </h3>
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                    {item.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xl font-bold text-red-600">
-                      R$ {item.price.toFixed(2)}
-                    </span>
-                    
-                    {getItemQuantity(item.id) === 0 ? (
-                      <Button
-                        onClick={() => addToCart(item)}
-                        variant="primary"
-                        disabled={!item.available}
-                      >
-                        Adicionar
-                      </Button>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-200 transition-colors"
-                        >
-                          <MdRemove size={16} />
-                        </button>
-                        <span className="font-medium text-gray-900 min-w-[20px] text-center">
-                          {getItemQuantity(item.id)}
-                        </span>
-                        <button
-                          onClick={() => addToCart(item)}
-                          className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors"
-                        >
-                          <MdAdd size={16} />
-                        </button>
-                      </div>
-                    )}
+          
+          {/* Restaurant Details */}
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <h3 className="font-bold text-lg text-gray-900 mb-2">Sobre o restaurante</h3>
+                <p className="text-gray-600 mb-4">
+                  {restaurant.description || `Bem-vindos ao ${restaurant.name}! Oferecemos os melhores pratos de ${categoryDisplayNames[restaurant.category].toLowerCase()} da região.`}
+                </p>
+                
+                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <MdLocationOn className="mr-2 text-red-600" size={16} />
+                    <span>{restaurant.address ? `${restaurant.address}, ${restaurant.city || ''}` : 'Entrega na região'}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <MdPhone className="mr-2 text-red-600" size={16} />
+                    <span>{restaurant.phone || 'Telefone não informado'}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <MdInfo className="mr-2 text-red-600" size={16} />
+                    <span>Pedido mínimo: R$ {restaurant.minimumOrder?.toFixed(2) || '0,00'}</span>
                   </div>
                 </div>
               </div>
-            </AnimatedContainer>
-          ))}
-        </div>
-        
-        {filteredItems.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500">Nenhum item encontrado nesta categoria.</p>
+              
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h4 className="font-bold text-gray-900 mb-3">Horário de funcionamento</h4>
+                <div className="space-y-2 text-sm text-gray-600">
+                  {restaurant.operatingHours ? (
+                    Object.entries(restaurant.operatingHours).map(([day, hours]) => {
+                      const dayNames: Record<string, string> = {
+                        monday: 'Segunda-feira',
+                        tuesday: 'Terça-feira',
+                        wednesday: 'Quarta-feira',
+                        thursday: 'Quinta-feira',
+                        friday: 'Sexta-feira',
+                        saturday: 'Sábado',
+                        sunday: 'Domingo'
+                      };
+                      
+                      const dayName = dayNames[day] || day;
+                      const hoursData = hours as any;
+                      
+                      if (hoursData?.closed) {
+                        return (
+                          <div key={day} className="flex justify-between">
+                            <span>{dayName}</span>
+                            <span className="text-red-600">Fechado</span>
+                          </div>
+                        );
+                      }
+                      
+                      return (
+                        <div key={day} className="flex justify-between">
+                          <span>{dayName}</span>
+                          <span>{hoursData?.open || '08:00'} - {hoursData?.close || '22:00'}</span>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="flex justify-between">
+                      <span>Todos os dias</span>
+                      <span>08:00 - 22:00</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
+        </div>
+
+        {/* Menu */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Cardápio</h2>
+            
+            {/* Category Filter */}
+            <div className="flex overflow-x-auto gap-2 pb-2">
+              {menuCategories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors duration-200 ${
+                    selectedCategory === category
+                      ? 'bg-red-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-600'
+                  }`}
+                >
+                  {category === 'all' ? 'Todos' : category}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-6">
+            {filteredMenuItems.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="text-4xl mb-2">🍽️</div>
+                <p className="text-gray-600">Nenhum item encontrado nesta categoria.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredMenuItems.map((item) => (
+                  <MenuItemCard key={item.id} item={item} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Fixed Cart Button */}
+      {/* Cart Floating Button */}
       {getTotalItems() > 0 && (
-        <div className="fixed bottom-4 left-4 right-4 z-50 md:hidden">
-          <button
-            onClick={handlePlaceOrder}
-            disabled={isPlacingOrder}
-            className="w-full bg-red-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+        <div className="fixed bottom-6 right-6 z-50">
+          <button 
+            onClick={() => setShowCart(true)}
+            className="bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-200 p-4 flex items-center gap-3"
           >
-            <MdShoppingCart size={24} className="mr-2" />
-            {isPlacingOrder ? 'Finalizando...' : `${getTotalItems()} itens - R$ ${getTotalPrice().toFixed(2)}`}
+            <div className="bg-white/20 rounded-full w-8 h-8 flex items-center justify-center">
+              <span className="font-bold text-sm">{getTotalItems()}</span>
+            </div>
+            <div className="text-left">
+              <div className="text-sm font-medium">Ver carrinho</div>
+              <div className="text-xs opacity-90">R$ {getTotalPrice().toFixed(2)}</div>
+            </div>
           </button>
         </div>
       )}
 
-      {/* Address Selector Modal */}
-      {showAddressSelector && (
+      {/* Cart Modal */}
+      {showCart && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <MdLocationOn size={28} />
-                  <h2 className="text-xl font-bold">Selecionar Endereço de Entrega</h2>
-                </div>
+                <h2 className="text-xl font-semibold text-gray-900">Seu pedido</h2>
                 <button
-                  onClick={() => setShowAddressSelector(false)}
-                  className="text-white hover:text-red-200 transition-colors"
+                  onClick={() => setShowCart(false)}
+                  className="text-gray-400 hover:text-gray-600"
                 >
                   ✕
                 </button>
               </div>
             </div>
-            <div className="p-6">
-              <AddressSelector
-                onAddressSelect={(address) => {
-                  setSelectedAddress(address);
-                  setShowAddressSelector(false);
-                  // Após selecionar o endereço, finalizar o pedido
-                  setTimeout(() => {
-                    handlePlaceOrder();
-                  }, 100);
-                }}
-                placeholder="Digite seu endereço de entrega..."
-              />
+
+            <div className="p-6 max-h-96 overflow-y-auto">
+              {cart.map((item) => (
+                <div key={item.id} className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-12 h-12 object-cover rounded-lg"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
+                    <p className="text-red-600 font-semibold">R$ {item.price.toFixed(2)}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                    >
+                      <MdRemove className="text-sm" />
+                    </button>
+                    <span className="font-medium text-gray-900 w-8 text-center">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                    >
+                      <MdAdd className="text-sm" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-6 border-t border-gray-200">
+              <div className="space-y-3 mb-4">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span>R$ {getTotalPrice().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>Taxa de entrega</span>
+                  <span>R$ {restaurant?.deliveryFee.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className="flex justify-between text-lg font-semibold text-gray-900 border-t pt-3">
+                  <span>Total</span>
+                  <span>R$ {(getTotalPrice() + (restaurant?.deliveryFee || 0)).toFixed(2)}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleCheckout}
+                disabled={checkingOut || cart.length === 0}
+                className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {checkingOut ? 'Processando...' : `Finalizar pedido • R$ ${(getTotalPrice() + (restaurant?.deliveryFee || 0)).toFixed(2)}`}
+              </button>
             </div>
           </div>
         </div>

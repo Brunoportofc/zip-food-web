@@ -16,6 +16,7 @@ export interface CreateRestaurantData {
   delivery_fee?: number;
   minimum_order?: number;
   delivery_radius_km?: number;
+  ownerId: string; // ID do proprietário do restaurante
 }
 
 // Interface para atualização de restaurante

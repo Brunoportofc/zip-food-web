@@ -69,7 +69,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>((
     }
   };
   
-  const baseClasses = 'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black';
+  const baseClasses = 'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 text-gray-900 placeholder-gray-400';
   
   const variantClasses = {
     default: 'border border-gray-300 rounded-lg bg-white',

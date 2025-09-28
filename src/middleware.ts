@@ -165,12 +165,13 @@ export async function middleware(request: NextRequest) {
       return redirectToSignIn(request);
     }
 
-    const { uid, role: userRole } = await verifyResponse.json();
+    const { uid, role: userRole, customClaims } = await verifyResponse.json();
     
-    // [FASE 1 - LOG 7] Sessão validada com sucesso
+    // [FASE 1 - LOG 7] Sessão validada com sucesso - incluindo custom claims
     console.log('[MIDDLEWARE] ✅ SESSÃO VÁLIDA! Dados do usuário:', {
       uid,
       userRole,
+      customClaims,
       pathname,
       timestamp: new Date().toISOString()
     });
@@ -223,8 +224,11 @@ export async function middleware(request: NextRequest) {
       if (pathname === '/') {
         console.log('🔄 [Middleware] Verificando se restaurante está cadastrado');
         
+        // ✨ CORREÇÃO: SEMPRE verificar via API para ter certeza
+        // Custom claims podem estar desatualizados ou indefinidos
         try {
-          // Verificar se o restaurante já está cadastrado
+          console.log('🔄 [Middleware] Verificando via API (fonte confiável)...');
+          
           const checkRestaurantResponse = await fetch(new URL('/api/restaurant/check', request.url), {
             method: 'POST',
             headers: {
@@ -237,20 +241,20 @@ export async function middleware(request: NextRequest) {
             const { hasRestaurant } = await checkRestaurantResponse.json();
             
             if (hasRestaurant) {
-              console.log('✅ [Middleware] Restaurante cadastrado, redirecionando para dashboard');
+              console.log('✅ [Middleware] Restaurante encontrado via API, redirecionando para dashboard');
               return NextResponse.redirect(new URL('/restaurant', request.url));
             } else {
-              console.log('⚠️ [Middleware] Restaurante não cadastrado, redirecionando para cadastro');
+              console.log('⚠️ [Middleware] Restaurante não encontrado, redirecionando para cadastro');
               return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
             }
           } else {
             // Se a API falhar, assumir que não está cadastrado
-            console.log('⚠️ [Middleware] Erro ao verificar restaurante, redirecionando para cadastro');
+            console.log('⚠️ [Middleware] Erro na API, redirecionando para cadastro');
             return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
           }
         } catch (error) {
           console.error('❌ [Middleware] Erro ao verificar restaurante cadastrado:', error);
-          // Em caso de erro, redirecionar para cadastro
+          // Em caso de erro, redirecionar para cadastro (comportamento mais seguro)
           return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
         }
       }
@@ -259,8 +263,10 @@ export async function middleware(request: NextRequest) {
       if (pathname === '/restaurant') {
         console.log('🔄 [Middleware] Acesso direto a /restaurant, verificando cadastro');
         
+        // ✨ CORREÇÃO: SEMPRE verificar via API para garantir que a informação está atualizada
         try {
-          // Verificar se o restaurante já está cadastrado
+          console.log('🔄 [Middleware] Verificando via API se usuário tem restaurante...');
+          
           const checkRestaurantResponse = await fetch(new URL('/api/restaurant/check', request.url), {
             method: 'POST',
             headers: {
@@ -276,6 +282,8 @@ export async function middleware(request: NextRequest) {
               console.log('⚠️ [Middleware] Restaurante não cadastrado, redirecionando para cadastro');
               return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
             }
+            
+            console.log('✅ [Middleware] Restaurante encontrado, permitindo acesso ao dashboard');
             // Se tem restaurante cadastrado, permite acesso à página principal
           } else {
             // Se a API falhar, assumir que não está cadastrado
@@ -284,7 +292,7 @@ export async function middleware(request: NextRequest) {
           }
         } catch (error) {
           console.error('❌ [Middleware] Erro ao verificar restaurante cadastrado:', error);
-          // Em caso de erro, redirecionar para cadastro
+          // Em caso de erro, redirecionar para cadastro (comportamento mais seguro)
           return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
         }
       }

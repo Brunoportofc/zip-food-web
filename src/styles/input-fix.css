@@ -1,0 +1,66 @@
+/* Fix para garantir que os textos dos inputs sejam sempre pretos */
+
+/* Global input styling */
+input[type="text"],
+input[type="email"], 
+input[type="password"],
+input[type="tel"],
+input[type="url"],
+input[type="number"],
+input[type="search"],
+textarea,
+select {
+  color: #111827 !important; /* text-gray-900 */
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus, 
+input[type="password"]:focus,
+input[type="tel"]:focus,
+input[type="url"]:focus,
+input[type="number"]:focus,
+input[type="search"]:focus,
+textarea:focus,
+select:focus {
+  color: #111827 !important; /* text-gray-900 */
+}
+
+/* Placeholder styling */
+input::placeholder,
+textarea::placeholder {
+  color: #9CA3AF !important; /* text-gray-400 */
+  opacity: 1;
+}
+
+/* Disabled inputs */
+input:disabled,
+textarea:disabled,
+select:disabled {
+  color: #6B7280 !important; /* text-gray-500 */
+  background-color: #F9FAFB !important; /* bg-gray-50 */
+}
+
+/* Autocomplete fix for browsers */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #111827 !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  background-color: white !important;
+}
+
+/* Ensure specific classes override */
+.text-black {
+  color: #000000 !important;
+}
+
+.text-gray-900 {
+  color: #111827 !important;
+}
+
+/* Fix for search inputs */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   FaShoppingBag, FaTruck, FaClock, FaDollarSign, 
   FaStar, FaChartLine, FaUsers, FaBell,
-  FaCalendarAlt, FaArrowUp, FaArrowDown, FaUtensils
+  FaCalendarAlt, FaArrowUp, FaArrowDown, FaUtensils, FaTimes
 } from 'react-icons/fa';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -17,6 +17,8 @@ interface DashboardMetrics {
   totalCustomers: number;
   conversionRate: number;
   peakHours: string;
+  orderVariation?: number;
+  revenueVariation?: number;
 }
 
 interface Order {
@@ -36,63 +38,130 @@ interface Order {
   estimatedDeliveryTime?: Date;
 }
 
-export default function DashboardTab() {
+interface DashboardTabProps {
+  restaurantData?: any;
+}
+
+export default function DashboardTab({ restaurantData }: DashboardTabProps) {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [recentOrders, setRecentOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [welcomeCardClosed, setWelcomeCardClosed] = useState(false);
+
+  // Verificar se o card de boas-vindas foi fechado anteriormente
+  useEffect(() => {
+    const cardClosed = localStorage.getItem(`welcome-card-closed-${restaurantData?.id}`);
+    if (cardClosed === 'true') {
+      setWelcomeCardClosed(true);
+    }
+  }, [restaurantData?.id]);
+
+  // Função para fechar o card e salvar no localStorage
+  const handleCloseWelcomeCard = () => {
+    setWelcomeCardClosed(true);
+    if (restaurantData?.id) {
+      localStorage.setItem(`welcome-card-closed-${restaurantData.id}`, 'true');
+    }
+  };
 
   useEffect(() => {
-    loadDashboardData();
+    // Só carregar dados quando tivermos restaurantData
+    if (restaurantData?.id) {
+      loadDashboardData();
+    }
     
     // Atualização automática a cada 30 segundos
     const interval = setInterval(() => {
-      refreshData();
+      if (restaurantData?.id) {
+        refreshData();
+      }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [restaurantData]);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       
-      // Carregar métricas simuladas (em produção viriam da API)
-      const mockMetrics: DashboardMetrics = {
-        todayOrders: Math.floor(Math.random() * 50) + 10,
-        todayRevenue: Math.floor(Math.random() * 2000) + 500,
-        averageDeliveryTime: Math.floor(Math.random() * 20) + 25,
-        activeDeliveries: Math.floor(Math.random() * 8) + 2,
-        customerRating: 4.2 + Math.random() * 0.7,
-        totalCustomers: Math.floor(Math.random() * 500) + 200,
-        conversionRate: 8 + Math.random() * 8,
-        peakHours: '19:00 - 21:00'
-      };
-      setMetrics(mockMetrics);
+      // Carregar dados reais do restaurante
+      if (!restaurantData?.id) {
+        console.log('⚠️ [Dashboard] Sem dados do restaurante, carregando métricas básicas');
+        setMetrics({
+          todayOrders: 0,
+          todayRevenue: 0,
+          averageDeliveryTime: 0,
+          activeDeliveries: 0,
+          customerRating: restaurantData?.rating || 0,
+          totalCustomers: 0,
+          conversionRate: 0,
+          peakHours: 'N/A'
+        });
+        setRecentOrders([]);
+        return;
+      }
 
-      // Carregar pedidos simulados
-      const mockOrders: Order[] = [
-        {
-          id: `ORD-${Date.now()}-1`,
-          customer: { name: 'João Silva', phone: '(11) 99999-9999' },
-          items: [{ name: 'Pizza Margherita', quantity: 1, price: 35.90 }],
-          total: 41.89,
-          status: 'preparing',
-          estimatedDeliveryTime: new Date(Date.now() + 35 * 60 * 1000),
-          createdAt: new Date(Date.now() - 15 * 60 * 1000)
-        },
-        {
-          id: `ORD-${Date.now()}-2`,
-          customer: { name: 'Maria Santos', phone: '(11) 88888-8888' },
-          items: [{ name: 'Hambúrguer Artesanal', quantity: 2, price: 28.50 }],
-          total: 61.99,
-          status: 'delivering',
-          estimatedDeliveryTime: new Date(Date.now() + 20 * 60 * 1000),
-          createdAt: new Date(Date.now() - 45 * 60 * 1000)
+      console.log('🔄 [Dashboard] Carregando estatísticas reais para restaurante:', restaurantData.id);
+      
+      // Carregar estatísticas da nova API
+      try {
+        const statsResponse = await fetch('/api/restaurant/stats', {
+          credentials: 'include'
+        });
+        
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          const stats = statsData.data;
+          
+          console.log('📊 [Dashboard] Estatísticas carregadas:', stats);
+          
+          // Definir métricas baseadas nos dados reais
+          const realMetrics: DashboardMetrics = {
+            todayOrders: stats.todayOrders,
+            todayRevenue: stats.todayRevenue,
+            averageDeliveryTime: stats.averageDeliveryTime,
+            activeDeliveries: stats.activeDeliveries,
+            customerRating: stats.customerRating,
+            totalCustomers: stats.totalCustomers,
+            conversionRate: stats.conversionRate,
+            peakHours: stats.peakHours
+          };
+          
+          setMetrics(realMetrics);
+          setRecentOrders(stats.recentOrders || []);
+          
+        } else {
+          console.log('⚠️ [Dashboard] Erro ao carregar estatísticas, usando métricas básicas');
+          // Fallback para métricas básicas se não conseguir carregar estatísticas
+          setMetrics({
+            todayOrders: 0,
+            todayRevenue: 0,
+            averageDeliveryTime: parseInt(restaurantData.estimated_delivery_time?.split('-')[0] || '30'),
+            activeDeliveries: 0,
+            customerRating: restaurantData.rating || 0,
+            totalCustomers: 0,
+            conversionRate: 0,
+            peakHours: 'N/A'
+          });
+          setRecentOrders([]);
         }
-      ];
-      setRecentOrders(mockOrders);
+      } catch (error) {
+        console.error('❌ [Dashboard] Erro ao carregar estatísticas:', error);
+        // Métricas de fallback
+        setMetrics({
+          todayOrders: 0,
+          todayRevenue: 0,
+          averageDeliveryTime: parseInt(restaurantData.estimated_delivery_time?.split('-')[0] || '30'),
+          activeDeliveries: 0,
+          customerRating: restaurantData.rating || 0,
+          totalCustomers: 0,
+          conversionRate: 0,
+          peakHours: 'N/A'
+        });
+        setRecentOrders([]);
+      }
       
     } catch (error) {
       console.error('Erro ao carregar dados do dashboard:', error);
@@ -104,18 +173,8 @@ export default function DashboardTab() {
   const refreshData = async () => {
     setRefreshing(true);
     try {
-      // Atualizar apenas métricas para não sobrecarregar
-      const mockMetrics: DashboardMetrics = {
-        todayOrders: Math.floor(Math.random() * 50) + 10,
-        todayRevenue: Math.floor(Math.random() * 2000) + 500,
-        averageDeliveryTime: Math.floor(Math.random() * 20) + 25,
-        activeDeliveries: Math.floor(Math.random() * 8) + 2,
-        customerRating: 4.2 + Math.random() * 0.7,
-        totalCustomers: Math.floor(Math.random() * 500) + 200,
-        conversionRate: 8 + Math.random() * 8,
-        peakHours: '19:00 - 21:00'
-      };
-      setMetrics(mockMetrics);
+      // Recarregar todos os dados reais
+      await loadDashboardData();
     } catch (error) {
       console.error('Erro ao atualizar dados:', error);
     } finally {
@@ -162,12 +221,13 @@ export default function DashboardTab() {
 
   return (
     <div className="space-y-6">
+
       {/* Header com refresh */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Métricas e Pedidos</h2>
           <p className="text-gray-600 mt-1">
-            Visão geral do seu restaurante
+            Acompanhe o desempenho do seu restaurante em tempo real
             {refreshing && (
               <span className="ml-2 text-blue-600 text-sm">
                 • Atualizando dados...
@@ -184,6 +244,42 @@ export default function DashboardTab() {
         </button>
       </div>
 
+      {/* Welcome Message para novos restaurantes */}
+      {metrics && metrics.todayOrders === 0 && recentOrders.length === 0 && !welcomeCardClosed && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 relative">
+          {/* Botão de fechar */}
+          <button
+            onClick={handleCloseWelcomeCard}
+            className="absolute top-4 right-4 p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
+            title="Fechar mensagem"
+          >
+            <FaTimes className="w-4 h-4" />
+          </button>
+          
+          <div className="text-center pr-8">
+            <div className="text-4xl mb-4">🎉</div>
+            <h3 className="text-xl font-bold text-blue-900 mb-2">Bem-vindo ao Zip Food!</h3>
+            <p className="text-blue-700 mb-4">
+              Seu restaurante foi cadastrado com sucesso. Para começar a receber pedidos:
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => window.open('/restaurant/menu', '_self')}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                📋 Configure seu Menu
+              </button>
+              <button
+                onClick={() => window.open('/restaurant/minha-loja', '_self')}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                🏪 Edite sua Loja
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Métricas Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-sm p-6">
@@ -191,9 +287,18 @@ export default function DashboardTab() {
             <div>
               <p className="text-sm font-medium text-gray-600">Pedidos Hoje</p>
               <p className="text-3xl font-bold text-gray-900">{metrics?.todayOrders}</p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <FaArrowUp className="w-3 h-3 mr-1" />
-                +12% vs ontem
+              <p className={`text-sm flex items-center mt-1 ${
+                (metrics?.orderVariation || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {(metrics?.orderVariation || 0) >= 0 ? (
+                  <FaArrowUp className="w-3 h-3 mr-1" />
+                ) : (
+                  <FaArrowDown className="w-3 h-3 mr-1" />
+                )}
+                {metrics?.orderVariation !== undefined 
+                  ? `${metrics.orderVariation >= 0 ? '+' : ''}${metrics.orderVariation.toFixed(1)}% vs ontem`
+                  : 'N/A'
+                }
               </p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -209,9 +314,18 @@ export default function DashboardTab() {
               <p className="text-3xl font-bold text-gray-900">
                 R$ {metrics?.todayRevenue.toFixed(2)}
               </p>
-              <p className="text-sm text-green-600 flex items-center mt-1">
-                <FaArrowUp className="w-3 h-3 mr-1" />
-                +8% vs ontem
+              <p className={`text-sm flex items-center mt-1 ${
+                (metrics?.revenueVariation || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {(metrics?.revenueVariation || 0) >= 0 ? (
+                  <FaArrowUp className="w-3 h-3 mr-1" />
+                ) : (
+                  <FaArrowDown className="w-3 h-3 mr-1" />
+                )}
+                {metrics?.revenueVariation !== undefined 
+                  ? `${metrics.revenueVariation >= 0 ? '+' : ''}${metrics.revenueVariation.toFixed(1)}% vs ontem`
+                  : 'N/A'
+                }
               </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -225,9 +339,9 @@ export default function DashboardTab() {
             <div>
               <p className="text-sm font-medium text-gray-600">Tempo Médio Entrega</p>
               <p className="text-3xl font-bold text-gray-900">{metrics?.averageDeliveryTime}min</p>
-              <p className="text-sm text-red-600 flex items-center mt-1">
-                <FaArrowDown className="w-3 h-3 mr-1" />
-                -3min vs ontem
+              <p className="text-sm text-blue-600 flex items-center mt-1">
+                <FaClock className="w-3 h-3 mr-1" />
+                Baseado em dados reais
               </p>
             </div>
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -405,43 +519,6 @@ export default function DashboardTab() {
         </div>
       </div>
 
-      {/* Ações Rápidas */}
-      <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-900">Ações Rápidas</h3>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors group">
-              <FaUtensils className="w-8 h-8 text-gray-400 group-hover:text-blue-500 mb-3" />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-blue-700">
-                Gerenciar Cardápio
-              </span>
-            </button>
-
-            <button className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors group">
-              <FaShoppingBag className="w-8 h-8 text-gray-400 group-hover:text-green-500 mb-3" />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-green-700">
-                Ver Todos os Pedidos
-              </span>
-            </button>
-
-            <button className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors group">
-              <FaBell className="w-8 h-8 text-gray-400 group-hover:text-purple-500 mb-3" />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-purple-700">
-                Notificações
-              </span>
-            </button>
-
-            <button className="flex flex-col items-center p-6 border-2 border-dashed border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-colors group">
-              <FaChartLine className="w-8 h-8 text-gray-400 group-hover:text-orange-500 mb-3" />
-              <span className="text-sm font-medium text-gray-700 group-hover:text-orange-700">
-                Relatórios
-              </span>
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

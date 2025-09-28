@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { restaurantService } from '@/services/restaurant.service';
+import { RestaurantCategory, categoryDisplayNames } from '@/types/restaurant';
 import { 
   FaStore, FaUtensils, FaImage, FaPlus, FaEdit, FaTrash, 
   FaSave, FaSpinner, FaArrowLeft, FaCheck 
@@ -21,7 +23,7 @@ interface MenuItem {
 
 interface RestaurantData {
   name: string;
-  category: string;
+  category: RestaurantCategory | '';
   description: string;
   phone: string;
   email: string;
@@ -34,10 +36,8 @@ interface RestaurantData {
   menuItems: MenuItem[];
 }
 
-const categories = [
-  'Pizzaria', 'Hamburgueria', 'Japonesa', 'Italiana', 'Brasileira',
-  'Mexicana', 'Chinesa', 'Vegetariana', 'Doces e Sobremesas', 'Lanches'
-];
+// Usar as categorias do sistema sincronizadas
+const categories = Object.entries(categoryDisplayNames);
 
 const defaultMenuCategories = [
   'Entradas', 'Pratos Principais', 'Sobremesas', 'Bebidas', 'Especiais'
@@ -74,7 +74,7 @@ export default function RestaurantCadastro() {
   });
 
   useEffect(() => {
-    // Aguardar o carregamento inicial do useAuth
+    // Aguardar o carregamento da autenticação antes de fazer qualquer redirecionamento
     if (authLoading) return;
     
     if (!user || userRole !== 'restaurant') {
@@ -178,19 +178,56 @@ export default function RestaurantCadastro() {
       return;
     }
 
+    if (!user) {
+      toast.error('Você precisa estar logado para cadastrar um restaurante.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // Aqui você implementaria a lógica para salvar no banco de dados
-      // Por exemplo, usando um serviço que salva tanto os dados do restaurante
-      // quanto os itens do menu associados ao usuário logado
+      // Preparar dados do restaurante com ownerId
+      const restaurantData = {
+        name: formData.name,
+        description: formData.description,
+        address: formData.address,
+        city: formData.city,
+        cuisine_type: formData.category,
+        phone: formData.phone,
+        email: formData.email,
+        delivery_fee: formData.deliveryFee,
+        minimum_order: formData.minimumOrder,
+        ownerId: user.uid, // ID do proprietário do restaurante
+      };
+
+      console.log('Dados do restaurante a serem enviados:', restaurantData);
       
-      console.log('Dados do restaurante:', formData);
-      console.log('Usuário:', user?.uid);
+      // Chamar o serviço para criar o restaurante
+      const result = await restaurantService.createRestaurant(restaurantData);
       
-      // Simular salvamento
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('Restaurante criado com sucesso:', result);
+
+      // ✨ CORREÇÃO CRÍTICA: Forçar atualização do token para obter novos custom claims
+      try {
+        console.log('🔄 Atualizando token do usuário para obter novos custom claims...');
+        const newToken = await user.getIdToken(true); // Force refresh
+        console.log('✅ Token atualizado com sucesso');
+        
+        // Aguardar um pouco para garantir que os claims foram propagados
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (tokenError) {
+        console.warn('⚠️ Erro ao atualizar token:', tokenError);
+        // Não falhar o fluxo se apenas a atualização do token falhar
+      }
+
+      toast.success('🎉 Restaurante cadastrado com sucesso! Redirecionando para o dashboard...');
       
-      toast.success('Restaurante cadastrado com sucesso!');
+      // Aguardar um pouco para garantir que os custom claims sejam atualizados
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Mostrar próximos passos antes do redirecionamento
+      toast.success('📍 Próximos passos: Configure seu menu e gerencie sua loja!');
+      
+      // Redirecionar para o dashboard
       router.push('/restaurant');
       
     } catch (error) {
@@ -299,8 +336,8 @@ export default function RestaurantCadastro() {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 text-black"
                   >
                     <option value="">Selecione uma categoria</option>
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
+                    {categories.map(([key, name]) => (
+                      <option key={key} value={key}>{name}</option>
                     ))}
                   </select>
                 </div>
@@ -557,7 +594,22 @@ export default function RestaurantCadastro() {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex items-center justify-end mt-8 pt-6 border-t border-gray-200">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+            {/* Botão Anterior - aparece apenas na segunda fase (currentStep === 2) */}
+            {currentStep === 2 && (
+              <button
+                onClick={prevStep}
+                className="flex items-center space-x-2 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                <FaArrowLeft className="w-4 h-4" />
+                <span>Anterior</span>
+              </button>
+            )}
+
+            {/* Espaçador quando não há botão anterior */}
+            {currentStep !== 2 && <div></div>}
+
+            {/* Botão Próximo ou Finalizar */}
             {currentStep < 3 ? (
               <button
                 onClick={nextStep}

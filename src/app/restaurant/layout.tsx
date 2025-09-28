@@ -4,11 +4,12 @@ import { RestaurantProtectedRoute } from '@/components/auth/ProtectedRoute';
 import LogoutButton from '@/components/LogoutButton';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { usePathname } from 'next/navigation';
-import { MdDashboard, MdRestaurantMenu, MdListAlt, MdSettings, MdNotifications, MdMenu, MdClose } from 'react-icons/md';
+import { MdDashboard, MdSettings, MdNotifications, MdMenu, MdClose, MdStore, MdRestaurantMenu, MdListAlt } from 'react-icons/md';
 import Link from 'next/link';
 import { useState } from 'react';
 import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
 import dynamic from 'next/dynamic';
+import RestaurantToggle from '@/components/RestaurantToggle';
 
 
 // Importação dinâmica dos componentes client-side only
@@ -55,11 +56,16 @@ export default function RestaurantLayout({
       active: pathname === '/restaurant/menu'
     },
     {
-      href: '/restaurant/orders',
+      href: '/restaurant/pedidos',
       icon: MdListAlt,
       label: 'Pedidos',
-      active: pathname === '/restaurant/orders',
-      badge: unreadCount
+      active: pathname === '/restaurant/pedidos'
+    },
+    {
+      href: '/restaurant/minha-loja',
+      icon: MdStore,
+      label: 'Minha Loja',
+      active: pathname === '/restaurant/minha-loja'
     },
     {
       href: '/restaurant/settings',
@@ -129,10 +135,10 @@ export default function RestaurantLayout({
               </ul>
             </AnimatedContainer>
 
-            {/* Offline Toggle */}
+            {/* Restaurant Status Toggle */}
             <AnimatedContainer animationType="fadeInUp" delay={300}>
-              <div className="mt-4 lg:mt-6 p-2 lg:p-3 bg-gray-50 rounded-xl">
-                <OfflineToggle />
+              <div className="mt-4 lg:mt-6">
+                <RestaurantToggle />
               </div>
             </AnimatedContainer>
 
@@ -170,12 +176,19 @@ export default function RestaurantLayout({
                     {/* Botão de notificações */}
                     <button
                       onClick={() => setShowNotifications(!showNotifications)}
-                      className="relative p-2 lg:p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all"
+                      className={`relative p-2 lg:p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 hover:scale-105 ${
+                        unreadCount > 0 ? 'animate-pulse' : ''
+                      }`}
                     >
-                      <MdNotifications size={18} className="text-gray-600 lg:w-5 lg:h-5" />
+                      <MdNotifications 
+                        size={18} 
+                        className={`text-gray-600 lg:w-5 lg:h-5 transition-colors ${
+                          unreadCount > 0 ? 'text-red-500' : ''
+                        }`} 
+                      />
                       {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full min-w-[16px] lg:min-w-[20px] text-center text-[10px] lg:text-xs">
-                          {unreadCount}
+                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full min-w-[16px] lg:min-w-[20px] text-center text-[10px] lg:text-xs animate-bounce shadow-lg">
+                          {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                       )}
                     </button>

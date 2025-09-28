@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import AnimatedContainer from './AnimatedContainer';
 import useRealTimeNotifications from '@/hooks/useRealTimeNotifications';
+import '@/styles/notifications.css';
 import { 
   MdNotifications, 
   MdClose, 
@@ -114,15 +115,22 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
   return (
     <>
-      {/* Overlay */}
+      {/* Overlay com blur e animação suave */}
       <div 
-        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+        className={`notification-overlay fixed inset-0 z-40 ${
+          isOpen 
+            ? 'backdrop-blur-sm bg-black/30 opacity-100' 
+            : 'backdrop-blur-0 bg-black/0 opacity-0 pointer-events-none'
+        }`}
         onClick={onClose}
       />
       
-      {/* Notification Panel */}
-      <AnimatedContainer animationType="slideIn" delay={0}>
-        <div className={`fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col ${className}`}>
+      {/* Notification Panel com animação lateral suave */}
+      <div className={`notification-panel fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 flex flex-col transform ${
+        isOpen 
+          ? 'translate-x-0 opacity-100' 
+          : 'translate-x-full opacity-0'
+      } ${className}`}>
           {/* Header */}
           <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6">
             <div className="flex items-center justify-between mb-4">
@@ -164,6 +172,27 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                     <span>Limpar todas</span>
                   </button>
                 )}
+                {/* Botão temporário para debug */}
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/notifications/cleanup', {
+                        method: 'POST',
+                        credentials: 'include'
+                      });
+                      if (response.ok) {
+                        const data = await response.json();
+                        console.log('🔧 [Debug] Limpeza realizada:', data);
+                        window.location.reload();
+                      }
+                    } catch (error) {
+                      console.error('Erro na limpeza:', error);
+                    }
+                  }}
+                  className="text-red-100 hover:text-white text-xs underline"
+                >
+                  🔧 Debug
+                </button>
               </div>
             </div>
           </div>
@@ -204,12 +233,15 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </div>
             ) : (
               <div className="p-4 space-y-3">
-                {filteredNotifications.map((notification) => (
+                {filteredNotifications.map((notification, index) => (
                   <div
                     key={notification.id}
-                    className={`p-4 rounded-xl border-2 transition-all hover:shadow-md cursor-pointer ${
+                    className={`notification-item p-4 rounded-xl border-2 cursor-pointer transform ${
                       getNotificationBg(notification.type, notification.read)
-                    } ${!notification.read ? 'ring-2 ring-red-200' : ''}`}
+                    } ${!notification.read ? 'ring-2 ring-red-200 notification-unread' : 'notification-read'}`}
+                    style={{
+                      animationDelay: `${index * 50}ms`
+                    }}
                     onClick={() => markAsRead(notification.id)}
                   >
                     <div className="flex items-start justify-between">
@@ -264,7 +296,6 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
             )}
           </div>
         </div>
-      </AnimatedContainer>
     </>
   );
 };

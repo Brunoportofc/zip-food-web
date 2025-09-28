@@ -46,7 +46,18 @@ export async function GET(request: NextRequest) {
           ordersQuery = ordersQuery.where('customer_id', '==', userId);
           break;
         case 'restaurant':
-          ordersQuery = ordersQuery.where('restaurant_id', '==', userId);
+          // Para restaurantes, buscar pelo owner_id no restaurante
+          const restaurantQuery = await adminDb.collection('restaurants')
+            .where('owner_id', '==', userId)
+            .get();
+          
+          if (!restaurantQuery.empty) {
+            const restaurantId = restaurantQuery.docs[0].id;
+            ordersQuery = ordersQuery.where('restaurant_id', '==', restaurantId);
+          } else {
+            // Se não encontrar restaurante, retornar lista vazia
+            return successResponse([], 'Nenhum pedido encontrado');
+          }
           break;
         case 'delivery':
           ordersQuery = ordersQuery.where('delivery_driver_id', '==', userId);
@@ -72,7 +83,7 @@ export async function GET(request: NextRequest) {
         }
 
         if (orderData.customer_id) {
-          const customerDoc = await adminDb.collection('customers').doc(orderData.customer_id).get();
+          const customerDoc = await adminDb.collection('users').doc(orderData.customer_id).get();
           if (customerDoc.exists) {
             orderData.customer = { id: customerDoc.id, ...customerDoc.data() };
           }
@@ -183,7 +194,7 @@ export async function POST(request: NextRequest) {
 
       // Buscar dados do cliente
       if (order.customer_id) {
-        const customerDoc = await adminDb.collection('customers').doc(order.customer_id).get();
+        const customerDoc = await adminDb.collection('users').doc(order.customer_id).get();
         if (customerDoc.exists) {
           completeOrder.customer = { id: customerDoc.id, ...customerDoc.data() };
         }
@@ -198,6 +209,37 @@ export async function POST(request: NextRequest) {
         id: itemDoc.id,
         ...itemDoc.data()
       }));
+
+      // Criar notificação para o restaurante
+      try {
+        const itemsText = body.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+        
+        await adminDb.collection('notifications').add({
+          title: '🛒 Novo Pedido Recebido',
+          message: `Pedido #${order.id} - ${itemsText} (R$ ${total.toFixed(2)})`,
+          type: 'order',
+          priority: 'high',
+          timestamp: new Date(),
+          read: false,
+          restaurantId: body.restaurantId,
+          orderId: order.id,
+          action: {
+            label: 'Ver Pedido',
+            url: `/restaurant/pedidos?id=${order.id}`
+          },
+          metadata: {
+            customerName: 'Cliente',
+            total,
+            itemCount: body.items.length,
+            paymentMethod: body.paymentMethod
+          }
+        });
+        
+        console.log('✅ [Orders API] Notificação de novo pedido criada');
+      } catch (notificationError) {
+        console.error('❌ [Orders API] Erro ao criar notificação:', notificationError);
+        // Não falhar o pedido se a notificação falhar
+      }
 
       return successResponse(completeOrder, 'Pedido criado com sucesso', 201);
     } catch (firestoreError) {

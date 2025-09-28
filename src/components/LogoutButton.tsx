@@ -1,8 +1,10 @@
 'use client';
 
-
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/auth.store';
+import { useAuth } from '@/hooks/useAuth';
+import { FaSignOutAlt, FaSpinner } from 'react-icons/fa';
+import { toast } from 'react-hot-toast';
 
 interface LogoutButtonProps {
   className?: string;
@@ -12,22 +14,70 @@ interface LogoutButtonProps {
  * Componente de botão de logout que permite ao usuário sair da aplicação
  */
 const LogoutButton = ({ className = '' }: LogoutButtonProps) => {
-
   const router = useRouter();
-  const { signOut } = useAuthStore();
+  const { signOut } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleLogout = async () => {
-    await signOut();
-    router.push('/auth/sign-in');
+    // Confirmação antes de sair
+    const confirmed = window.confirm('Tem certeza que deseja sair?');
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
+      console.log('🚪 [Logout] Iniciando processo de logout...');
+      
+      // Toast de feedback
+      toast.loading('Saindo...', { id: 'logout' });
+      
+      await signOut();
+      
+      // Sucesso
+      toast.success('Logout realizado com sucesso!', { id: 'logout' });
+      
+      // Aguardar um pouco antes do redirecionamento para garantir que o toast seja visto
+      setTimeout(() => {
+        console.log('🔄 [Logout] Redirecionando para página de login...');
+        
+        // Usar replace para garantir que o usuário não volte com o botão voltar
+        router.replace('/auth/sign-in');
+        
+        // Fallback: se router.replace falhar, usar window.location
+        setTimeout(() => {
+          if (window.location.pathname !== '/auth/sign-in') {
+            console.log('🔄 [Logout] Fallback: usando window.location...');
+            window.location.href = '/auth/sign-in';
+          }
+        }, 1000);
+      }, 800);
+      
+    } catch (error) {
+      console.error('❌ [Logout] Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout. Tente novamente.', { id: 'logout' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <button
       onClick={handleLogout}
-      className={`flex items-center p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors ${className}`}
+      disabled={loading}
+      className={`w-full flex items-center justify-center gap-3 p-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium border border-red-200 hover:border-red-300 ${
+        loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+      } ${className}`}
     >
-      <span className="mr-2">🚪</span>
-      <span>Sair</span>
+      {loading ? (
+        <>
+          <FaSpinner className="animate-spin" size={16} />
+          <span>Saindo...</span>
+        </>
+      ) : (
+        <>
+          <FaSignOutAlt size={16} />
+          <span>Sair</span>
+        </>
+      )}
     </button>
   );
 };

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db as adminDb } from '@/lib/api/firebase';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 import { successResponse, errorResponse, serverErrorResponse } from '@/lib/api/response';
 
 // Mensagens de erro internacionalizadas
@@ -108,9 +108,34 @@ export async function GET(
     const recentReviews: any[] = [];
 
     const restaurantDetails = {
-      ...restaurant,
+      id: restaurant.id,
+      name: restaurant.name,
+      description: restaurant.description,
+      address: restaurant.address,
+      city: restaurant.city,
+      phone: restaurant.phone,
+      email: restaurant.email,
+      // Mapear cuisine_type para category para compatibilidade com o frontend
+      category: restaurant.cuisine_type || restaurant.category,
+      deliveryFee: restaurant.delivery_fee || 0,
+      minimumOrder: restaurant.minimum_order || 0,
+      estimatedDeliveryTime: restaurant.estimated_delivery_time || '30-45 min',
+      rating: restaurant.rating || 0,
+      isPromoted: restaurant.is_promoted || false,
+      status: restaurant.is_active ? 'active' : 'inactive',
+      ownerId: restaurant.owner_id,
+      createdAt: restaurant.created_at?.toDate() || new Date(),
+      updatedAt: restaurant.updated_at?.toDate() || new Date(),
+      // Imagens atualizadas
+      image: restaurant.cover_image_url || restaurant.logo_url || '/images/restaurants/default-cover.svg',
+      logo: restaurant.logo_url || '/images/restaurants/default-logo.svg',
+      coverImage: restaurant.cover_image_url || '/images/restaurants/default-cover.svg',
+      // Horários de funcionamento atualizados
+      operatingHours: restaurant.operating_hours || {},
+      // Dados do menu
       menu: menuByCategory,
       menuStats,
+      // Status operacional
       isOpen,
       nextOpenTime,
       recentReviews,
@@ -157,34 +182,87 @@ export async function PUT(
         return errorResponse(getErrorMessage('RESTAURANT_NOT_FOUND', lang), 404);
       }
 
+    // Log dos dados recebidos para debug
+    console.log('🔄 [PUT /api/restaurants] Dados recebidos para atualização:', {
+      restaurantId,
+      body: { ...body, id: undefined }, // Remover ID do log
+      timestamp: new Date().toISOString()
+    });
+
     // Preparar dados para atualização (apenas campos fornecidos)
     const updateData: any = {};
     
-    if (body.name) updateData.name = body.name.trim();
+    // Campos de texto - usar !== undefined para permitir strings vazias
+    if (body.name !== undefined) updateData.name = body.name?.trim() || null;
     if (body.description !== undefined) updateData.description = body.description?.trim() || null;
-    if (body.address) updateData.address = body.address.trim();
-    if (body.city) updateData.city = body.city.trim();
-    if (body.country !== undefined) updateData.country = body.country?.trim() || 'Israel';
+    if (body.address !== undefined) updateData.address = body.address?.trim() || null;
+    if (body.city !== undefined) updateData.city = body.city?.trim() || null;
+    if (body.country !== undefined) updateData.country = body.country?.trim() || 'Brasil';
+    
+    // Campos numéricos
     if (body.latitude !== undefined) updateData.latitude = body.latitude ? parseFloat(body.latitude) : null;
     if (body.longitude !== undefined) updateData.longitude = body.longitude ? parseFloat(body.longitude) : null;
-    if (body.cuisine_type) updateData.cuisine_type = body.cuisine_type.trim();
+    if (body.delivery_fee !== undefined) updateData.delivery_fee = body.delivery_fee !== null ? parseFloat(body.delivery_fee) || 0 : 0;
+    if (body.minimum_order !== undefined) updateData.minimum_order = body.minimum_order !== null ? parseFloat(body.minimum_order) || 0 : 0;
+    if (body.delivery_radius_km !== undefined) updateData.delivery_radius_km = body.delivery_radius_km ? parseInt(body.delivery_radius_km) : 5;
+    
+    // Campos de categoria e tipo
+    if (body.cuisine_type !== undefined) updateData.cuisine_type = body.cuisine_type?.trim() || null;
+    if (body.category !== undefined) updateData.category = body.category?.trim() || null;
+    
+    // Campos de tempo e horários
     if (body.operating_hours !== undefined) updateData.operating_hours = body.operating_hours || {};
+    if (body.estimated_delivery_time !== undefined) updateData.estimated_delivery_time = body.estimated_delivery_time?.trim() || '30-45 min';
+    
+    // Campos de contato
     if (body.phone !== undefined) updateData.phone = body.phone?.trim() || null;
     if (body.email !== undefined) updateData.email = body.email?.trim() || null;
-    if (body.delivery_fee !== undefined) updateData.delivery_fee = body.delivery_fee ? parseFloat(body.delivery_fee) : 0.00;
-    if (body.minimum_order !== undefined) updateData.minimum_order = body.minimum_order ? parseFloat(body.minimum_order) : 0.00;
-    if (body.delivery_radius_km !== undefined) updateData.delivery_radius_km = body.delivery_radius_km ? parseInt(body.delivery_radius_km) : 5;
+    
+    // Campos de imagem para "Minha Loja"
+    if (body.logo_url !== undefined) updateData.logo_url = body.logo_url?.trim() || null;
+    if (body.cover_image_url !== undefined) updateData.cover_image_url = body.cover_image_url?.trim() || null;
+    
+    // Campo de status
     if (body.is_active !== undefined) updateData.is_active = Boolean(body.is_active);
 
+    // Log dos dados que serão atualizados
+    console.log('💾 [PUT /api/restaurants] Dados preparados para atualização:', {
+      updateData,
+      fieldsCount: Object.keys(updateData).length,
+      timestamp: new Date().toISOString()
+    });
+
     // Adicionar timestamp de atualização
-    updateData.updated_at = new Date().toISOString();
+    updateData.updated_at = new Date();
 
       // Atualizar no Firestore
       await restaurantRef.update(updateData);
       
+      console.log('✅ [PUT /api/restaurants] Restaurante atualizado com sucesso no Firestore:', {
+        restaurantId,
+        updatedFields: Object.keys(updateData),
+        timestamp: new Date().toISOString()
+      });
+      
       // Buscar dados atualizados
       const updatedDoc = await restaurantRef.get();
       restaurant = { id: updatedDoc.id, ...updatedDoc.data() };
+      
+      console.log('📤 [PUT /api/restaurants] Dados atualizados retornados:', {
+        restaurantId,
+        hasData: !!restaurant,
+        updatedData: {
+          name: restaurant.name,
+          description: restaurant.description,
+          logo_url: restaurant.logo_url,
+          cover_image_url: restaurant.cover_image_url,
+          category: restaurant.category,
+          delivery_fee: restaurant.delivery_fee,
+          minimum_order: restaurant.minimum_order,
+          estimated_delivery_time: restaurant.estimated_delivery_time
+        },
+        timestamp: new Date().toISOString()
+      });
     } catch (firestoreError) {
       console.error('Erro ao atualizar restaurante no Firestore:', firestoreError);
       return serverErrorResponse(getErrorMessage('SERVER_ERROR', lang));
@@ -227,7 +305,7 @@ export async function DELETE(
       // Soft delete - marcar como inativo
       await restaurantRef.update({ 
         is_active: false,
-        updated_at: new Date().toISOString()
+        updated_at: new Date()
       });
     } catch (firestoreError) {
       console.error('Erro ao deletar restaurante no Firestore:', firestoreError);

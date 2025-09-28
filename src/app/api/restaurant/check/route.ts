@@ -18,26 +18,8 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 [API] Verificando se restaurante está cadastrado para usuário:', userId);
 
-    // [DIAGNÓSTICO] Verificar na coleção de configurações de restaurante
-    console.log('[API] 📋 Verificando na coleção restaurant_configs...');
-    const configQuery = adminDb.collection('restaurant_configs')
-      .where('restaurantId', '==', userId)
-      .limit(1);
-    
-    const configSnapshot = await configQuery.get();
-    
-    if (!configSnapshot.empty) {
-      const configData = configSnapshot.docs[0].data();
-      console.log('✅ [API] Configuração de restaurante encontrada:', {
-        configId: configSnapshot.docs[0].id,
-        restaurantId: configData.restaurantId,
-        businessName: configData.businessName,
-        approvalStatus: configData.approvalStatus
-      });
-      return NextResponse.json({ hasRestaurant: true });
-    }
-
-    // [DIAGNÓSTICO] Verificar na coleção principal de restaurantes
+    // ✨ CORREÇÃO: Usar a mesma lógica que a criação de restaurante
+    // Verificar APENAS na coleção principal 'restaurants' com owner_id
     console.log('[API] 🏪 Verificando na coleção restaurants (owner_id)...');
     const restaurantQuery = adminDb.collection('restaurants')
       .where('owner_id', '==', userId)
@@ -47,33 +29,25 @@ export async function POST(request: NextRequest) {
     
     if (!restaurantSnapshot.empty) {
       const restaurantData = restaurantSnapshot.docs[0].data();
-      console.log('✅ [API] Restaurante encontrado na coleção principal:', {
+      console.log('✅ [API] Restaurante encontrado:', {
         restaurantId: restaurantSnapshot.docs[0].id,
         name: restaurantData.name,
-        owner_id: restaurantData.owner_id,
-        status: restaurantData.status
+        owner_id: '***',
+        is_active: restaurantData.is_active
       });
-      return NextResponse.json({ hasRestaurant: true });
+      
+      return NextResponse.json({ 
+        hasRestaurant: true,
+        restaurantId: restaurantSnapshot.docs[0].id,
+        restaurantData: {
+          id: restaurantSnapshot.docs[0].id,
+          name: restaurantData.name,
+          is_active: restaurantData.is_active
+        }
+      });
     }
 
-    // [DIAGNÓSTICO] Verificar se existe documento direto com o userId
-    console.log('[API] 📄 Verificando documento direto com userId...');
-    const directDoc = await adminDb.collection('restaurants').doc(userId).get();
-    
-    if (directDoc.exists) {
-      const directData = directDoc.data();
-      console.log('✅ [API] Restaurante encontrado como documento direto:', {
-        userId,
-        name: directData?.name,
-        status: directData?.status
-      });
-      return NextResponse.json({ hasRestaurant: true });
-    }
-
-    console.log('⚠️ [API] Nenhum restaurante encontrado para o usuário:', {
-      userId,
-      checkedCollections: ['restaurant_configs', 'restaurants (owner_id)', 'restaurants (direct doc)']
-    });
+    console.log('⚠️ [API] Nenhum restaurante encontrado para o usuário:', userId);
     return NextResponse.json({ hasRestaurant: false });
 
   } catch (error) {

@@ -43,12 +43,16 @@ export async function POST(request: NextRequest) {
     const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
     const uid = decodedClaims.uid;
 
-    // [FASE 4 - LOG 5] Token verificado com sucesso
+    // [FASE 4 - LOG 5] Token verificado com sucesso - incluindo custom claims
     console.log('[API_VERIFY] ✅ Token verificado com sucesso:', {
       uid,
       iss: decodedClaims.iss,
       aud: decodedClaims.aud,
       exp: new Date(decodedClaims.exp * 1000).toISOString(),
+      customClaims: {
+        hasRestaurant: decodedClaims.hasRestaurant || false,
+        restaurantId: decodedClaims.restaurantId || null
+      },
       timestamp: new Date().toISOString()
     });
 
@@ -113,7 +117,11 @@ export async function POST(request: NextRequest) {
       success: true,
       uid,
       role: userRole,
-      userData
+      userData,
+      customClaims: {
+        hasRestaurant: decodedClaims.hasRestaurant || false,
+        restaurantId: decodedClaims.restaurantId || null
+      }
     });
 
   } catch (error) {

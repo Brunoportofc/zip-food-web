@@ -4,41 +4,78 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { 
-  FaTachometerAlt, FaUtensils, FaShoppingBag, FaCog, 
-  FaStore, FaBell, FaSignOutAlt 
+  FaTachometerAlt, FaCog, 
+  FaStore
 } from 'react-icons/fa';
 import DashboardTab from '@/components/restaurant/DashboardTab';
-import MenuTab from '@/components/restaurant/MenuTab';
-import OrdersTab from '@/components/restaurant/OrdersTab';
 
-type TabType = 'dashboard' | 'menu' | 'orders' | 'settings';
+type TabType = 'dashboard' | 'settings';
 
 export default function RestaurantPage() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user, userData, userRole, loading: authLoading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
   const [loading, setLoading] = useState(true);
+  const [restaurantData, setRestaurantData] = useState<any>(null);
 
   useEffect(() => {
-    if (!user) {
+    console.log('[RestaurantPage] 🔄 Estado da autenticação:', {
+      authLoading,
+      hasUser: !!user,
+      userRole,
+      hasUserData: !!userData,
+      timestamp: new Date().toISOString()
+    });
+
+    // ✨ CORREÇÃO: Se chegou aqui, o middleware já validou tudo
+    // Não fazer redirecionamentos desnecessários
+    if (authLoading) {
+      console.log('[RestaurantPage] ⏳ Aguardando carregamento da autenticação...');
+      return;
+    }
+
+    // Se não tem usuário após o loading, algo deu errado
+    if (!user && !authLoading) {
+      console.log('[RestaurantPage] ❌ Usuário não encontrado após carregamento, redirecionando...');
       router.push('/auth/sign-in');
       return;
     }
 
-    if (user.userRole !== 'restaurant') {
+    // Se tem usuário mas papel não é restaurante
+    if (user && userRole && userRole !== 'restaurant') {
+      console.log('[RestaurantPage] ❌ Papel do usuário não é restaurante:', userRole);
       router.push('/auth/sign-in');
       return;
     }
 
-    setLoading(false);
-  }, [user, router]);
+    // Se chegou aqui, está tudo OK
+    if (user && (userRole === 'restaurant' || !userRole)) {
+      console.log('[RestaurantPage] ✅ Usuário válido, carregando dashboard...');
+      loadRestaurantData();
+      setLoading(false);
+    }
+  }, [user, userData, userRole, authLoading, router]);
 
-  const handleSignOut = async () => {
+  const loadRestaurantData = async () => {
     try {
-      await signOut();
-      router.push('/auth/sign-in');
+      console.log('[RestaurantPage] 🔄 Carregando dados do restaurante...');
+      
+      // Buscar dados do restaurante via API
+      const response = await fetch('/api/restaurant/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user?.uid })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('[RestaurantPage] ✅ Dados do restaurante carregados:', data);
+        setRestaurantData(data.restaurantData);
+      } else {
+        console.log('[RestaurantPage] ⚠️ Erro ao carregar dados do restaurante');
+      }
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('[RestaurantPage] ❌ Erro ao carregar dados:', error);
     }
   };
 
@@ -50,18 +87,6 @@ export default function RestaurantPage() {
       description: 'Visão geral do restaurante'
     },
     {
-      id: 'menu' as TabType,
-      label: 'Cardápio',
-      icon: FaUtensils,
-      description: 'Gerenciar itens do cardápio'
-    },
-    {
-      id: 'orders' as TabType,
-      label: 'Pedidos',
-      icon: FaShoppingBag,
-      description: 'Acompanhar pedidos'
-    },
-    {
       id: 'settings' as TabType,
       label: 'Configurações',
       icon: FaCog,
@@ -69,7 +94,7 @@ export default function RestaurantPage() {
     }
   ];
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -92,36 +117,26 @@ export default function RestaurantPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  Painel do Restaurante
+                  {restaurantData?.name || 'Painel do Restaurante'}
                 </h1>
                 <p className="text-gray-600">
-                  Bem-vindo, {user?.userData?.displayName || user?.user?.displayName || 'Restaurante'}!
+                  Bem-vindo, {userData?.displayName || user?.displayName || 'Restaurante'}!
                 </p>
+                {restaurantData && (
+                  <p className="text-sm text-gray-500">
+                    Status: {restaurantData.is_active ? '🟢 Ativo' : '🔴 Inativo'}
+                  </p>
+                )}
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <FaBell className="w-6 h-6" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  3
-                </span>
-              </button>
-              
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
                 <span className="text-sm font-medium text-green-700">Online</span>
               </div>
-              
-              <button
-                onClick={handleSignOut}
-                className="flex items-center space-x-2 text-gray-600 hover:text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg transition-colors"
-              >
-                <FaSignOutAlt className="w-4 h-4" />
-                <span>Sair</span>
-              </button>
             </div>
           </div>
         </div>
@@ -157,9 +172,7 @@ export default function RestaurantPage() {
 
         {/* Tab Content */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          {activeTab === 'dashboard' && <DashboardTab />}
-          {activeTab === 'menu' && <MenuTab />}
-          {activeTab === 'orders' && <OrdersTab />}
+          {activeTab === 'dashboard' && <DashboardTab restaurantData={restaurantData} />}
           {activeTab === 'settings' && (
             <div className="text-center py-12">
               <FaCog className="w-12 h-12 text-gray-400 mx-auto mb-4" />

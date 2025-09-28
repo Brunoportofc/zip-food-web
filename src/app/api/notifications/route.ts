@@ -1,274 +1,435 @@
-import { NextRequest } from 'next/server';
-import { adminDb } from '@/lib/firebase/admin';
-import { successResponse, errorResponse, unauthorizedResponse, notFoundResponse, serverErrorResponse } from '@/lib/api/response';
+// src/app/api/notifications/route.ts
+// API para gerenciar notificações reais
 
-// Interface para criação de notificação
-interface CreateNotificationRequest {
-  userId?: string; // Opcional, pode ser inferido do middleware
-  orderId?: string;
-  type: string;
-  title: string;
-  message: string;
-}
+import { NextRequest, NextResponse } from 'next/server';
+import { adminAuth, adminDb } from '@/lib/firebase/admin';
 
-// Interface para atualização de notificação
-interface UpdateNotificationRequest {
-  isRead?: boolean;
-}
-
-// GET - Listar notificações do usuário
+// GET - Buscar notificações do restaurante
 export async function GET(request: NextRequest) {
   try {
-    // Obter informações do usuário do middleware
-    const userId = request.headers.get('x-user-id');
-    const userType = request.headers.get('x-user-type');
-
-    if (!userId) {
-      return unauthorizedResponse('Usuário não autenticado');
+    console.log('🔄 [Notifications API] Iniciando busca de notificações...');
+    
+    // Verificar autenticação
+    const sessionCookie = request.cookies.get('session')?.value;
+    console.log('🔄 [Notifications API] Session cookie presente:', !!sessionCookie);
+    
+    if (!sessionCookie) {
+      console.log('❌ [Notifications API] Sem cookie de sessão');
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(request.url);
-    const unreadOnly = searchParams.get('unreadOnly') === 'true';
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const userId = decodedClaims.uid;
+    console.log('🔄 [Notifications API] UserId:', userId);
 
-    let notifications: any[] = [];
-    let unreadCount = 0;
+    // Buscar restaurante do usuário
+    const restaurantQuery = adminDb.collection('restaurants')
+      .where('owner_id', '==', userId)
+      .limit(1);
     
-    try {
-      let notificationsQuery = adminDb.collection('notifications')
-        .where('user_id', '==', userId)
-        .orderBy('created_at', 'desc');
+    const restaurantSnapshot = await restaurantQuery.get();
+    console.log('🔄 [Notifications API] Restaurantes encontrados:', restaurantSnapshot.size);
+    
+    if (restaurantSnapshot.empty) {
+      console.log('❌ [Notifications API] Nenhum restaurante encontrado para o usuário');
+      return NextResponse.json(
+        { error: 'Restaurante não encontrado' },
+        { status: 404 }
+      );
+    }
 
-      // Filtrar apenas não lidas se solicitado
-      if (unreadOnly) {
-        notificationsQuery = notificationsQuery.where('is_read', '==', false);
+    const restaurantId = restaurantSnapshot.docs[0].id;
+    console.log('🔄 [Notifications API] RestaurantId:', restaurantId);
+
+    // Buscar notificações do restaurante
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const filter = searchParams.get('filter') || 'all';
+
+    let query = adminDb.collection('notifications')
+      .where('restaurantId', '==', restaurantId);
+
+    // Aplicar filtros primeiro, depois ordenação
+    if (filter === 'unread') {
+      query = query.where('read', '==', false);
+    } else if (filter === 'order') {
+      query = query.where('type', '==', 'order');
+    } else if (filter === 'system') {
+      query = query.where('type', '==', 'system');
+    }
+
+    let notifications = [];
+    let snapshot;
+
+    try {
+      // Tentar query com ordenação
+      query = query.orderBy('timestamp', 'desc').limit(limit);
+      snapshot = await query.get();
+    } catch (orderError) {
+      console.log('⚠️ [Notifications API] Fallback para query sem ordenação:', orderError instanceof Error ? orderError.message : 'Erro desconhecido');
+      
+      // Fallback: query simples sem ordenação
+      query = adminDb.collection('notifications')
+        .where('restaurantId', '==', restaurantId)
+        .limit(limit);
+
+      // Aplicar filtros novamente
+      if (filter === 'unread') {
+        query = query.where('read', '==', false);
+      } else if (filter === 'order') {
+        query = query.where('type', '==', 'order');
+      } else if (filter === 'system') {
+        query = query.where('type', '==', 'system');
       }
 
-      // Aplicar paginação
-      notificationsQuery = notificationsQuery.offset(offset).limit(limit);
-
-      const notificationsSnapshot = await notificationsQuery.get();
-      notifications = notificationsSnapshot.docs.map(doc => ({
+      snapshot = await query.get();
+    }
+    
+    notifications = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
         id: doc.id,
-        ...doc.data()
-      }));
+        title: data.title,
+        message: data.message,
+        type: data.type,
+        timestamp: data.timestamp ? data.timestamp.toDate() : new Date(),
+        read: data.read || false,
+        priority: data.priority || 'normal',
+        orderId: data.orderId,
+        action: data.action,
+        metadata: data.metadata
+      };
+    });
 
-      // Contar total de notificações não lidas
-      const unreadQuery = adminDb.collection('notifications')
-        .where('user_id', '==', userId)
-        .where('is_read', '==', false);
-      
-      const unreadSnapshot = await unreadQuery.get();
+    // Ordenar no cliente se não foi possível no servidor
+    notifications.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+    // Contar não lidas
+    let unreadCount = 0;
+    try {
+      const unreadSnapshot = await adminDb.collection('notifications')
+        .where('restaurantId', '==', restaurantId)
+        .where('read', '==', false)
+        .get();
       unreadCount = unreadSnapshot.size;
-    } catch (firestoreError) {
-      console.error('Erro ao buscar notificações no Firestore:', firestoreError);
-      return serverErrorResponse('Erro ao buscar notificações');
+    } catch (unreadError) {
+      console.log('⚠️ [Notifications API] Erro ao contar não lidas, usando fallback');
+      unreadCount = notifications.filter(n => !n.read).length;
     }
 
-    return successResponse({
-      notifications: notifications || [],
-      unreadCount: unreadCount || 0,
-      hasMore: notifications && notifications.length === limit
-    }, 'Notificações listadas com sucesso');
+    console.log('✅ [Notifications API] Retornando dados:', {
+      totalNotifications: notifications.length,
+      unreadCount,
+      unreadFromArray: notifications.filter(n => !n.read).length
+    });
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        notifications,
+        unreadCount,
+        total: notifications.length
+      }
+    });
 
   } catch (error) {
-    console.error('Erro interno ao listar notificações:', error);
-    return serverErrorResponse('Erro interno do servidor');
+    console.error('❌ [Notifications API] Erro ao buscar notificações:', error);
+    
+    // Log detalhado para debug
+    if (error instanceof Error) {
+      console.error('❌ [Notifications API] Detalhes do erro:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+    }
+    
+    return NextResponse.json(
+      { 
+        error: 'Erro interno do servidor',
+        details: error instanceof Error ? error.message : 'Erro desconhecido'
+      },
+      { status: 500 }
+    );
   }
 }
 
 // POST - Criar nova notificação
 export async function POST(request: NextRequest) {
   try {
-    // Obter informações do usuário do middleware
-    const currentUserId = request.headers.get('x-user-id');
-    const userType = request.headers.get('x-user-type');
-
-    if (!currentUserId) {
-      return unauthorizedResponse('Usuário não autenticado');
+    // Verificar autenticação
+    const sessionCookie = request.cookies.get('session')?.value;
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
     }
 
-    const body: CreateNotificationRequest = await request.json();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const userId = decodedClaims.uid;
 
-    // Validar dados obrigatórios
-    if (!body.type || !body.title || !body.message) {
-      return errorResponse('Tipo, título e mensagem são obrigatórios');
+    // Buscar restaurante do usuário
+    const restaurantQuery = adminDb.collection('restaurants')
+      .where('owner_id', '==', userId)
+      .limit(1);
+    
+    const restaurantSnapshot = await restaurantQuery.get();
+    
+    if (restaurantSnapshot.empty) {
+      return NextResponse.json(
+        { error: 'Restaurante não encontrado' },
+        { status: 404 }
+      );
     }
 
-    // Determinar o usuário de destino
-    const targetUserId = body.userId || currentUserId;
+    const restaurantId = restaurantSnapshot.docs[0].id;
 
-    // Verificar se o usuário tem permissão para criar notificação para outro usuário
-    if (body.userId && body.userId !== currentUserId) {
-      // Apenas o sistema ou administradores podem criar notificações para outros usuários
-      // Por enquanto, permitir apenas para o próprio usuário
-      return unauthorizedResponse('Não é possível criar notificação para outro usuário');
+    const {
+      title,
+      message,
+      type,
+      priority = 'normal',
+      orderId,
+      action,
+      metadata
+    } = await request.json();
+
+    if (!title || !message || !type) {
+      return NextResponse.json(
+        { error: 'Título, mensagem e tipo são obrigatórios' },
+        { status: 400 }
+      );
     }
 
-    try {
-      // Criar notificação
-      const notificationData = {
-        user_id: targetUserId,
-        order_id: body.orderId,
-        type: body.type,
-        title: body.title,
-        message: body.message,
-        is_read: false,
-        created_at: new Date()
-      };
+    const notification = {
+      title,
+      message,
+      type,
+      timestamp: new Date(),
+      read: false,
+      restaurantId,
+      priority,
+      orderId: orderId || null,
+      action: action || null,
+      metadata: metadata || null
+    };
 
-      const docRef = await adminDb.collection('notifications').add(notificationData);
-      const newNotification = await docRef.get();
-      const notification = { id: newNotification.id, ...newNotification.data() };
+    const docRef = await adminDb.collection('notifications').add(notification);
 
-      return successResponse(notification, 'Notificação criada com sucesso', 201);
-    } catch (firestoreError) {
-      console.error('Erro ao criar notificação no Firestore:', firestoreError);
-      return serverErrorResponse('Erro ao criar notificação');
-    }
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: docRef.id,
+        ...notification
+      }
+    });
 
   } catch (error) {
-    console.error('Erro interno ao criar notificação:', error);
-    return serverErrorResponse('Erro interno do servidor');
+    console.error('❌ [Notifications API] Erro ao criar notificação:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
   }
 }
 
-// PATCH - Atualizar notificação (marcar como lida/não lida)
-export async function PATCH(request: NextRequest) {
+// PUT - Atualizar notificação (marcar como lida, etc.)
+export async function PUT(request: NextRequest) {
   try {
-    // Obter informações do usuário do middleware
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
-      return unauthorizedResponse('Usuário não autenticado');
+    // Verificar autenticação
+    const sessionCookie = request.cookies.get('session')?.value;
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(request.url);
-    const notificationId = searchParams.get('id');
-    const markAllAsRead = searchParams.get('markAllAsRead') === 'true';
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const userId = decodedClaims.uid;
 
-    const body: UpdateNotificationRequest = await request.json();
-
-    try {
-      if (markAllAsRead) {
-        // Marcar todas as notificações como lidas
-        const unreadQuery = adminDb.collection('notifications')
-          .where('user_id', '==', userId)
-          .where('is_read', '==', false);
-        
-        const unreadSnapshot = await unreadQuery.get();
-        const batch = adminDb.batch();
-        
-        unreadSnapshot.docs.forEach(doc => {
-          batch.update(doc.ref, { is_read: true });
-        });
-        
-        await batch.commit();
-        return successResponse(null, 'Todas as notificações foram marcadas como lidas');
-      }
+    const { notificationId, read, action } = await request.json();
 
       if (!notificationId) {
-        return errorResponse('ID da notificação é obrigatório');
+      return NextResponse.json(
+        { error: 'ID da notificação é obrigatório' },
+        { status: 400 }
+      );
       }
 
       // Verificar se a notificação pertence ao usuário
-      const notificationRef = adminDb.collection('notifications').doc(notificationId);
-      const notificationDoc = await notificationRef.get();
+    const notificationDoc = await adminDb.collection('notifications').doc(notificationId).get();
 
       if (!notificationDoc.exists) {
-        return notFoundResponse('Notificação não encontrada');
+      return NextResponse.json(
+        { error: 'Notificação não encontrada' },
+        { status: 404 }
+      );
       }
 
       const notificationData = notificationDoc.data();
-      if (notificationData?.user_id !== userId) {
-        return notFoundResponse('Notificação não encontrada');
-      }
-
-      // Atualizar notificação
-      const updateData: any = {};
-      if (body.isRead !== undefined) {
-        updateData.is_read = body.isRead;
-      }
-
-      await notificationRef.update(updateData);
-      
-      // Buscar dados atualizados
-      const updatedDoc = await notificationRef.get();
-      const updatedNotification = { id: updatedDoc.id, ...updatedDoc.data() };
-
-      return successResponse(updatedNotification, 'Notificação atualizada com sucesso');
-    } catch (firestoreError) {
-      console.error('Erro ao atualizar notificação no Firestore:', firestoreError);
-      return serverErrorResponse('Erro ao atualizar notificação');
+    
+    // Verificar se o restaurante pertence ao usuário
+    const restaurantDoc = await adminDb.collection('restaurants').doc(notificationData!.restaurantId).get();
+    
+    if (!restaurantDoc.exists || restaurantDoc.data()!.owner_id !== userId) {
+      return NextResponse.json(
+        { error: 'Acesso negado' },
+        { status: 403 }
+      );
     }
 
+    const updates: any = {};
+    
+    if (typeof read === 'boolean') {
+      updates.read = read;
+      if (read) {
+        updates.readAt = new Date();
+      }
+    }
+
+    if (action === 'markAllAsRead') {
+      // Marcar todas as notificações do restaurante como lidas
+      const batch = adminDb.batch();
+      const unreadQuery = await adminDb.collection('notifications')
+        .where('restaurantId', '==', notificationData!.restaurantId)
+        .where('read', '==', false)
+        .get();
+
+      unreadQuery.docs.forEach(doc => {
+        batch.update(doc.ref, { read: true, readAt: new Date() });
+      });
+
+      await batch.commit();
+
+      return NextResponse.json({
+        success: true,
+        message: 'Todas as notificações foram marcadas como lidas',
+        updated: unreadQuery.size
+      });
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await adminDb.collection('notifications').doc(notificationId).update(updates);
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: notificationId,
+        ...updates
+      }
+    });
+
   } catch (error) {
-    console.error('Erro interno ao atualizar notificação:', error);
-    return serverErrorResponse('Erro interno do servidor');
+    console.error('❌ [Notifications API] Erro ao atualizar notificação:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
   }
 }
 
-// DELETE - Remover notificação
+// DELETE - Deletar notificação
 export async function DELETE(request: NextRequest) {
   try {
-    // Obter informações do usuário do middleware
-    const userId = request.headers.get('x-user-id');
-
-    if (!userId) {
-      return unauthorizedResponse('Usuário não autenticado');
+    // Verificar autenticação
+    const sessionCookie = request.cookies.get('session')?.value;
+    if (!sessionCookie) {
+      return NextResponse.json(
+        { error: 'Não autenticado' },
+        { status: 401 }
+      );
     }
+
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const userId = decodedClaims.uid;
 
     const { searchParams } = new URL(request.url);
     const notificationId = searchParams.get('id');
-    const deleteAll = searchParams.get('deleteAll') === 'true';
+    const action = searchParams.get('action');
 
-    try {
-      if (deleteAll) {
-        // Deletar todas as notificações lidas do usuário
-        const readQuery = adminDb.collection('notifications')
-          .where('user_id', '==', userId)
-          .where('is_read', '==', true);
-        
-        const readSnapshot = await readQuery.get();
+    if (action === 'clearAll') {
+      // Buscar restaurante do usuário
+      const restaurantQuery = adminDb.collection('restaurants')
+        .where('owner_id', '==', userId)
+        .limit(1);
+      
+      const restaurantSnapshot = await restaurantQuery.get();
+      
+      if (restaurantSnapshot.empty) {
+        return NextResponse.json(
+          { error: 'Restaurante não encontrado' },
+          { status: 404 }
+        );
+      }
+
+      const restaurantId = restaurantSnapshot.docs[0].id;
+
+      // Deletar todas as notificações do restaurante
         const batch = adminDb.batch();
+      const allNotificationsQuery = await adminDb.collection('notifications')
+        .where('restaurantId', '==', restaurantId)
+        .get();
         
-        readSnapshot.docs.forEach(doc => {
+      allNotificationsQuery.docs.forEach(doc => {
           batch.delete(doc.ref);
         });
         
         await batch.commit();
-        return successResponse(null, 'Todas as notificações lidas foram removidas');
+
+      return NextResponse.json({
+        success: true,
+        message: 'Todas as notificações foram removidas',
+        deleted: allNotificationsQuery.size
+      });
       }
 
       if (!notificationId) {
-        return errorResponse('ID da notificação é obrigatório');
+      return NextResponse.json(
+        { error: 'ID da notificação é obrigatório' },
+        { status: 400 }
+      );
       }
 
       // Verificar se a notificação pertence ao usuário
-      const notificationRef = adminDb.collection('notifications').doc(notificationId);
-      const notificationDoc = await notificationRef.get();
+    const notificationDoc = await adminDb.collection('notifications').doc(notificationId).get();
 
       if (!notificationDoc.exists) {
-        return notFoundResponse('Notificação não encontrada');
+      return NextResponse.json(
+        { error: 'Notificação não encontrada' },
+        { status: 404 }
+      );
       }
 
       const notificationData = notificationDoc.data();
-      if (notificationData?.user_id !== userId) {
-        return notFoundResponse('Notificação não encontrada');
-      }
-
-      // Deletar notificação
-      await notificationRef.delete();
-
-      return successResponse(null, 'Notificação removida com sucesso');
-    } catch (firestoreError) {
-      console.error('Erro ao deletar notificação no Firestore:', firestoreError);
-      return serverErrorResponse('Erro ao deletar notificação');
+    
+    // Verificar se o restaurante pertence ao usuário
+    const restaurantDoc = await adminDb.collection('restaurants').doc(notificationData!.restaurantId).get();
+    
+    if (!restaurantDoc.exists || restaurantDoc.data()!.owner_id !== userId) {
+      return NextResponse.json(
+        { error: 'Acesso negado' },
+        { status: 403 }
+      );
     }
 
+    await adminDb.collection('notifications').doc(notificationId).delete();
+
+    return NextResponse.json({
+      success: true,
+      message: 'Notificação removida com sucesso'
+    });
+
   } catch (error) {
-    console.error('Erro interno ao deletar notificação:', error);
-    return serverErrorResponse('Erro interno do servidor');
+    console.error('❌ [Notifications API] Erro ao deletar notificação:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
   }
 }
