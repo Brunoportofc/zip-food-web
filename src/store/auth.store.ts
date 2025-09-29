@@ -24,6 +24,7 @@ interface AuthState {
   isAuthenticated: () => boolean;
   isCustomer: () => boolean;
   isRestaurant: () => boolean;
+  isDelivery: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -52,6 +53,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setLoading: (loading) => {
+        console.log('🔄 [Store] Atualizando loading:', loading);
         set({ loading });
       },
 
@@ -68,7 +70,7 @@ export const useAuthStore = create<AuthState>()(
       // Getters
       isAuthenticated: () => {
         const state = get();
-        return !!(state.user && state.userData);
+        return !!(state.user && state.userData && state.userRole);
       },
 
       isCustomer: () => {
@@ -80,13 +82,18 @@ export const useAuthStore = create<AuthState>()(
         const state = get();
         return state.userRole === 'restaurant';
       },
+
+      isDelivery: () => {
+        const state = get();
+        return state.userRole === 'delivery';
+      },
     }),
     {
       name: 'auth-storage',
-      // Apenas persistir dados não sensíveis
+      // ✨ CORREÇÃO: Não persistir dados sensíveis por segurança
       partialize: (state) => ({
+        // Apenas persistir informações básicas não sensíveis
         userRole: state.userRole,
-        // Não persistir user e userData por segurança
       }),
     }
   )

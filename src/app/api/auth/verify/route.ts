@@ -13,6 +13,15 @@ export async function POST(request: NextRequest) {
   });
 
   try {
+    // ✨ CORREÇÃO: Verificar se o Firebase Admin está disponível
+    if (!adminAuth || !adminDb) {
+      console.warn('⚠️ [API_VERIFY] Firebase Admin não disponível');
+      return NextResponse.json({
+        success: false,
+        error: 'Firebase Admin não configurado',
+        fallback: true
+      }, { status: 503 });
+    }
     const { sessionCookie } = await request.json();
     
     // [FASE 4 - LOG 2] Dados recebidos

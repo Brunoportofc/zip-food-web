@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build --turbopack",
     "start": "next start"
   },
   "dependencies": {
+    "@stripe/connect-js": "^3.3.30",
+    "@stripe/react-connect-js": "^3.3.30",
     "@stripe/stripe-js": "^7.9.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",

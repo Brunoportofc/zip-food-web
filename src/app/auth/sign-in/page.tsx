@@ -65,61 +65,60 @@ export default function SignInPage() {
 
         toast.success('Login realizado com sucesso!');
         
-        // Redirecionar baseado no tipo de usuário
-        // O middleware também cuidará do redirecionamento, mas fazemos aqui para ser mais rápido
-        if (result.userRole) {
-          // [FASE 2 - LOG 5] Determinando rota de redirecionamento
-          console.log('[SIGN_IN_PAGE] 🎯 Determinando rota de redirecionamento...', {
-            userRole: result.userRole,
-            timestamp: new Date().toISOString()
-          });
+        // [FASE 2 - LOG 5] Login bem-sucedido, redirecionamento direto baseado no papel
+        console.log('[SIGN_IN_PAGE] 🎯 Redirecionando diretamente baseado no papel do usuário...', {
+          userRole: result.userRole,
+          timestamp: new Date().toISOString()
+        });
 
-          // Aguardar um pequeno delay para garantir que o estado seja atualizado
-          await new Promise(resolve => setTimeout(resolve, 100));
-
-          let redirectPath = '/';
+        // ✨ CORREÇÃO: Aguardar um momento maior para o cookie de sessão ser criado
+        // e o estado ser sincronizado antes do redirecionamento
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // ✨ CORREÇÃO: Verificar se há um parâmetro de redirecionamento
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectParam = urlParams.get('redirect');
+        
+        // Redirecionar baseado no papel do usuário ou parâmetro de redirecionamento
+        let redirectPath = '/';
+        
+        if (redirectParam && redirectParam !== '/auth/sign-in') {
+          // Se há um redirecionamento específico solicitado, usar ele
+          redirectPath = redirectParam;
+          console.log('[SIGN_IN_PAGE] 🎯 Usando redirecionamento solicitado:', redirectPath);
+        } else {
+          // Senão, redirecionar baseado no papel do usuário
           switch (result.userRole) {
             case 'customer':
               redirectPath = '/customer';
-              console.log('[SIGN_IN_PAGE] 🛍️ Redirecionando cliente para /customer');
+              break;
+            case 'restaurant':
+              redirectPath = '/restaurant'; // Middleware verificará se precisa ir para cadastro ou dashboard
               break;
             case 'delivery':
               redirectPath = '/delivery';
-              console.log('[SIGN_IN_PAGE] 🚚 Redirecionando entregador para /delivery');
-              break;
-            case 'restaurant':
-              redirectPath = '/restaurant';
-              // Para restaurantes, o middleware verificará se já está cadastrado
-              console.log('[SIGN_IN_PAGE] 🍽️ Redirecionando restaurante para /restaurant (middleware verificará cadastro)');
               break;
             default:
-              console.log('[SIGN_IN_PAGE] ❓ Tipo de usuário desconhecido, redirecionando para raiz');
+              redirectPath = '/'; // Página inicial como fallback
           }
-
-          // [DIAGNÓSTICO] Tentar diferentes métodos de redirecionamento
-          console.log('[SIGN_IN_PAGE] 🔄 Tentando redirecionamento para:', redirectPath);
+        }
+        
+        console.log('[SIGN_IN_PAGE] 🔄 Redirecionando para:', redirectPath);
+        
+        try {
+          // Usar replace em vez de push para evitar voltar para a página de login
+          router.replace(redirectPath);
           
-          try {
-            // Método 1: Next.js router
-            console.log('[SIGN_IN_PAGE] 📍 Método 1: router.push()');
-            router.push(redirectPath);
-            
-            // Aguardar um momento e verificar se o redirecionamento funcionou
-            setTimeout(() => {
-              if (window.location.pathname === '/auth/sign-in') {
-                console.warn('[SIGN_IN_PAGE] ⚠️ router.push() falhou, tentando window.location');
-                window.location.href = redirectPath;
-              }
-            }, 500);
-            
-          } catch (routerError) {
-            console.error('[SIGN_IN_PAGE] ❌ Erro no router.push, usando window.location:', routerError);
-            window.location.href = redirectPath;
-          }
-        } else {
-          // Se não conseguir determinar o tipo, deixar o middleware cuidar
-          console.log('[SIGN_IN_PAGE] ⚠️ Tipo de usuário não determinado, deixando middleware cuidar');
-          router.push('/');
+          // Fallback com window.location
+          setTimeout(() => {
+            if (window.location.pathname === '/auth/sign-in') {
+              console.warn('[SIGN_IN_PAGE] ⚠️ router.replace() falhou, usando window.location');
+              window.location.replace(redirectPath);
+            }
+          }, 1000);
+        } catch (error) {
+          console.error('[SIGN_IN_PAGE] ❌ Erro no redirecionamento:', error);
+          window.location.replace(redirectPath);
         }
       } else {
         // [FASE 2 - LOG 6] Falha no login

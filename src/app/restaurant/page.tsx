@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { RestaurantDashboard } from '@/components/stripe/RestaurantDashboard';
 import { 
   FaTachometerAlt, FaCog, 
-  FaStore
+  FaStore, FaCreditCard
 } from 'react-icons/fa';
 import DashboardTab from '@/components/restaurant/DashboardTab';
 
-type TabType = 'dashboard' | 'settings';
+type TabType = 'dashboard' | 'settings' | 'payments';
 
 export default function RestaurantPage() {
   const router = useRouter();
@@ -67,15 +68,32 @@ export default function RestaurantPage() {
         body: JSON.stringify({ userId: user?.uid })
       });
 
+      console.log('[RestaurantPage] 📡 Resposta da API:', {
+        status: response.status,
+        ok: response.ok
+      });
+
       if (response.ok) {
         const data = await response.json();
-        console.log('[RestaurantPage] ✅ Dados do restaurante carregados:', data);
-        setRestaurantData(data.restaurantData);
+        console.log('[RestaurantPage] 📋 Dados recebidos:', data);
+        
+        if (data.hasRestaurant) {
+          console.log('[RestaurantPage] ✅ Restaurante encontrado, carregando dashboard');
+          setRestaurantData(data.restaurantData);
+        } else {
+          console.log('[RestaurantPage] ⚠️ Restaurante não encontrado, redirecionando para cadastro');
+          router.replace('/restaurant/cadastro');
+          return;
+        }
       } else {
-        console.log('[RestaurantPage] ⚠️ Erro ao carregar dados do restaurante');
+        console.log('[RestaurantPage] ❌ Erro na API de verificação, redirecionando para cadastro');
+        router.replace('/restaurant/cadastro');
+        return;
       }
     } catch (error) {
       console.error('[RestaurantPage] ❌ Erro ao carregar dados:', error);
+      console.log('[RestaurantPage] ❌ Redirecionando para cadastro devido ao erro');
+      router.replace('/restaurant/cadastro');
     }
   };
 
@@ -85,6 +103,12 @@ export default function RestaurantPage() {
       label: 'Dashboard',
       icon: FaTachometerAlt,
       description: 'Visão geral do restaurante'
+    },
+    {
+      id: 'payments' as TabType,
+      label: 'Pagamentos',
+      icon: FaCreditCard,
+      description: 'Configuração do Stripe Connect'
     },
     {
       id: 'settings' as TabType,
@@ -173,6 +197,17 @@ export default function RestaurantPage() {
         {/* Tab Content */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           {activeTab === 'dashboard' && <DashboardTab restaurantData={restaurantData} />}
+          {activeTab === 'payments' && (
+            <div>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Configuração de Pagamentos</h2>
+                <p className="text-gray-600">
+                  Gerencie sua conta Stripe Connect e configurações de pagamento.
+                </p>
+              </div>
+              <RestaurantDashboard />
+            </div>
+          )}
           {activeTab === 'settings' && (
             <div className="text-center py-12">
               <FaCog className="w-12 h-12 text-gray-400 mx-auto mb-4" />

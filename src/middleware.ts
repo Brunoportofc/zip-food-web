@@ -5,7 +5,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Rotas que não precisam de autenticação
 const publicRoutes = [
-  '/',
   '/auth/sign-in',
   '/auth/sign-up',
   '/auth/forgot-password',
@@ -41,24 +40,25 @@ export async function middleware(request: NextRequest) {
     timestamp: new Date().toISOString()
   });
 
-  // Permitir rotas públicas (EXCLUINDO rotas protegidas)
-  if (publicRoutes.some(route => {
-    if (route === '/') {
-      return pathname === '/'; // Exact match for root
-    }
-    return pathname.startsWith(route);
-  })) {
+  // Permitir rotas públicas
+  if (publicRoutes.some(route => pathname.startsWith(route))) {
     console.log('✅ [MIDDLEWARE] Rota pública permitida:', pathname);
     return NextResponse.next();
   }
 
-  // Permitir arquivos estáticos e API routes (exceto auth)
+  // Permitir arquivos estáticos e API routes (exceto algumas auth APIs específicas)
   if (
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname.startsWith('/@vite') || // Vite development files
-    pathname.includes('.') // arquivos com extensão
+    pathname.includes('.') || // arquivos com extensão
+    (pathname.startsWith('/api') && !pathname.startsWith('/api/auth/verify') && !pathname.startsWith('/api/auth/session'))
   ) {
+    return NextResponse.next();
+  }
+
+  // ✨ CORREÇÃO: Permitir acesso à página inicial para todos os usuários
+  if (pathname === '/') {
+    console.log('[MIDDLEWARE] 🏠 Rota raiz acessada - permitindo acesso à página inicial');
     return NextResponse.next();
   }
 
@@ -119,10 +119,10 @@ export async function middleware(request: NextRequest) {
       method: request.method,
       timestamp: new Date().toISOString()
     });
-    
+
+    // ✨ CORREÇÃO: Para rotas protegidas específicas, sempre exigir cookie de sessão
     if (!sessionCookie) {
-      // [FASE 1 - LOG 4] Registrar redirecionamento por falta de cookie
-      console.error('[MIDDLEWARE] ❌ ERRO: Sem cookie de sessão! Redirecionando para /auth/sign-in', {
+      console.log('[MIDDLEWARE] ❌ ERRO: Sem cookie de sessão para rota protegida! Redirecionando para /auth/sign-in', {
         originalUrl: request.url,
         pathname,
         reason: 'NO_SESSION_COOKIE',
@@ -185,78 +185,27 @@ export async function middleware(request: NextRequest) {
       isDeliveryRoute: deliveryRoutes.some(route => pathname.startsWith(route))
     });
 
-    // Lógica de redirecionamento baseada no papel
+    // Lógica de proteção de rotas baseada no papel (sem redirecionamentos automáticos da raiz)
     if (userRole === 'customer') {
-      // Usuário é cliente
+      // Usuário é cliente - só bloquear acesso a áreas restritas
       if (restaurantRoutes.some(route => pathname.startsWith(route)) || 
           deliveryRoutes.some(route => pathname.startsWith(route))) {
         console.log('🔄 [Middleware] Cliente tentando acessar área restrita, redirecionando');
         return NextResponse.redirect(new URL('/customer', request.url));
       }
-      
-      // Se está na raiz, redirecionar para área do cliente
-      if (pathname === '/') {
-        console.log('🔄 [Middleware] Redirecionando cliente para sua área');
-        return NextResponse.redirect(new URL('/customer', request.url));
-      }
     } else if (userRole === 'delivery') {
-      // Usuário é entregador
+      // Usuário é entregador - só bloquear acesso a áreas restritas
       if (customerRoutes.some(route => pathname.startsWith(route)) || 
           restaurantRoutes.some(route => pathname.startsWith(route))) {
         console.log('🔄 [Middleware] Entregador tentando acessar área restrita, redirecionando');
         return NextResponse.redirect(new URL('/delivery', request.url));
       }
-      
-      // Se está na raiz, redirecionar para área do entregador
-      if (pathname === '/') {
-        console.log('🔄 [Middleware] Redirecionando entregador para sua área');
-        return NextResponse.redirect(new URL('/delivery', request.url));
-      }
     } else if (userRole === 'restaurant') {
-      // Usuário é restaurante
+      // Usuário é restaurante - só bloquear acesso a áreas restritas e verificar cadastro quando necessário
       if (customerRoutes.some(route => pathname.startsWith(route)) || 
           deliveryRoutes.some(route => pathname.startsWith(route))) {
         console.log('🔄 [Middleware] Restaurante tentando acessar área restrita, redirecionando');
-        return NextResponse.redirect(new URL('/restaurant/register', request.url));
-      }
-      
-      // Se está na raiz, verificar se tem restaurante cadastrado
-      if (pathname === '/') {
-        console.log('🔄 [Middleware] Verificando se restaurante está cadastrado');
-        
-        // ✨ CORREÇÃO: SEMPRE verificar via API para ter certeza
-        // Custom claims podem estar desatualizados ou indefinidos
-        try {
-          console.log('🔄 [Middleware] Verificando via API (fonte confiável)...');
-          
-          const checkRestaurantResponse = await fetch(new URL('/api/restaurant/check', request.url), {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ userId: uid }),
-          });
-
-          if (checkRestaurantResponse.ok) {
-            const { hasRestaurant } = await checkRestaurantResponse.json();
-            
-            if (hasRestaurant) {
-              console.log('✅ [Middleware] Restaurante encontrado via API, redirecionando para dashboard');
-              return NextResponse.redirect(new URL('/restaurant', request.url));
-            } else {
-              console.log('⚠️ [Middleware] Restaurante não encontrado, redirecionando para cadastro');
-              return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
-            }
-          } else {
-            // Se a API falhar, assumir que não está cadastrado
-            console.log('⚠️ [Middleware] Erro na API, redirecionando para cadastro');
-            return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
-          }
-        } catch (error) {
-          console.error('❌ [Middleware] Erro ao verificar restaurante cadastrado:', error);
-          // Em caso de erro, redirecionar para cadastro (comportamento mais seguro)
-          return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
-        }
+        return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
       }
       
       // Se está tentando acessar /restaurant diretamente, verificar se tem restaurante cadastrado
@@ -275,25 +224,33 @@ export async function middleware(request: NextRequest) {
             body: JSON.stringify({ userId: uid }),
           });
 
+          console.log('📡 [Middleware] Resposta da API restaurant/check:', {
+            status: checkRestaurantResponse.status,
+            ok: checkRestaurantResponse.ok
+          });
+
           if (checkRestaurantResponse.ok) {
-            const { hasRestaurant } = await checkRestaurantResponse.json();
+            const responseData = await checkRestaurantResponse.json();
+            console.log('📋 [Middleware] Dados da resposta:', responseData);
             
-            if (!hasRestaurant) {
+            if (responseData.hasRestaurant) {
+              console.log('✅ [Middleware] Restaurante encontrado, permitindo acesso ao dashboard');
+              // Se tem restaurante cadastrado, permite acesso à página principal
+              return NextResponse.next();
+            } else {
               console.log('⚠️ [Middleware] Restaurante não cadastrado, redirecionando para cadastro');
               return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
             }
-            
-            console.log('✅ [Middleware] Restaurante encontrado, permitindo acesso ao dashboard');
-            // Se tem restaurante cadastrado, permite acesso à página principal
           } else {
-            // Se a API falhar, assumir que não está cadastrado
-            console.log('⚠️ [Middleware] Erro ao verificar restaurante, redirecionando para cadastro');
-            return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
+            // Se a API falhar, permitir acesso e deixar a página decidir
+            console.log('⚠️ [Middleware] API falhou, permitindo acesso (página decidirá)');
+            return NextResponse.next();
           }
         } catch (error) {
           console.error('❌ [Middleware] Erro ao verificar restaurante cadastrado:', error);
-          // Em caso de erro, redirecionar para cadastro (comportamento mais seguro)
-          return NextResponse.redirect(new URL('/restaurant/cadastro', request.url));
+          // Em caso de erro, permitir acesso e deixar a página decidir
+          console.log('⚠️ [Middleware] Erro na verificação, permitindo acesso (página decidirá)');
+          return NextResponse.next();
         }
       }
     } else {
@@ -332,8 +289,20 @@ function redirectToSignIn(request: NextRequest): NextResponse {
     signInUrl.searchParams.set('redirect', request.nextUrl.pathname);
   }
   
-  console.log('🔄 [Middleware] Redirecionando para login:', signInUrl.toString());
-  return NextResponse.redirect(signInUrl);
+  console.log('🔄 [Middleware] Redirecionando para login:', {
+    from: request.nextUrl.pathname,
+    to: signInUrl.toString(),
+    reason: 'Não autenticado',
+    timestamp: new Date().toISOString()
+  });
+  
+  const response = NextResponse.redirect(signInUrl);
+  
+  // Adicionar headers de debug
+  response.headers.set('X-Redirect-Reason', 'Authentication Required');
+  response.headers.set('X-Original-Path', request.nextUrl.pathname);
+  
+  return response;
 }
 
 // Configurar quais rotas o middleware deve processar
@@ -341,11 +310,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - sw.js (service worker)
+     * - api (except auth APIs which are handled differently)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sw.js|.*\\..*).*)',
   ],
 };

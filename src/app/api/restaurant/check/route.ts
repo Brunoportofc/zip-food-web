@@ -18,14 +18,31 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 [API] Verificando se restaurante está cadastrado para usuário:', userId);
 
+    // ✨ CORREÇÃO: Verificar se adminDb está disponível
+    if (!adminDb) {
+      console.error('❌ [API] Firebase Admin DB não disponível');
+      return NextResponse.json(
+        { hasRestaurant: false, error: 'Banco de dados não disponível' },
+        { status: 503 }
+      );
+    }
+
     // ✨ CORREÇÃO: Usar a mesma lógica que a criação de restaurante
     // Verificar APENAS na coleção principal 'restaurants' com owner_id
     console.log('[API] 🏪 Verificando na coleção restaurants (owner_id)...');
+    
     const restaurantQuery = adminDb.collection('restaurants')
       .where('owner_id', '==', userId)
       .limit(1);
     
+    console.log('[API] 🔍 Executando query para owner_id:', userId);
     const restaurantSnapshot = await restaurantQuery.get();
+    
+    console.log('[API] 📊 Resultado da query:', {
+      empty: restaurantSnapshot.empty,
+      size: restaurantSnapshot.size,
+      docsLength: restaurantSnapshot.docs.length
+    });
     
     if (!restaurantSnapshot.empty) {
       const restaurantData = restaurantSnapshot.docs[0].data();
@@ -53,10 +70,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('❌ [API] Erro ao verificar restaurante:', {
       error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
+      stack: error instanceof Error ? error.stack : undefined,
+      userId
     });
     return NextResponse.json(
-      { error: 'Erro interno do servidor' },
+      { error: 'Erro interno do servidor', hasRestaurant: false },
       { status: 500 }
     );
   }

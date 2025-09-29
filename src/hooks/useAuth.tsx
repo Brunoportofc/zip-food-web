@@ -6,6 +6,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { authService, UserData, UserRole } from '@/services/auth.service';
+import { useAuthStore } from '@/store/auth.store';
 
 interface AuthContextType {
   user: User | null;
@@ -26,108 +27,101 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  const [user, setUser] = useState<User | null>(null);
-  const [userData, setUserData] = useState<UserData | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  // ✨ CORREÇÃO: Usar o store Zustand como fonte única da verdade
+  const {
+    user,
+    userData,
+    userRole,
+    loading,
+    setUser,
+    setUserData,
+    setUserRole,
+    setLoading,
+    clearAuth,
+    isAuthenticated
+  } = useAuthStore();
 
   // [FASE 3 - LOG 1] Hook inicializado
   console.log('[useAuth] 🚀 Hook inicializado', {
     timestamp: new Date().toISOString(),
-    initialLoadingState: loading
+    initialLoadingState: loading,
+    hasUser: !!user,
+    userRole
   });
 
+  // ✨ CORREÇÃO: useEffect para monitorar mudanças de autenticação
   useEffect(() => {
-    // [FASE 3 - LOG 2] useEffect de verificação de sessão disparado
-    console.log('[useAuth] 🔄 useEffect de verificação de sessão disparado', {
-      timestamp: new Date().toISOString()
-    });
+    console.log('[useAuth] 🔄 Configurando listener de autenticação...');
     
     const unsubscribe = authService.onAuthStateChanged(async (firebaseUser) => {
-      // [FASE 3 - LOG 3] Estado de autenticação mudou
-      console.log('[useAuth] 📡 Estado de autenticação mudou:', {
+      console.log('[useAuth] 🔥 Firebase Auth State Changed:', {
         hasUser: !!firebaseUser,
-        uid: firebaseUser?.uid || 'null',
-        email: firebaseUser?.email || 'null',
+        uid: firebaseUser?.uid,
+        email: firebaseUser?.email,
         timestamp: new Date().toISOString()
       });
-      
-      setUser(firebaseUser);
-      
+
       if (firebaseUser) {
-        // [FASE 3 - LOG 4] Usuário logado - buscar dados do Firestore
-        console.log('[useAuth] 👤 Usuário logado detectado, buscando dados no Firestore...', {
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          timestamp: new Date().toISOString()
-        });
-
+        // Usuário logado
+        setUser(firebaseUser);
+        
         try {
-          const data = await authService.getUserData(firebaseUser.uid);
+          // Buscar dados do usuário no Firestore
+          const userData = await authService.getUserData(firebaseUser.uid);
           
-          // [FASE 3 - LOG 5] Dados do usuário obtidos
-          console.log('[useAuth] ✅ Dados do usuário obtidos do Firestore:', {
-            hasData: !!data,
-            role: data?.role || 'null',
-            user_type: data?.user_type || 'null',
-            displayName: data?.displayName || 'null',
-            timestamp: new Date().toISOString()
-          });
-
-          setUserData(data);
-          setUserRole(data?.role || null);
+          if (userData) {
+            console.log('[useAuth] ✅ Dados do usuário carregados:', {
+              uid: userData.uid,
+              role: userData.role,
+              displayName: userData.displayName
+            });
+            
+            setUserData(userData);
+            setUserRole(userData.role);
+          } else {
+            console.warn('[useAuth] ⚠️ Dados do usuário não encontrados no Firestore');
+            // Manter o usuário mas sem dados específicos
+            setUserData(null);
+            setUserRole(null);
+          }
         } catch (error) {
-          // [FASE 3 - LOG 6] Erro ao carregar dados do usuário
-          console.error('[useAuth] ❌ Erro ao carregar dados do usuário:', {
-            error: error instanceof Error ? error.message : String(error),
-            uid: firebaseUser.uid,
-            timestamp: new Date().toISOString()
-          });
+          console.error('[useAuth] ❌ Erro ao buscar dados do usuário:', error);
           setUserData(null);
           setUserRole(null);
         }
       } else {
-        // [FASE 3 - LOG 7] Usuário deslogado
-        console.log('[useAuth] 🚪 Usuário deslogado detectado', {
-          timestamp: new Date().toISOString()
-        });
-        setUserData(null);
-        setUserRole(null);
+        // Usuário deslogado
+        console.log('[useAuth] 🚪 Usuário deslogado, limpando estado');
+        clearAuth();
       }
       
-      // [FASE 3 - LOG 8] Finalizando verificação de sessão
-      // Use setTimeout to ensure state updates are reflected in logs
-      setTimeout(() => {
-        console.log('[useAuth] 🏁 Verificação de sessão finalizada', {
-          hasUser: !!firebaseUser,
-          hasUserData: !!firebaseUser ? 'will_be_set' : false,
-          userRole: firebaseUser ? 'will_be_set' : null,
-          loadingState: false,
-          timestamp: new Date().toISOString()
-        });
-      }, 0);
+      // Sempre definir loading como false após processar
       setLoading(false);
     });
 
     return () => {
-      // [FASE 3 - LOG 9] Removendo listener
-      console.log('[useAuth] 🧹 Removendo listener de autenticação', {
-        timestamp: new Date().toISOString()
-      });
+      console.log('[useAuth] 🧹 Removendo listener de autenticação');
       unsubscribe();
     };
-  }, []);
+  }, [setUser, setUserData, setUserRole, setLoading, clearAuth]);
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      console.log('[useAuth] 🔐 Iniciando processo de login...');
+      
       const result = await authService.signIn({ email, password });
       
-      if (result.success) {
+      if (result.success && result.user) {
+        console.log('[useAuth] ✅ Login bem-sucedido:', {
+          uid: result.user.uid,
+          role: result.user.role
+        });
+
         // Criar cookie de sessão no servidor
-        const user = authService.getCurrentUser();
-        if (user) {
-          const idToken = await user.getIdToken();
+        const firebaseUser = authService.getCurrentUser();
+        if (firebaseUser) {
+          const idToken = await firebaseUser.getIdToken();
           try {
             const sessionResponse = await fetch('/api/auth/session', {
               method: 'POST',
@@ -140,28 +134,37 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const sessionData = await sessionResponse.json();
             
             if (!sessionResponse.ok) {
-              console.warn('⚠️ Aviso ao criar sessão:', sessionData.details || sessionData.error);
-              // Não falhar o login se apenas o cookie de sessão falhou
+              console.warn('⚠️ [useAuth] Aviso ao criar sessão:', sessionData.error || sessionData.warning);
             } else {
-              console.log('✅ Cookie de sessão criado com sucesso');
+              console.log('✅ [useAuth] Cookie de sessão criado com sucesso');
             }
           } catch (sessionError) {
-            console.warn('⚠️ Erro ao criar cookie de sessão:', sessionError);
-            // Não falhar o login se apenas o cookie de sessão falhou
+            console.warn('⚠️ [useAuth] Erro ao criar cookie de sessão:', sessionError);
           }
-
-          // ✨ REMOVIDO: Sincronização de custom claims no login
-          // O middleware agora sempre verifica via API para garantir dados atualizados
-          console.log('✅ [Auth] Login concluído. Middleware cuidará da verificação de restaurante.');
         }
         
-        // O onAuthStateChanged vai atualizar o estado automaticamente
-        // O middleware cuidará do redirecionamento baseado no tipo de usuário
-        return { success: true, userRole: result.user?.role };
+        // ✨ CORREÇÃO: Atualizar estado imediatamente para evitar problemas de timing
+        const currentUser = authService.getCurrentUser();
+        setUser(currentUser);
+        setUserData(result.user);
+        setUserRole(result.user.role);
+        
+        console.log('[useAuth] ✅ Estado atualizado após login:', {
+          uid: result.user.uid,
+          role: result.user.role,
+          hasUser: !!currentUser,
+          userEmail: currentUser?.email
+        });
+        
+        // Garantir que o estado foi persistido antes de retornar
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        return { success: true, userRole: result.user.role };
       } else {
         return { success: false, error: result.error };
       }
     } catch (error: any) {
+      console.error('[useAuth] ❌ Erro no login:', error);
       return { success: false, error: error.message || 'Erro inesperado' };
     } finally {
       setLoading(false);
@@ -171,13 +174,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUp = async (email: string, password: string, displayName: string, role: UserRole, phone?: string) => {
     try {
       setLoading(true);
+      console.log('[useAuth] 📝 Iniciando processo de cadastro...');
+      
       const result = await authService.signUp({ email, password, displayName, role, phone });
       
-      if (result.success) {
+      if (result.success && result.user) {
+        console.log('[useAuth] ✅ Cadastro bem-sucedido:', {
+          uid: result.user.uid,
+          role: result.user.role
+        });
+
         // Criar cookie de sessão no servidor
-        const user = authService.getCurrentUser();
-        if (user) {
-          const idToken = await user.getIdToken();
+        const firebaseUser = authService.getCurrentUser();
+        if (firebaseUser) {
+          const idToken = await firebaseUser.getIdToken();
           try {
             const sessionResponse = await fetch('/api/auth/session', {
               method: 'POST',
@@ -190,24 +200,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
             const sessionData = await sessionResponse.json();
             
             if (!sessionResponse.ok) {
-              console.warn('⚠️ Aviso ao criar sessão:', sessionData.details || sessionData.error);
-              // Não falhar o login se apenas o cookie de sessão falhou
+              console.warn('⚠️ [useAuth] Aviso ao criar sessão:', sessionData.error || sessionData.warning);
             } else {
-              console.log('✅ Cookie de sessão criado com sucesso');
+              console.log('✅ [useAuth] Cookie de sessão criado com sucesso');
             }
           } catch (sessionError) {
-            console.warn('⚠️ Erro ao criar cookie de sessão:', sessionError);
-            // Não falhar o login se apenas o cookie de sessão falhou
+            console.warn('⚠️ [useAuth] Erro ao criar cookie de sessão:', sessionError);
           }
         }
         
         // O onAuthStateChanged vai atualizar o estado automaticamente
-        // O middleware cuidará do redirecionamento baseado no tipo de usuário
-        return { success: true, userRole: role };
+        return { success: true, userRole: result.user.role };
       } else {
         return { success: false, error: result.error };
       }
     } catch (error: any) {
+      console.error('[useAuth] ❌ Erro no cadastro:', error);
       return { success: false, error: error.message || 'Erro inesperado' };
     } finally {
       setLoading(false);
@@ -217,54 +225,29 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signOut = async () => {
     try {
       setLoading(true);
-      console.log('🚪 [useAuth] Iniciando processo de logout...');
+      console.log('[useAuth] 🚪 Iniciando processo de logout...');
       
-      // 1. Remover cookie de sessão no servidor
+      await authService.signOut();
+      
+      // Limpar cookie de sessão
       try {
-        const response = await fetch('/api/auth/session', {
+        await fetch('/api/auth/session', {
           method: 'DELETE',
         });
-        
-        if (response.ok) {
-          console.log('✅ [useAuth] Cookie de sessão removido do servidor');
-        } else {
-          console.warn('⚠️ [useAuth] Falha ao remover cookie do servidor');
-        }
-      } catch (cookieError) {
-        console.warn('⚠️ [useAuth] Erro ao remover cookie:', cookieError);
-        // Não falhar o logout se apenas o cookie falhar
+        console.log('✅ [useAuth] Cookie de sessão removido');
+      } catch (error) {
+        console.warn('⚠️ [useAuth] Erro ao remover cookie de sessão:', error);
       }
       
-      // 2. Fazer logout no Firebase
-      const result = await authService.signOut();
-      if (!result.success) {
-        throw new Error(result.error);
-      }
-      
-      // 3. Limpar estados locais
-      setUser(null);
-      setUserData(null);
-      setUserRole(null);
-      
-      // 4. Limpar localStorage
-      try {
-        localStorage.clear();
-        console.log('✅ [useAuth] localStorage limpo');
-      } catch (storageError) {
-        console.warn('⚠️ [useAuth] Erro ao limpar localStorage:', storageError);
-      }
-      
-      console.log('✅ [useAuth] Logout completo realizado com sucesso');
-      
+      // O onAuthStateChanged vai limpar o estado automaticamente
+      console.log('[useAuth] ✅ Logout realizado com sucesso');
     } catch (error) {
-      console.error('❌ [useAuth] Erro ao fazer logout:', error);
-      throw error; // Propagar erro para ser tratado pelo componente
+      console.error('[useAuth] ❌ Erro no logout:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Função para verificar se o usuário tem um tipo específico
   const isUserType = (requiredType: UserRole | UserRole[]): boolean => {
     if (!userRole) return false;
     
@@ -275,22 +258,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return userRole === requiredType;
   };
 
-  // Função para verificar permissões (implementação básica)
   const hasPermission = (permission: string): boolean => {
-    // Implementação básica - pode ser expandida conforme necessário
+    // Implementar lógica de permissões baseada no papel do usuário
     if (!userRole) return false;
     
-    // Exemplo de permissões básicas por tipo de usuário
+    // Exemplo básico de permissões
     const permissions: Record<UserRole, string[]> = {
-      customer: ['view_restaurants', 'place_orders', 'view_orders'],
-      restaurant: ['manage_menu', 'view_orders', 'manage_restaurant'],
-      delivery: ['view_deliveries', 'accept_deliveries', 'update_delivery_status']
+      customer: ['order', 'review', 'profile'],
+      restaurant: ['menu', 'orders', 'profile', 'dashboard'],
+      delivery: ['deliveries', 'profile', 'earnings']
     };
     
     return permissions[userRole]?.includes(permission) || false;
   };
 
-  const value: AuthContextType = {
+  const contextValue: AuthContextType = {
     user,
     userData,
     userRole,
@@ -303,7 +285,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
@@ -311,10 +293,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
-  
   if (context === undefined) {
-    throw new Error('useAuth deve ser usado dentro de um AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
-  
   return context;
 }
