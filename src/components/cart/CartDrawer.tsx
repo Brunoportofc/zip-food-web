@@ -169,7 +169,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
         {item.description && (
           <p className="text-sm text-gray-500 truncate">{item.description}</p>
         )}
-        <p className="text-red-600 font-semibold">₪ {item.price.toFixed(2)}</p>
+        <p className="text-primary font-semibold">₪ {item.price.toFixed(2)}</p>
       </div>
       
       <div className="flex items-center gap-2 flex-shrink-0">
@@ -193,7 +193,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
         
         <button
           onClick={() => removeItem(item.id)}
-          className="w-8 h-8 rounded-full text-red-500 hover:bg-red-50 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ml-2"
+          className="w-8 h-8 rounded-full text-error hover:bg-error-50 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ml-2"
         >
           <MdDelete size={16} />
         </button>
@@ -279,12 +279,12 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                      <MdLocationOn className="text-red-600" />
+                      <MdLocationOn className="text-primary" />
                       Endereço de Entrega
                     </h3>
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center gap-1"
+                      className="text-primary hover:text-primary-dark text-sm font-medium flex items-center gap-1"
                     >
                       <MdEdit size={16} />
                       {deliveryAddress ? 'Alterar' : 'Adicionar'}
@@ -308,7 +308,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 {/* Forma de pagamento */}
                 <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
                   <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <MdPayment className="text-red-600" />
+                    <MdPayment className="text-primary" />
                     Forma de Pagamento
                   </h3>
                   
@@ -320,7 +320,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                         value="card"
                         checked={paymentMethod === 'card'}
                         onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                        className="text-red-600 focus:ring-red-500"
+                        className="text-primary focus:ring-primary"
                       />
                       <div className="flex items-center gap-2">
                         <MdPayment className="text-gray-600" />
@@ -335,7 +335,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                         value="cash"
                         checked={paymentMethod === 'cash'}
                         onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                        className="text-red-600 focus:ring-red-500"
+                        className="text-primary focus:ring-primary"
                       />
                       <div className="flex items-center gap-2">
                         <MdMoney className="text-gray-600" />
@@ -354,7 +354,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
               <button
                 onClick={handleCheckout}
                 disabled={!canCheckout() || isProcessing}
-                className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 disabled:hover:scale-100"
+                className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 disabled:hover:scale-100"
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">

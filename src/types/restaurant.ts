@@ -85,11 +85,11 @@ export const statusDisplayNames: Record<RestaurantStatus, string> = {
   rejected: 'Rejeitado'
 };
 
-// Cores para cada status
+// Cores para cada status (usando classes centralizadas do Tailwind)
 export const statusColors: Record<RestaurantStatus, string> = {
-  pending: 'text-yellow-600 bg-yellow-100',
-  active: 'text-green-600 bg-green-100',
-  suspended: 'text-red-600 bg-red-100',
+  pending: 'text-warning-600 bg-warning-100',
+  active: 'text-success-600 bg-success-100',
+  suspended: 'text-error-600 bg-error-100',
   rejected: 'text-gray-600 bg-gray-100'
 };
 

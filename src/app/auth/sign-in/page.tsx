@@ -95,9 +95,7 @@ export default function SignInPage() {
             case 'restaurant':
               redirectPath = '/restaurant'; // Middleware verificará se precisa ir para cadastro ou dashboard
               break;
-            case 'delivery':
-              redirectPath = '/delivery';
-              break;
+            // delivery removido por enquanto
             default:
               redirectPath = '/'; // Página inicial como fallback
           }
@@ -148,15 +146,15 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <AnimatedContainer className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-gray-900 rounded-2xl shadow-xl p-8 border border-primary">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-white mb-2">
               Bem-vindo de volta!
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-300">
               Entre na sua conta para continuar
             </p>
           </div>
@@ -165,18 +163,18 @@ export default function SignInPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                 Email
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary w-5 h-5" />
                 <input
                   type="email"
                   id="email"
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-500"
+                  className="w-full pl-10 pr-4 py-3 border border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-gray-800 text-white placeholder-gray-400"
                   placeholder="seu@email.com"
                   required
                   disabled={loading || isSubmitting}
@@ -186,18 +184,18 @@ export default function SignInPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
                 Senha
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary w-5 h-5" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors bg-white text-gray-900 placeholder-gray-500"
+                  className="w-full pl-10 pr-12 py-3 border border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-gray-800 text-white placeholder-gray-400"
                   placeholder="Sua senha"
                   required
                   disabled={loading || isSubmitting}
@@ -205,7 +203,7 @@ export default function SignInPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-primary hover:text-primary-dark transition-colors"
                   disabled={loading || isSubmitting}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

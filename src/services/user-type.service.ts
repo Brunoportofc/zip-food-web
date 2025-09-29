@@ -32,9 +32,7 @@ export interface UserProfile {
   restaurant_name?: string;
   restaurant_status?: 'pending_approval' | 'approved' | 'rejected';
   
-  // Campos específicos para entregadores
-  delivery_status?: 'available' | 'busy' | 'offline';
-  vehicle_type?: 'bike' | 'motorcycle' | 'car';
+  // Campos específicos para entregadores - removido temporariamente
   
   // Permissões e configurações
   permissions?: string[];
@@ -74,14 +72,6 @@ class UserTypeService {
       default_status: 'pending_approval',
       requires_approval: true,
       collection_name: 'restaurants'
-    },
-    delivery: {
-      type: 'delivery',
-      display_name: 'Entregador',
-      permissions: ['view_deliveries', 'update_delivery_status', 'track_location'],
-      default_status: 'pending_approval',
-      requires_approval: true,
-      collection_name: 'delivery_drivers'
     }
   };
 
@@ -120,9 +110,6 @@ class UserTypeService {
       if (userData.user_type === 'restaurant') {
         userProfile.restaurant_name = userData.restaurant_name || userData.name;
         userProfile.restaurant_status = 'pending_approval';
-      } else if (userData.user_type === 'delivery') {
-        userProfile.delivery_status = 'offline';
-        userProfile.vehicle_type = userData.vehicle_type || 'bike';
       }
 
       console.log('Salvando perfil na coleção users...');

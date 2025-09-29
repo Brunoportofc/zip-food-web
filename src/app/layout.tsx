@@ -36,7 +36,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
       >
         <AuthProvider>
           <AuthCheck>
@@ -50,17 +50,20 @@ export default function RootLayout({
           toastOptions={{
             duration: 3000,
             style: {
-              background: '#363636',
-              color: '#fff',
+              background: '#1F2937',
+              color: '#FFFFFF',
+              border: '1px solid #00FF88',
             },
             success: {
               style: {
-                background: '#10B981',
+                background: '#00FF88',
+                color: '#000000',
               },
             },
             error: {
               style: {
                 background: '#EF4444',
+                color: '#FFFFFF',
               },
             },
           }}

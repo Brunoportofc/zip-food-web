@@ -103,16 +103,11 @@ export default function SignUpPage() {
         toast.success('Conta criada com sucesso!');
         
         // Redirecionar baseado no tipo de usuário
-        // O middleware também cuidará do redirecionamento, mas fazemos aqui para ser mais rápido
         switch (formData.user_type) {
           case 'customer':
             router.push('/customer');
             break;
-          case 'delivery':
-            router.push('/delivery');
-            break;
           case 'restaurant':
-            // Para restaurantes, o middleware verificará se já está cadastrado
             router.push('/restaurant');
             break;
           default:
@@ -141,39 +136,31 @@ export default function SignUpPage() {
       label: 'Cliente', 
       description: 'Quero pedir comida',
       icon: Users,
-      color: 'from-blue-500 to-blue-600',
-      hoverColor: 'hover:from-blue-600 hover:to-blue-700'
+      color: 'from-primary to-primary-dark',
+      hoverColor: 'hover:from-primary-dark hover:to-primary-800'
     },
     { 
       value: 'restaurant' as UserRole, 
       label: 'Restaurante', 
       description: 'Quero vender comida',
       icon: Store,
-      color: 'from-green-500 to-green-600',
-      hoverColor: 'hover:from-green-600 hover:to-green-700'
-    },
-    { 
-      value: 'delivery' as UserRole, 
-      label: 'Delivery', 
-      description: 'Quero entregar comida',
-      icon: Truck,
-      color: 'from-purple-500 to-purple-600',
-      hoverColor: 'hover:from-purple-600 hover:to-purple-700'
-    },
+      color: 'from-primary to-primary-dark',
+      hoverColor: 'hover:from-primary-dark hover:to-primary-800'
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
+    <div className="min-h-screen bg-black">
       <div className="flex flex-col lg:flex-row min-h-screen">
         {/* Left Side - User Type Selection */}
-        <div className="flex-1 flex flex-col justify-center items-center p-4 lg:p-8 bg-white">
+        <div className="flex-1 flex flex-col justify-center items-center p-4 lg:p-8 bg-black">
           <AnimatedContainer className="w-full max-w-lg">
-            <div className="bg-white p-6 lg:p-8 rounded-lg shadow-lg">
+            <div className="bg-gray-900 p-6 lg:p-8 rounded-lg shadow-lg border border-primary">
               <div className="text-center mb-6 lg:mb-8">
-                <h2 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2 lg:mb-3">
+                <h2 className="text-xl lg:text-2xl font-bold text-white mb-2 lg:mb-3">
                   Escolha seu Tipo de Conta
                 </h2>
-                <p className="text-gray-600 mb-4 lg:mb-6 text-sm lg:text-base">
+                <p className="text-gray-300 mb-4 lg:mb-6 text-sm lg:text-base">
                   Selecione como você quer usar nossa plataforma
                 </p>
               </div>

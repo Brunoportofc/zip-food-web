@@ -1,7 +1,7 @@
 // Authentication types and utilities for the ZipFood application
 
 // User types
-export type UserType = 'customer' | 'restaurant' | 'delivery';
+export type UserType = 'customer' | 'restaurant';
 
 export interface User {
   uid: string;
