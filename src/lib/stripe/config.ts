@@ -1,57 +1,52 @@
 import Stripe from 'stripe';
 
 if (!process.env.STRIPE_SECRET_KEY) {
+  console.error('❌ [Stripe Config] STRIPE_SECRET_KEY não está definida nas variáveis de ambiente');
   throw new Error('STRIPE_SECRET_KEY is not defined in environment variables');
 }
 
-// Initialize Stripe with Connect capabilities
+console.log('🔍 [Stripe Config] Inicializando Stripe para Israel:', {
+  hasSecretKey: !!process.env.STRIPE_SECRET_KEY,
+  keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 7),
+  apiVersion: '2025-08-27.basil'
+});
+
+// Initialize Stripe for normal payments (without Connect)
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2025-08-27.basil',
   typescript: true,
 });
 
-// Stripe Connect configuration
+console.log('✅ [Stripe Config] Stripe inicializado com sucesso para Israel');
+
+// Stripe configuration for Israel-based platform
 export const stripeConfig = {
-  // Platform application fee (percentage)
+  // Platform fee percentage that goes to the main account
   platformFeePercent: 5, // 5% platform fee
   
-  // Currency
-  currency: 'brl',
-  
-  // Connect account types
-  accountType: 'express' as const, // Express accounts for easier onboarding
+  // Currency for Israel
+  currency: 'ils', // Israeli Shekel
   
   // Webhook endpoints
   webhookEndpoints: {
-    connect: '/api/stripe/webhook/connect',
     payments: '/api/stripe/webhook/payments',
   },
   
-  // Return URLs for Connect onboarding
+  // Payment success/failure URLs
   returnUrls: {
-    success: `${process.env.NEXT_PUBLIC_APP_URL}/restaurant/stripe/success`,
-    failure: `${process.env.NEXT_PUBLIC_APP_URL}/restaurant/stripe/failure`,
-    refresh: `${process.env.NEXT_PUBLIC_APP_URL}/restaurant/stripe/refresh`,
+    success: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/success`,
+    failure: `${process.env.NEXT_PUBLIC_APP_URL}/checkout/failure`,
   },
   
-  // Required capabilities for restaurant accounts
-  capabilities: [
-    'card_payments',
-    'transfers',
-  ] as Stripe.AccountCreateParams.Capabilities[],
+  // Payment settings
+  paymentMethods: ['card'] as Stripe.PaymentMethodCreateParams.Type[],
   
-  // Business type for restaurants
-  businessType: 'company' as const,
-  
-  // Required information for Brazilian accounts
-  requiredFields: {
-    business_profile: {
-      mcc: '5812', // Eating Places and Restaurants
-      url: process.env.NEXT_PUBLIC_APP_URL,
-    },
-    tos_acceptance: {
-      service_agreement: 'recipient',
-    },
+  // Automatic payout settings for restaurants
+  payoutSettings: {
+    // When to automatically pay restaurants
+    payoutSchedule: 'weekly', // weekly, daily, or manual
+    // Minimum amount to trigger payout
+    minimumPayoutAmount: 100, // 100 ILS minimum
   },
 };
 

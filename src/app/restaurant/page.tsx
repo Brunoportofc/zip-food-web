@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { RestaurantDashboard } from '@/components/stripe/RestaurantDashboard';
+import StripeConnectionDashboard from '@/components/restaurant/StripeConnectionDashboard';
 import { 
   FaTachometerAlt, FaCog, 
   FaStore, FaCreditCard
@@ -108,7 +108,7 @@ export default function RestaurantPage() {
       id: 'payments' as TabType,
       label: 'Pagamentos',
       icon: FaCreditCard,
-      description: 'Configuração do Stripe Connect'
+      description: 'Conectar sua conta Stripe'
     },
     {
       id: 'settings' as TabType,
@@ -200,12 +200,12 @@ export default function RestaurantPage() {
           {activeTab === 'payments' && (
             <div>
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Configuração de Pagamentos</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">🔗 Conexão Stripe</h2>
                 <p className="text-gray-600">
-                  Gerencie sua conta Stripe Connect e configurações de pagamento.
+                  Configure sua própria conta Stripe para receber pagamentos diretamente.
                 </p>
               </div>
-              <RestaurantDashboard />
+              <StripeConnectionDashboard />
             </div>
           )}
           {activeTab === 'settings' && (

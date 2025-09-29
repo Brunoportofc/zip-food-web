@@ -18,6 +18,10 @@ import {
 import { Restaurant, RestaurantCategory, categoryDisplayNames } from '@/types';
 import restaurantService from '@/services/restaurant.service';
 import { categoryConfig } from '@/constants';
+import { useCartStore, PaymentMethod } from '@/store/cart.store';
+import CartDrawer from '@/components/cart/CartDrawer';
+import CartIcon from '@/components/cart/CartIcon';
+import { toast, Toaster } from 'react-hot-toast';
 
 interface RestaurantPageProps {
   params: Promise<{ id: string }>;
@@ -33,10 +37,6 @@ interface MenuItem {
   available: boolean;
 }
 
-interface CartItem extends MenuItem {
-  quantity: number;
-}
-
 export default function RestaurantPage({ params }: RestaurantPageProps) {
   const resolvedParams = use(params);
   const restaurantId = resolvedParams.id;
@@ -44,11 +44,16 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isFavorite, setIsFavorite] = useState(false);
-  const [showCart, setShowCart] = useState(false);
-  const [checkingOut, setCheckingOut] = useState(false);
+  
+  // Zustand store do carrinho
+  const { 
+    addItem, 
+    getItemQuantity, 
+    setRestaurantInfo,
+    hasItems 
+  } = useCartStore();
 
   // Carregar dados do restaurante
   useEffect(() => {
@@ -70,6 +75,13 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
         if (foundRestaurant) {
           console.log('🍔 [CUSTOMER RESTAURANT] Dados do restaurante carregados:', foundRestaurant);
           setRestaurant(foundRestaurant);
+          
+          // Configurar informações do restaurante no carrinho
+          setRestaurantInfo(
+            foundRestaurant.id, 
+            foundRestaurant.name, 
+            foundRestaurant.deliveryFee || 5.00
+          );
           
           // Carregar menu real da API
           try {
@@ -116,68 +128,59 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
     ? menuItems 
     : menuItems.filter(item => item.category === selectedCategory);
 
-  // Funções do carrinho
-  const addToCart = (item: MenuItem) => {
-    setCart(prev => {
-      const existingItem = prev.find(cartItem => cartItem.id === item.id);
-      if (existingItem) {
-        return prev.map(cartItem =>
-          cartItem.id === item.id 
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem
-        );
-      }
-      return [...prev, { ...item, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (itemId: string) => {
-    setCart(prev => {
-      const existingItem = prev.find(cartItem => cartItem.id === itemId);
-      if (existingItem && existingItem.quantity > 1) {
-        return prev.map(cartItem =>
-          cartItem.id === itemId 
-            ? { ...cartItem, quantity: cartItem.quantity - 1 }
-            : cartItem
-        );
-      }
-      return prev.filter(cartItem => cartItem.id !== itemId);
-    });
-  };
-
-  const getItemQuantity = (itemId: string) => {
-    return cart.find(item => item.id === itemId)?.quantity || 0;
-  };
-
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  const handleCheckout = async () => {
+  // Função para adicionar item ao carrinho
+  const handleAddToCart = (item: MenuItem) => {
     if (!restaurant) return;
     
+    addItem({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      image: item.image,
+      restaurantId: restaurant.id,
+      category: item.category
+    });
+    
+    toast.success(`${item.name} adicionado ao carrinho!`);
+  };
+
+  // Função de checkout integrada com Stripe
+  const handleCheckout = async (paymentMethod: PaymentMethod) => {
+    if (!restaurant) {
+      toast.error('Informações do restaurante não encontradas');
+      return;
+    }
+
+    const { 
+      items, 
+      deliveryAddress, 
+      getSubtotal, 
+      deliveryFee,
+      clearCart 
+    } = useCartStore.getState();
+
+    if (!deliveryAddress) {
+      toast.error('Endereço de entrega é obrigatório');
+      return;
+    }
+
     try {
-      setCheckingOut(true);
-      
       const orderData = {
         restaurantId: restaurant.id,
-        items: cart.map(item => ({
+        items: items.map(item => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
           price: item.price
         })),
-        deliveryAddress: {
-          street: 'Rua Exemplo',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          zipCode: '01234-567'
-        },
-        paymentMethod: 'credit-card' as const,
+        deliveryAddress,
+        paymentMethod: paymentMethod === 'cash' ? 'cash' : 'credit-card',
         notes: ''
       };
 
+      if (paymentMethod === 'cash') {
+        // Pagamento em dinheiro - criar pedido diretamente
       const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
@@ -189,23 +192,48 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
 
       if (response.ok) {
         const result = await response.json();
-        alert('Pedido realizado com sucesso! Número: ' + result.data.id);
-        setCart([]);
-        setShowCart(false);
+          toast.success(`Pedido realizado com sucesso! Número: ${result.data.id}`);
+          clearCart();
+        } else {
+          const error = await response.json();
+          toast.error(error.message || 'Erro ao realizar pedido');
+        }
       } else {
-        const error = await response.json();
-        alert(error.message || 'Erro ao realizar pedido');
+        // Pagamento com cartão - redirecionar para Stripe Checkout
+        const totalAmount = Math.round((getSubtotal() + deliveryFee) * 100); // Converter para centavos
+
+        const checkoutResponse = await fetch('/api/stripe/payment/create-intent', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            restaurantId: restaurant.id,
+            amount: totalAmount,
+            description: `Pedido - ${restaurant.name}`,
+            orderData
+          })
+        });
+
+        if (checkoutResponse.ok) {
+          const { clientSecret } = await checkoutResponse.json();
+          
+          // Aqui você integraria com o Stripe Elements ou redirecionaria para checkout
+          // Por enquanto, vamos simular sucesso
+          toast.success('Redirecionando para pagamento...');
+          
+          // TODO: Implementar integração completa com Stripe Elements
+          console.log('Client Secret:', clientSecret);
+        } else {
+          const error = await checkoutResponse.json();
+          toast.error(error.message || 'Erro ao processar pagamento');
+        }
       }
     } catch (error) {
       console.error('Erro ao realizar pedido:', error);
-      alert('Erro ao realizar pedido');
-    } finally {
-      setCheckingOut(false);
+      toast.error('Erro ao processar pedido');
     }
-  };
-
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.quantity, 0);
   };
 
   if (loading) {
@@ -281,7 +309,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
           
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold text-gray-900">
-              R$ {item.price.toFixed(2)}
+              ₪ {item.price.toFixed(2)}
             </span>
             
             {item.available && (
@@ -289,14 +317,14 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                 {quantity > 0 ? (
                   <div className="flex items-center bg-red-50 rounded-full">
                     <button
-                      onClick={() => removeFromCart(item.id)}
+                      onClick={() => useCartStore.getState().updateQuantity(item.id, quantity - 1)}
                       className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
                     >
                       <MdRemove size={16} />
                     </button>
                     <span className="px-3 py-1 font-bold text-red-600">{quantity}</span>
                     <button
-                      onClick={() => addToCart(item)}
+                      onClick={() => handleAddToCart(item)}
                       className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
                     >
                       <MdAdd size={16} />
@@ -304,7 +332,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                   </div>
                 ) : (
                   <button
-                    onClick={() => addToCart(item)}
+                    onClick={() => handleAddToCart(item)}
                     className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors duration-200"
                   >
                     <MdAdd size={16} />
@@ -354,6 +382,9 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
               <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200">
                 <MdShare size={20} />
               </button>
+              
+              {/* Ícone do carrinho */}
+              <CartIcon size={20} />
             </div>
           </div>
         </div>
@@ -407,7 +438,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                   <div className="flex items-center">
                     <MdLocationOn className="mr-2 text-red-600" size={16} />
-                    <span>{restaurant.address ? `${restaurant.address}, ${restaurant.city || ''}` : 'Entrega na região'}</span>
+                    <span>{restaurant.address ? `${restaurant.address}` : 'Entrega na região'}</span>
                   </div>
                   <div className="flex items-center">
                     <MdPhone className="mr-2 text-red-600" size={16} />
@@ -423,43 +454,10 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
               <div className="bg-gray-50 rounded-xl p-4">
                 <h4 className="font-bold text-gray-900 mb-3">Horário de funcionamento</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  {restaurant.operatingHours ? (
-                    Object.entries(restaurant.operatingHours).map(([day, hours]) => {
-                      const dayNames: Record<string, string> = {
-                        monday: 'Segunda-feira',
-                        tuesday: 'Terça-feira',
-                        wednesday: 'Quarta-feira',
-                        thursday: 'Quinta-feira',
-                        friday: 'Sexta-feira',
-                        saturday: 'Sábado',
-                        sunday: 'Domingo'
-                      };
-                      
-                      const dayName = dayNames[day] || day;
-                      const hoursData = hours as any;
-                      
-                      if (hoursData?.closed) {
-                        return (
-                          <div key={day} className="flex justify-between">
-                            <span>{dayName}</span>
-                            <span className="text-red-600">Fechado</span>
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <div key={day} className="flex justify-between">
-                          <span>{dayName}</span>
-                          <span>{hoursData?.open || '08:00'} - {hoursData?.close || '22:00'}</span>
-                        </div>
-                      );
-                    })
-                  ) : (
                     <div className="flex justify-between">
                       <span>Todos os dias</span>
                       <span>08:00 - 22:00</span>
                     </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -506,100 +504,30 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
         </div>
       </div>
 
-      {/* Cart Floating Button */}
-      {getTotalItems() > 0 && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <button 
-            onClick={() => setShowCart(true)}
-            className="bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-200 p-4 flex items-center gap-3"
-          >
-            <div className="bg-white/20 rounded-full w-8 h-8 flex items-center justify-center">
-              <span className="font-bold text-sm">{getTotalItems()}</span>
-            </div>
-            <div className="text-left">
-              <div className="text-sm font-medium">Ver carrinho</div>
-              <div className="text-xs opacity-90">R$ {getTotalPrice().toFixed(2)}</div>
-            </div>
-          </button>
-        </div>
-      )}
-
-      {/* Cart Modal */}
-      {showCart && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Seu pedido</h2>
-                <button
-                  onClick={() => setShowCart(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6 max-h-96 overflow-y-auto">
-              {cart.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 py-3 border-b border-gray-100 last:border-0">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-12 h-12 object-cover rounded-lg"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
-                    <p className="text-red-600 font-semibold">R$ {item.price.toFixed(2)}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                    >
-                      <MdRemove className="text-sm" />
-                    </button>
-                    <span className="font-medium text-gray-900 w-8 text-center">
-                      {item.quantity}
-                    </span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
-                    >
-                      <MdAdd className="text-sm" />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-6 border-t border-gray-200">
-              <div className="space-y-3 mb-4">
-                <div className="flex justify-between text-gray-600">
-                  <span>Subtotal</span>
-                  <span>R$ {getTotalPrice().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-gray-600">
-                  <span>Taxa de entrega</span>
-                  <span>R$ {restaurant?.deliveryFee.toFixed(2) || '0.00'}</span>
-                </div>
-                <div className="flex justify-between text-lg font-semibold text-gray-900 border-t pt-3">
-                  <span>Total</span>
-                  <span>R$ {(getTotalPrice() + (restaurant?.deliveryFee || 0)).toFixed(2)}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleCheckout}
-                disabled={checkingOut || cart.length === 0}
-                className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {checkingOut ? 'Processando...' : `Finalizar pedido • R$ ${(getTotalPrice() + (restaurant?.deliveryFee || 0)).toFixed(2)}`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Cart Drawer */}
+      <CartDrawer onCheckout={handleCheckout} />
+      
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+          success: {
+            style: {
+              background: '#10B981',
+            },
+          },
+          error: {
+            style: {
+              background: '#EF4444',
+            },
+          },
+        }}
+      />
     </div>
   );
 }

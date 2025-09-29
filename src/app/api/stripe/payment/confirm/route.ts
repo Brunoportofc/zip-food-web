@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe/config';
+import { stripe, stripeConfig } from '@/lib/stripe/config';
+import { payoutSystemService } from '@/lib/stripe/payout-system';
 import { adminDb } from '@/lib/firebase/admin';
 import { verifySessionCookie } from '@/lib/firebase/admin';
 
@@ -74,13 +75,23 @@ export async function POST(request: NextRequest) {
         updated_at: new Date(),
       });
 
+      // Schedule payout to restaurant
+      const payoutResult = await payoutSystemService.processPaymentAndSchedulePayout(
+        orderId,
+        orderData.restaurant_id,
+        orderData.payment_amount,
+        paymentIntentId
+      );
+
+      console.log('💰 [Payment Confirm] Repasse agendado:', payoutResult);
+
       // Create notification for restaurant
       await adminDb.collection('notifications').add({
         type: 'new_order',
         restaurant_id: orderData.restaurant_id,
         order_id: orderId,
         title: 'Novo Pedido Recebido',
-        message: `Pedido #${orderId} foi confirmado e pago. Valor: R$ ${(orderData.payment_amount / 100).toFixed(2)}`,
+        message: `Pedido #${orderId} foi confirmado e pago. Valor: ₪${(orderData.payment_amount / 100).toFixed(2)}`,
         read: false,
         created_at: new Date(),
       });

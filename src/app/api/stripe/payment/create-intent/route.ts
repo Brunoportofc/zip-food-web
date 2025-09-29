@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe/config';
-import { stripeConnectService } from '@/lib/stripe/connect';
+import { stripeConfig, calculatePlatformFee, calculateRestaurantAmount } from '@/lib/stripe/config';
+import { restaurantStripeService } from '@/lib/stripe/restaurant-stripe';
 import { adminDb } from '@/lib/firebase/admin';
 import { verifySessionCookie } from '@/lib/firebase/admin';
-import { calculatePlatformFee, calculateRestaurantAmount } from '@/lib/stripe/config';
 
 interface CreatePaymentIntentRequest {
-  orderId: string;
-  amount: number; // Amount in cents (BRL)
+  orderId?: string;
+  amount: number; // Amount in agurot (ILS)
   restaurantId: string;
+  description?: string;
+  orderData?: any; // Dados completos do pedido para criação se não existir
   paymentMethodTypes?: string[];
 }
 
@@ -28,68 +29,143 @@ export async function POST(request: NextRequest) {
     const customerId = decodedToken.uid;
 
     const body: CreatePaymentIntentRequest = await request.json();
-    const { orderId, amount, restaurantId, paymentMethodTypes = ['card'] } = body;
+    const { orderId, amount, restaurantId, description, orderData, paymentMethodTypes = ['card'] } = body;
 
     // Validate required fields
-    if (!orderId || !amount || !restaurantId) {
+    if (!amount || !restaurantId) {
       return NextResponse.json(
-        { error: 'Missing required fields: orderId, amount, restaurantId' },
+        { error: 'Missing required fields: amount, restaurantId' },
         { status: 400 }
       );
     }
 
-    // Validate amount (minimum R$ 0.50)
-    if (amount < 50) {
+    // Validate amount (minimum ₪5.00 = 500 agurot)
+    if (amount < 500) {
       return NextResponse.json(
-        { error: 'Amount must be at least R$ 0.50' },
+        { error: 'Amount must be at least ₪5.00' },
         { status: 400 }
       );
     }
 
-    // Verify order exists and belongs to customer
-    const orderDoc = await adminDb.collection('orders').doc(orderId).get();
+    // Se orderId for fornecido, verificar se o pedido existe
+    let finalOrderId = orderId;
     
-    if (!orderDoc.exists) {
+    if (orderId) {
+      const orderDoc = await adminDb.collection('orders').doc(orderId).get();
+      
+      if (!orderDoc.exists) {
+        return NextResponse.json(
+          { error: 'Order not found' },
+          { status: 404 }
+        );
+      }
+
+      const existingOrderData = orderDoc.data();
+      
+      if (existingOrderData?.customer_id !== customerId) {
+        return NextResponse.json(
+          { error: 'Unauthorized access to order' },
+          { status: 403 }
+        );
+      }
+
+      // Check if order already has a payment intent
+      if (existingOrderData?.payment_intent_id) {
+        return NextResponse.json(
+          { error: 'Payment intent already exists for this order' },
+          { status: 400 }
+        );
+      }
+    } else if (orderData) {
+      // Criar pedido se orderData for fornecido
+      try {
+        const newOrderData = {
+          customer_id: customerId,
+          restaurant_id: restaurantId,
+          status: 'pending_payment',
+          subtotal: orderData.subtotal || amount / 100,
+          delivery_fee: orderData.deliveryFee || 0,
+          total: amount / 100,
+          delivery_address: orderData.deliveryAddress,
+          payment_method: 'credit-card',
+          notes: orderData.notes || '',
+          created_at: new Date(),
+          updated_at: new Date()
+        };
+
+        const orderRef = await adminDb.collection('orders').add(newOrderData);
+        finalOrderId = orderRef.id;
+
+        // Adicionar itens do pedido
+        if (orderData.items) {
+          const orderItems = orderData.items.map((item: any) => ({
+            order_id: finalOrderId,
+            product_id: item.id,
+            product_name: item.name,
+            quantity: item.quantity,
+            unit_price: item.price,
+            total_price: item.price * item.quantity,
+            notes: item.notes || ''
+          }));
+
+          const itemPromises = orderItems.map(item => 
+            adminDb.collection('order_items').add(item)
+          );
+
+          await Promise.all(itemPromises);
+        }
+
+        console.log('✅ [Stripe Payment] Pedido criado:', finalOrderId);
+      } catch (error) {
+        console.error('❌ [Stripe Payment] Erro ao criar pedido:', error);
+        return NextResponse.json(
+          { error: 'Error creating order' },
+          { status: 500 }
+        );
+      }
+    } else {
       return NextResponse.json(
-        { error: 'Order not found' },
+        { error: 'Either orderId or orderData must be provided' },
+        { status: 400 }
+      );
+    }
+
+    // Verify restaurant exists and is active
+    const restaurantDoc = await adminDb.collection('restaurants').doc(restaurantId).get();
+    
+    if (!restaurantDoc.exists) {
+      return NextResponse.json(
+        { error: 'Restaurant not found' },
         { status: 404 }
       );
     }
 
-    const orderData = orderDoc.data();
+    const restaurantData = restaurantDoc.data();
     
-    if (orderData?.customer_id !== customerId) {
+    if (!restaurantData?.is_active) {
       return NextResponse.json(
-        { error: 'Unauthorized access to order' },
-        { status: 403 }
-      );
-    }
-
-    // Check if order already has a payment intent
-    if (orderData?.payment_intent_id) {
-      return NextResponse.json(
-        { error: 'Payment intent already exists for this order' },
+        { error: 'Restaurant is not active' },
         { status: 400 }
       );
     }
 
-    // Verify restaurant can receive payments
-    const canReceivePayments = await stripeConnectService.canReceivePayments(restaurantId);
+    // Verify restaurant has Stripe keys configured
+    const canReceivePayments = await restaurantStripeService.canReceivePayments(restaurantId);
     
     if (!canReceivePayments) {
       return NextResponse.json(
-        { error: 'Restaurant cannot receive payments. Stripe setup incomplete.' },
+        { error: 'Restaurant has not configured Stripe payments yet' },
         { status: 400 }
       );
     }
 
-    // Get restaurant Stripe account
-    const restaurantAccount = await stripeConnectService.getRestaurantAccount(restaurantId);
+    // Get restaurant's Stripe instance
+    const restaurantStripe = await restaurantStripeService.createStripeInstance(restaurantId);
     
-    if (!restaurantAccount) {
+    if (!restaurantStripe) {
       return NextResponse.json(
-        { error: 'Restaurant Stripe account not found' },
-        { status: 404 }
+        { error: 'Failed to connect to restaurant Stripe account' },
+        { status: 500 }
       );
     }
 
@@ -97,28 +173,26 @@ export async function POST(request: NextRequest) {
     const platformFee = calculatePlatformFee(amount);
     const restaurantAmount = calculateRestaurantAmount(amount);
 
-    // Create Payment Intent with application fee
-    const paymentIntent = await stripe.paymentIntents.create({
+    // Create Payment Intent (goes directly to restaurant's Stripe account)
+    // Note: Platform fee will be collected separately via invoice/transfer
+    const paymentIntent = await restaurantStripe.paymentIntents.create({
       amount,
-      currency: 'brl',
+      currency: stripeConfig.currency,
       payment_method_types: paymentMethodTypes,
-      application_fee_amount: platformFee,
-      transfer_data: {
-        destination: restaurantAccount.stripeAccountId,
-      },
       metadata: {
-        orderId,
+        orderId: finalOrderId,
         customerId,
         restaurantId,
         platformFee: platformFee.toString(),
         restaurantAmount: restaurantAmount.toString(),
+        platformId: process.env.NEXT_PUBLIC_APP_URL || 'zipfood',
       },
-      description: `Pedido #${orderId} - ZipFood`,
+      description: description || `Pedido #${finalOrderId} - ZipFood`,
       receipt_email: decodedToken.email || undefined,
     });
 
     // Update order with payment intent information
-    await adminDb.collection('orders').doc(orderId).update({
+    await adminDb.collection('orders').doc(finalOrderId).update({
       payment_intent_id: paymentIntent.id,
       payment_status: 'pending',
       payment_amount: amount,
