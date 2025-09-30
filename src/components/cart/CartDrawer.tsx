@@ -155,7 +155,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
   const CartItemComponent = ({ item, index }: { item: CartItem; index: number }) => (
     <div 
-      className="flex items-center gap-3 py-4 border-b border-gray-100 animate-in slide-in-from-right-2 fade-in"
+      className="flex items-center gap-3 py-4 border-b border-gray-700 animate-in slide-in-from-right-2 fade-in"
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <img
@@ -165,35 +165,35 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
       />
       
       <div className="flex-1 min-w-0">
-        <h4 className="font-medium text-gray-900 truncate">{item.name}</h4>
+        <h4 className="font-medium text-white truncate">{item.name}</h4>
         {item.description && (
-          <p className="text-sm text-gray-500 truncate">{item.description}</p>
+          <p className="text-sm text-gray-400 truncate">{item.description}</p>
         )}
-        <p className="text-primary font-semibold">₪ {item.price.toFixed(2)}</p>
+        <p className="text-green-400 font-semibold">R$ {item.price.toFixed(2)}</p>
       </div>
       
       <div className="flex items-center gap-2 flex-shrink-0">
         <button
           onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-all duration-200 hover:scale-110 active:scale-95"
+          className="w-8 h-8 rounded-full border border-gray-600 bg-gray-800 flex items-center justify-center hover:bg-gray-700 hover:border-green-500 transition-all duration-200 hover:scale-110 active:scale-95"
         >
-          <MdRemove className="text-gray-600" size={16} />
+          <MdRemove className="text-gray-300 hover:text-green-400" size={16} />
         </button>
         
-        <span className="font-medium text-gray-900 w-8 text-center transition-all duration-300">
+        <span className="font-medium text-white w-8 text-center transition-all duration-300">
           {item.quantity}
         </span>
         
         <button
           onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-all duration-200 hover:scale-110 active:scale-95"
+          className="w-8 h-8 rounded-full border border-gray-600 bg-gray-800 flex items-center justify-center hover:bg-gray-700 hover:border-green-500 transition-all duration-200 hover:scale-110 active:scale-95"
         >
-          <MdAdd className="text-gray-600" size={16} />
+          <MdAdd className="text-gray-300 hover:text-green-400" size={16} />
         </button>
         
         <button
           onClick={() => removeItem(item.id)}
-          className="w-8 h-8 rounded-full text-error hover:bg-error-50 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ml-2"
+          className="w-8 h-8 rounded-full bg-red-900/30 border border-red-700 text-red-400 hover:bg-red-800 hover:text-red-300 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ml-2"
         >
           <MdDelete size={16} />
         </button>
@@ -212,25 +212,25 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
       />
       
       {/* Drawer com animação suave */}
-      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transform transition-all duration-500 ${
+      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-[#101828] z-50 shadow-2xl transform transition-all duration-500 ${
         isOpen 
           ? 'translate-x-0 scale-100 opacity-100 ease-out' 
           : 'translate-x-full scale-95 opacity-0 ease-in'
       }`}>
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
+          <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900">
             <div className="animate-in slide-in-from-left-2 fade-in duration-300">
-              <h2 className="text-xl font-semibold text-gray-900">Seu Pedido</h2>
+              <h2 className="text-xl font-semibold text-white">Seu Pedido</h2>
               {restaurantName && (
-                <p className="text-sm text-gray-600">{restaurantName}</p>
+                <p className="text-sm text-gray-400">{restaurantName}</p>
               )}
             </div>
             <button
               onClick={closeCart}
-              className="p-2 rounded-full hover:bg-gray-100 transition-all duration-200 hover:scale-110 active:scale-95 animate-in slide-in-from-right-2 fade-in duration-300"
+              className="p-2 rounded-full hover:bg-gray-800 transition-all duration-200 hover:scale-110 active:scale-95 animate-in slide-in-from-right-2 fade-in duration-300"
             >
-              <MdClose size={24} className="text-gray-600" />
+              <MdClose size={24} className="text-gray-400" />
             </button>
           </div>
 
@@ -240,10 +240,10 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
               /* Carrinho vazio */
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <div className="text-6xl mb-4">🛒</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-white mb-2">
                   Seu carrinho está vazio
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-gray-400">
                   Adicione itens do cardápio para começar seu pedido
                 </p>
               </div>
@@ -257,34 +257,34 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 </div>
 
                 {/* Resumo do pedido */}
-                <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                  <h3 className="font-medium text-gray-900 mb-3">Resumo do Pedido</h3>
+                <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
+                  <h3 className="font-medium text-white mb-3">Resumo do Pedido</h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-gray-300">
                       <span>Subtotal ({getTotalItems()} itens)</span>
-                      <span>₪ {getSubtotal().toFixed(2)}</span>
+                      <span>R$ {getSubtotal().toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-gray-300">
                       <span>Taxa de entrega</span>
-                      <span>₪ {deliveryFee.toFixed(2)}</span>
+                      <span>R$ {deliveryFee.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between font-semibold text-lg text-gray-900 border-t pt-2">
+                    <div className="flex justify-between font-semibold text-lg text-green-400 border-t border-gray-700 pt-2">
                       <span>Total</span>
-                      <span>₪ {getTotal().toFixed(2)}</span>
+                      <span>R$ {getTotal().toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Endereço de entrega */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-gray-900 flex items-center gap-2">
-                      <MdLocationOn className="text-primary" />
+                    <h3 className="font-medium text-white flex items-center gap-2">
+                      <MdLocationOn className="text-green-500" />
                       Endereço de Entrega
                     </h3>
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="text-primary hover:text-primary-dark text-sm font-medium flex items-center gap-1"
+                      className="text-green-400 hover:text-green-300 text-sm font-medium flex items-center gap-1"
                     >
                       <MdEdit size={16} />
                       {deliveryAddress ? 'Alterar' : 'Adicionar'}
@@ -292,23 +292,23 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                   </div>
                   
                   {deliveryAddress ? (
-                    <div className="text-sm text-gray-600">
+                    <div className="text-sm text-gray-300">
                       <p>{deliveryAddress.street}, {deliveryAddress.number}</p>
                       {deliveryAddress.complement && <p>{deliveryAddress.complement}</p>}
                       <p>{deliveryAddress.neighborhood}</p>
                       <p>{deliveryAddress.city} - {deliveryAddress.zipCode}</p>
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-400">
                       Adicione um endereço de entrega
                     </p>
                   )}
                 </div>
 
                 {/* Forma de pagamento */}
-                <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6">
-                  <h3 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                    <MdPayment className="text-primary" />
+                <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
+                  <h3 className="font-medium text-white mb-3 flex items-center gap-2">
+                    <MdPayment className="text-green-500" />
                     Forma de Pagamento
                   </h3>
                   
@@ -320,11 +320,11 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                         value="card"
                         checked={paymentMethod === 'card'}
                         onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                        className="text-primary focus:ring-primary"
+                        className="text-green-500 focus:ring-green-500"
                       />
                       <div className="flex items-center gap-2">
-                        <MdPayment className="text-gray-600" />
-                        <span className="text-sm font-medium">Cartão de Crédito ou Débito</span>
+                        <MdPayment className="text-gray-400" />
+                        <span className="text-sm font-medium text-gray-300">Cartão de Crédito ou Débito</span>
                       </div>
                     </label>
                     
@@ -335,11 +335,11 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                         value="cash"
                         checked={paymentMethod === 'cash'}
                         onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                        className="text-primary focus:ring-primary"
+                        className="text-green-500 focus:ring-green-500"
                       />
                       <div className="flex items-center gap-2">
-                        <MdMoney className="text-gray-600" />
-                        <span className="text-sm font-medium">Dinheiro</span>
+                        <MdMoney className="text-gray-400" />
+                        <span className="text-sm font-medium text-gray-300">Dinheiro</span>
                       </div>
                     </label>
                   </div>
@@ -350,11 +350,11 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
           {/* Footer - Botão de checkout */}
           {hasItems() && (
-            <div className="border-t border-gray-200 p-4 bg-white">
+            <div className="border-t border-gray-800 p-4 bg-gray-900">
               <button
                 onClick={handleCheckout}
                 disabled={!canCheckout() || isProcessing}
-                className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors"
+                className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">
@@ -364,13 +364,13 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 ) : !deliveryAddress ? (
                   'Adicione um endereço para continuar'
                 ) : (
-                  `Finalizar Pedido • ₪ ${getTotal().toFixed(2)}`
+                  `Finalizar Pedido • R$ ${getTotal().toFixed(2)}`
                 )}
               </button>
               
               <button
                 onClick={clearCart}
-                className="w-full mt-2 text-gray-600 py-2 text-sm hover:text-gray-800 transition-all duration-200 hover:scale-105 active:scale-95"
+                className="w-full mt-2 text-gray-400 py-2 text-sm hover:text-gray-300 transition-all duration-200 hover:scale-105 active:scale-95"
               >
                 Limpar carrinho
               </button>
@@ -381,16 +381,16 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
       {/* Modal de endereço */}
       {showAddressForm && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 z-60 flex items-center justify-center p-4 transition-all duration-300 ease-out">
-          <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto animate-in zoom-in-95 fade-in duration-300 ease-out">
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/50 z-60 flex items-center justify-center p-4 transition-all duration-300 ease-out">
+          <div className="bg-gray-900 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto animate-in zoom-in-95 fade-in duration-300 ease-out border border-gray-800">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 animate-in slide-in-from-left-2 fade-in duration-300">
+                <h3 className="text-lg font-semibold text-white animate-in slide-in-from-left-2 fade-in duration-300">
                   Endereço de Entrega
                 </h3>
                 <button
                   onClick={() => setShowAddressForm(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-all duration-200 hover:scale-110 active:scale-95 animate-in slide-in-from-right-2 fade-in duration-300"
+                  className="text-gray-400 hover:text-gray-300 transition-all duration-200 hover:scale-110 active:scale-95 animate-in slide-in-from-right-2 fade-in duration-300"
                 >
                   <MdClose size={24} />
                 </button>
@@ -402,7 +402,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                   type="button"
                   onClick={handleUseCurrentLocation}
                   disabled={isLoadingLocation}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
                 >
                   {isLoadingLocation ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -415,7 +415,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
               {/* Campo de busca */}
               <div className="relative mb-4 animate-in slide-in-from-bottom-2 fade-in duration-300 delay-150">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Buscar endereço
                 </label>
                 <div className="relative">
@@ -424,14 +424,14 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                     type="text"
                     value={addressSearchQuery}
                     onChange={(e) => setAddressSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-200 focus:scale-105"
+                    className="w-full pl-10 pr-10 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
                     placeholder="Digite o endereço para buscar..."
                   />
                   {addressSearchQuery && (
                     <button
                       type="button"
                       onClick={handleClearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
                     >
                       <MdClose size={16} />
                     </button>
@@ -440,10 +440,10 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
                 {/* Lista de sugestões */}
                 {showSuggestions && addressSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-gray-800 border border-gray-600 rounded-md shadow-lg max-h-60 overflow-y-auto">
                     {isLoadingSuggestions && (
-                      <div className="p-3 text-center text-gray-500">
-                        <div className="inline-block w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin mr-2"></div>
+                      <div className="p-3 text-center text-gray-400">
+                        <div className="inline-block w-4 h-4 border-2 border-gray-600 border-t-green-500 rounded-full animate-spin mr-2"></div>
                         Buscando...
                       </div>
                     )}
@@ -452,9 +452,9 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                         key={index}
                         type="button"
                         onClick={() => handleSelectSuggestion(suggestion)}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                        className="w-full px-4 py-3 text-left hover:bg-gray-700 transition-colors border-b border-gray-700 last:border-0"
                       >
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-white">
                           {suggestion.properties.formatted}
                         </div>
                       </button>
@@ -466,27 +466,27 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
               <form onSubmit={handleAddressSubmit} className="space-y-4 animate-in slide-in-from-bottom-2 fade-in duration-500 delay-200">
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Rua / Avenida *
                     </label>
                     <input
                       type="text"
                       value={addressForm.street}
                       onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-200 focus:scale-105"
+                      className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
                       placeholder="Nome da rua"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Número *
                     </label>
                     <input
                       type="text"
                       value={addressForm.number}
                       onChange={(e) => setAddressForm({ ...addressForm, number: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-200 focus:scale-105"
+                      className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
                       placeholder="123"
                       required
                     />
@@ -494,27 +494,27 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Complemento
                   </label>
                   <input
                     type="text"
                     value={addressForm.complement}
                     onChange={(e) => setAddressForm({ ...addressForm, complement: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500"
                     placeholder="Apartamento, bloco, etc. (opcional)"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Bairro *
                   </label>
                   <input
                     type="text"
                     value={addressForm.neighborhood}
                     onChange={(e) => setAddressForm({ ...addressForm, neighborhood: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500"
                     placeholder="Nome do bairro"
                     required
                   />
@@ -522,27 +522,27 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       Cidade *
                     </label>
                     <input
                       type="text"
                       value={addressForm.city}
                       onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-200 focus:scale-105"
+                      className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
                       placeholder="Cidade"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-300 mb-1">
                       CEP *
                     </label>
                     <input
                       type="text"
                       value={addressForm.zipCode}
                       onChange={(e) => setAddressForm({ ...addressForm, zipCode: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500 transition-all duration-200 focus:scale-105"
+                      className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
                       placeholder="12345-678"
                       required
                     />
@@ -553,13 +553,13 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                   <button
                     type="button"
                     onClick={() => setShowAddressForm(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 bg-gray-800 rounded-md hover:bg-gray-700 transition-all duration-200 hover:scale-105 active:scale-95"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all duration-200 hover:scale-105 active:scale-95"
                   >
                     Salvar Endereço
                   </button>

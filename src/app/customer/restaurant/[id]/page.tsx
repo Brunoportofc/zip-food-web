@@ -239,24 +239,24 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#101828]">
-        <div className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="bg-gray-900 shadow-sm border-b border-gray-800">
+          <div className="max-w-6xl mx-auto px-4 py-4">
             <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-gray-200 animate-pulse rounded-full mr-4"></div>
-              <div className="w-32 h-6 bg-gray-200 animate-pulse rounded"></div>
+              <div className="w-8 h-8 bg-gray-700 animate-pulse rounded-full mr-4"></div>
+              <div className="w-32 h-6 bg-gray-700 animate-pulse rounded"></div>
             </div>
           </div>
         </div>
         
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="bg-gray-200 animate-pulse h-64 rounded-2xl mb-6"></div>
+        <div className="max-w-6xl mx-auto px-4 py-6">
+          <div className="bg-gray-700 animate-pulse h-64 rounded-xl mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
-                <div className="bg-gray-200 h-32 rounded-lg mb-4"></div>
-                <div className="bg-gray-200 h-4 rounded mb-2"></div>
-                <div className="bg-gray-200 h-3 rounded mb-4"></div>
-                <div className="bg-gray-200 h-6 rounded"></div>
+              <div key={i} className="bg-gray-900 rounded-xl p-4 animate-pulse border border-gray-800">
+                <div className="bg-gray-700 h-32 rounded-lg mb-4"></div>
+                <div className="bg-gray-700 h-4 rounded mb-2"></div>
+                <div className="bg-gray-700 h-3 rounded mb-4"></div>
+                <div className="bg-gray-700 h-6 rounded"></div>
               </div>
             ))}
           </div>
@@ -270,11 +270,11 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
       <div className="min-h-screen bg-[#101828] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🏪</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Restaurante não encontrado</h1>
-          <p className="text-gray-600 mb-4">O restaurante solicitado não existe ou foi removido.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">Restaurante não encontrado</h1>
+          <p className="text-gray-400 mb-4">O restaurante solicitado não existe ou foi removido.</p>
           <Link
             href="/customer"
-            className="bg-primary-600 text-white px-6 py-2 rounded-full font-medium hover:bg-primary-700 transition-colors duration-200"
+            className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200"
           >
             Voltar ao Início
           </Link>
@@ -283,86 +283,23 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
     );
   }
 
-  const MenuItemCard = ({ item }: { item: MenuItem }) => {
-    const quantity = getItemQuantity(item.id);
-    
-    return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="relative">
-          <img
-            src={item.image}
-            alt={item.name}
-            className="w-full h-40 object-cover"
-          />
-          {!item.available && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <span className="bg-white text-gray-900 px-3 py-1 rounded-full text-sm font-bold">
-                Indisponível
-              </span>
-            </div>
-          )}
-        </div>
-
-        <div className="p-4">
-          <h3 className="font-bold text-lg text-gray-900 mb-2">{item.name}</h3>
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">{item.description}</p>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-xl font-bold text-gray-900">
-              ₪ {item.price.toFixed(2)}
-            </span>
-            
-            {item.available && (
-              <div className="flex items-center">
-                {quantity > 0 ? (
-                  <div className="flex items-center bg-primary-50 rounded-full">
-                    <button
-                      onClick={() => useCartStore.getState().updateQuantity(item.id, quantity - 1)}
-                      className="p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-colors duration-200"
-                    >
-                      <MdRemove size={16} />
-                    </button>
-                    <span className="px-3 py-1 font-bold text-primary-600">{quantity}</span>
-                    <button
-                      onClick={() => handleAddToCart(item)}
-                      className="p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-colors duration-200"
-                    >
-                      <MdAdd size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleAddToCart(item)}
-                    className="bg-primary-600 text-white p-2 rounded-full hover:bg-primary-700 transition-colors duration-200"
-                  >
-                    <MdAdd size={16} />
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-[#101828]">
       {/* Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="bg-gray-900 shadow-lg sticky top-0 z-40 border-b border-gray-800">
+        <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Link 
                 href="/customer"
-                className="mr-4 p-2 rounded-full hover:bg-gray-100 transition-colors duration-200"
+                className="mr-4 p-2 rounded-lg hover:bg-gray-800 transition-colors duration-200"
               >
-                <MdArrowBack size={24} className="text-gray-700" />
+                <MdArrowBack size={24} className="text-gray-300" />
               </Link>
               
               <div>
-                <h1 className="text-xl font-bold text-gray-900">{restaurant.name}</h1>
-                <p className="text-gray-600 text-sm flex items-center">
+                <h1 className="text-xl font-bold text-white">{restaurant.name}</h1>
+                <p className="text-gray-400 text-sm flex items-center">
                   <span className="mr-2">{categoryConfig[restaurant.category].icon}</span>
                   {categoryDisplayNames[restaurant.category]}
                 </p>
@@ -372,92 +309,88 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsFavorite(!isFavorite)}
-                className={`p-2 rounded-full transition-colors duration-200 ${
-                  isFavorite ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600 hover:bg-primary-100 hover:text-primary-600'
+                className={`p-2 rounded-lg transition-colors duration-200 ${
+                  isFavorite ? 'bg-red-900 text-red-400' : 'bg-gray-800 text-gray-400 hover:bg-red-900 hover:text-red-400'
                 }`}
               >
                 <MdFavorite size={20} />
               </button>
               
-              <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-100 hover:text-primary-600 transition-colors duration-200">
-            <MdShare size={20} />
-          </button>
+              <button className="p-2 rounded-lg bg-gray-800 text-gray-400 hover:bg-blue-900 hover:text-blue-400 transition-colors duration-200">
+                <MdShare size={20} />
+              </button>
               
-              {/* Ícone do carrinho */}
               <CartIcon size={20} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* Restaurant Info */}
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+      {/* Restaurant Hero */}
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 overflow-hidden mb-6">
           <div className="relative">
             <img
               src={restaurant.image}
               alt={restaurant.name}
               className="w-full h-64 object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
             
-            {/* Restaurant Info Overlay */}
-            <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{restaurant.name}</h1>
-                  <div className="flex items-center gap-4 text-sm">
-                    <div className="flex items-center">
-                      <MdStar className="mr-1 text-yellow-400" size={16} />
-                      <span className="font-bold">{restaurant.rating.toFixed(1)}</span>
-                      <span className="ml-1 opacity-80">(150+ avaliações)</span>
-                    </div>
-                    <div className="flex items-center">
-                      <MdAccessTime className="mr-1" size={16} />
-                      <span>{restaurant.estimatedDeliveryTime}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <MdDeliveryDining className="mr-1" size={16} />
-                      <span>{restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}</span>
-                    </div>
-                  </div>
+            <div className="absolute bottom-4 left-4 right-4 text-white">
+              <h1 className="text-2xl font-bold mb-2">{restaurant.name}</h1>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                  <MdStar className="mr-1 text-yellow-400" size={16} />
+                  <span className="font-bold">{restaurant.rating.toFixed(1)}</span>
+                </div>
+                <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                  <MdAccessTime className="mr-1" size={16} />
+                  <span>{restaurant.estimatedDeliveryTime}</span>
+                </div>
+                <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                  <MdDeliveryDining className="mr-1" size={16} />
+                  <span>{restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}</span>
                 </div>
               </div>
             </div>
           </div>
           
-          {/* Restaurant Details */}
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
-                <h3 className="font-bold text-lg text-gray-900 mb-2">Sobre o restaurante</h3>
-                <p className="text-gray-600 mb-4">
+                <h3 className="font-bold text-lg text-white mb-2">Sobre o restaurante</h3>
+                <p className="text-gray-300 mb-4">
                   {restaurant.description || `Bem-vindos ao ${restaurant.name}! Oferecemos os melhores pratos de ${categoryDisplayNames[restaurant.category].toLowerCase()} da região.`}
                 </p>
                 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
+                <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                   <div className="flex items-center">
-                    <MdLocationOn className="mr-2 text-primary-600" size={16} />
-                    <span>{restaurant.address ? `${restaurant.address}` : 'Entrega na região'}</span>
+                    <MdLocationOn className="mr-2 text-green-500" size={16} />
+                    <span>{restaurant.address || 'Entrega na região'}</span>
                   </div>
                   <div className="flex items-center">
-                    <MdPhone className="mr-2 text-primary-600" size={16} />
+                    <MdPhone className="mr-2 text-green-500" size={16} />
                     <span>{restaurant.phone || 'Telefone não informado'}</span>
                   </div>
                   <div className="flex items-center">
-                    <MdInfo className="mr-2 text-primary-600" size={16} />
+                    <MdInfo className="mr-2 text-green-500" size={16} />
                     <span>Pedido mínimo: R$ {restaurant.minimumOrder?.toFixed(2) || '0,00'}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-[#101828] rounded-xl p-4">
-                <h4 className="font-bold text-gray-900 mb-3">Horário de funcionamento</h4>
-                <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex justify-between">
-                      <span>Todos os dias</span>
-                      <span>08:00 - 22:00</span>
-                    </div>
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <h4 className="font-bold text-white mb-3">Horário de funcionamento</h4>
+                <div className="space-y-2 text-sm text-gray-300">
+                  <div className="flex justify-between">
+                    <span>Segunda - Domingo</span>
+                    <span>08:00 - 22:00</span>
+                  </div>
+                  <div className="flex items-center mt-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <span className="text-green-400 font-medium">Aberto agora</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -465,9 +398,9 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
         </div>
 
         {/* Menu */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Cardápio</h2>
+        <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 overflow-hidden">
+          <div className="p-6 border-b border-gray-800">
+            <h2 className="text-2xl font-bold text-white mb-4">Cardápio</h2>
             
             {/* Category Filter */}
             <div className="flex overflow-x-auto gap-2 pb-2">
@@ -475,10 +408,10 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
-                  className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors duration-200 ${
+                  className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors duration-200 ${
                     selectedCategory === category
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-primary-100 hover:text-primary-600'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-gray-800 text-gray-300 hover:bg-green-700 hover:text-white'
                   }`}
                 >
                   {category === 'all' ? 'Todos' : category}
@@ -491,7 +424,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
             {filteredMenuItems.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-2">🍽️</div>
-                <p className="text-gray-600">Nenhum item encontrado nesta categoria.</p>
+                <p className="text-gray-400">Nenhum item encontrado nesta categoria.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -530,4 +463,67 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
       />
     </div>
   );
+
+  function MenuItemCard({ item }: { item: MenuItem }) {
+    const quantity = getItemQuantity(item.id);
+    
+    return (
+      <div className="bg-gray-800 rounded-xl shadow-lg border border-gray-700 overflow-hidden hover:shadow-xl hover:border-gray-600 transition-all duration-200">
+        <div className="relative">
+          <img
+            src={item.image}
+            alt={item.name}
+            className="w-full h-40 object-cover"
+          />
+          {!item.available && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <span className="bg-gray-900 text-white px-3 py-1 rounded-lg text-sm font-bold border border-gray-700">
+                Indisponível
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="p-4">
+          <h3 className="font-bold text-lg text-white mb-2">{item.name}</h3>
+          <p className="text-gray-300 text-sm mb-3 line-clamp-2">{item.description}</p>
+          
+          <div className="flex items-center justify-between">
+            <span className="text-xl font-bold text-green-400">
+              R$ {item.price.toFixed(2)}
+            </span>
+            
+            {item.available && (
+              <div className="flex items-center">
+                {quantity > 0 ? (
+                  <div className="flex items-center bg-green-900/30 rounded-lg border border-green-700">
+                    <button
+                      onClick={() => useCartStore.getState().updateQuantity(item.id, quantity - 1)}
+                      className="p-2 text-green-400 hover:bg-green-800 rounded-lg transition-colors duration-200"
+                    >
+                      <MdRemove size={16} />
+                    </button>
+                    <span className="px-3 py-1 font-bold text-green-400">{quantity}</span>
+                    <button
+                      onClick={() => handleAddToCart(item)}
+                      className="p-2 text-green-400 hover:bg-green-800 rounded-lg transition-colors duration-200"
+                    >
+                      <MdAdd size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleAddToCart(item)}
+                    className="bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-colors duration-200 shadow-lg"
+                  >
+                    <MdAdd size={16} />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 }
