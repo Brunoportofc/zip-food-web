@@ -76,9 +76,9 @@ export default function RestaurantToggle() {
   };
 
   return (
-    <div className="bg-gray-50 rounded-xl p-3">
+    <div className="bg-gray-900 rounded-xl p-3 border border-green-500">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-700">Status da Loja</span>
+        <span className="text-sm font-medium text-white">Status da Loja</span>
         <div className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-500' : 'bg-red-500'}`} />
       </div>
       
@@ -110,7 +110,7 @@ export default function RestaurantToggle() {
         )}
       </button>
       
-      <p className="text-xs text-gray-500 mt-2 text-center">
+      <p className="text-xs text-gray-300 mt-2 text-center">
         {isOpen 
           ? 'Clientes podem fazer pedidos' 
           : 'Loja invisível para clientes'

@@ -271,7 +271,7 @@ export default function RestaurantCadastro() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <FaStore className="w-8 h-8 text-red-600" />
+              <FaStore className="w-8 h-8 text-primary-600" />
             </div>
           </div>
         </div>
@@ -289,7 +289,7 @@ export default function RestaurantCadastro() {
                   {currentStep > step ? <FaCheck /> : step}
                 </div>
                 <div className="ml-3">
-                  <p className={`font-medium ${currentStep >= step ? 'text-red-600' : 'text-gray-600'}`}>
+                  <p className={`font-medium ${currentStep >= step ? 'text-primary-600' : 'text-gray-600'}`}>
                     {step === 1 && 'Informações Básicas'}
                     {step === 2 && 'Cardápio'}
                     {step === 3 && 'Revisão'}

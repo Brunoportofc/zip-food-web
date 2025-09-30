@@ -238,7 +238,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#101828]">
         <div className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center mb-4">
@@ -267,14 +267,14 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
 
   if (!restaurant) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#101828] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🏪</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Restaurante não encontrado</h1>
           <p className="text-gray-600 mb-4">O restaurante solicitado não existe ou foi removido.</p>
           <Link
             href="/customer"
-            className="bg-red-600 text-white px-6 py-2 rounded-full font-medium hover:bg-red-700 transition-colors duration-200"
+            className="bg-primary-600 text-white px-6 py-2 rounded-full font-medium hover:bg-primary-700 transition-colors duration-200"
           >
             Voltar ao Início
           </Link>
@@ -315,17 +315,17 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
             {item.available && (
               <div className="flex items-center">
                 {quantity > 0 ? (
-                  <div className="flex items-center bg-red-50 rounded-full">
+                  <div className="flex items-center bg-primary-50 rounded-full">
                     <button
                       onClick={() => useCartStore.getState().updateQuantity(item.id, quantity - 1)}
-                      className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                      className="p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-colors duration-200"
                     >
                       <MdRemove size={16} />
                     </button>
-                    <span className="px-3 py-1 font-bold text-red-600">{quantity}</span>
+                    <span className="px-3 py-1 font-bold text-primary-600">{quantity}</span>
                     <button
                       onClick={() => handleAddToCart(item)}
-                      className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                      className="p-2 text-primary-600 hover:bg-primary-100 rounded-full transition-colors duration-200"
                     >
                       <MdAdd size={16} />
                     </button>
@@ -333,7 +333,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                 ) : (
                   <button
                     onClick={() => handleAddToCart(item)}
-                    className="bg-red-600 text-white p-2 rounded-full hover:bg-red-700 transition-colors duration-200"
+                    className="bg-primary-600 text-white p-2 rounded-full hover:bg-primary-700 transition-colors duration-200"
                   >
                     <MdAdd size={16} />
                   </button>
@@ -347,7 +347,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#101828]">
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -373,15 +373,15 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
               <button
                 onClick={() => setIsFavorite(!isFavorite)}
                 className={`p-2 rounded-full transition-colors duration-200 ${
-                  isFavorite ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600'
+                  isFavorite ? 'bg-primary-100 text-primary-600' : 'bg-gray-100 text-gray-600 hover:bg-primary-100 hover:text-primary-600'
                 }`}
               >
                 <MdFavorite size={20} />
               </button>
               
-              <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-red-100 hover:text-red-600 transition-colors duration-200">
-                <MdShare size={20} />
-              </button>
+              <button className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-100 hover:text-primary-600 transition-colors duration-200">
+            <MdShare size={20} />
+          </button>
               
               {/* Ícone do carrinho */}
               <CartIcon size={20} />
@@ -437,21 +437,21 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                 
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                   <div className="flex items-center">
-                    <MdLocationOn className="mr-2 text-red-600" size={16} />
+                    <MdLocationOn className="mr-2 text-primary-600" size={16} />
                     <span>{restaurant.address ? `${restaurant.address}` : 'Entrega na região'}</span>
                   </div>
                   <div className="flex items-center">
-                    <MdPhone className="mr-2 text-red-600" size={16} />
+                    <MdPhone className="mr-2 text-primary-600" size={16} />
                     <span>{restaurant.phone || 'Telefone não informado'}</span>
                   </div>
                   <div className="flex items-center">
-                    <MdInfo className="mr-2 text-red-600" size={16} />
+                    <MdInfo className="mr-2 text-primary-600" size={16} />
                     <span>Pedido mínimo: R$ {restaurant.minimumOrder?.toFixed(2) || '0,00'}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className="bg-[#101828] rounded-xl p-4">
                 <h4 className="font-bold text-gray-900 mb-3">Horário de funcionamento</h4>
                 <div className="space-y-2 text-sm text-gray-600">
                     <div className="flex justify-between">
@@ -477,8 +477,8 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                   onClick={() => setSelectedCategory(category)}
                   className={`px-4 py-2 rounded-full whitespace-nowrap transition-colors duration-200 ${
                     selectedCategory === category
-                      ? 'bg-red-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-600'
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-primary-100 hover:text-primary-600'
                   }`}
                 >
                   {category === 'all' ? 'Todos' : category}

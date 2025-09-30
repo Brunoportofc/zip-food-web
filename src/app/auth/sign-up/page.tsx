@@ -7,6 +7,7 @@ import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowRight, Users, Store, Truck, Trash2 } from 'lucide-react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import LottieAnimation from '@/components/LottieAnimation';
+import MetaballsBackground from '@/components/MetaballsBackground';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/services/auth.service';
 import { cleanupOrphanAccount } from '@/utils/cleanup-orphan-accounts';
@@ -150,33 +151,39 @@ export default function SignUpPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="flex flex-col lg:flex-row min-h-screen">
+    <div className="min-h-screen bg-background relative">
+      {/* Animated Background */}
+      <MetaballsBackground />
+      
+      <div className="flex flex-col lg:flex-row min-h-screen relative z-10">
         {/* Left Side - User Type Selection */}
-        <div className="flex-1 flex flex-col justify-center items-center p-4 lg:p-8 bg-black">
+        <div className="flex-1 flex flex-col justify-center items-center p-4 lg:p-8">
           <AnimatedContainer className="w-full max-w-lg">
-            <div className="bg-gray-900 p-6 lg:p-8 rounded-lg shadow-lg border border-primary">
-              <div className="text-center mb-6 lg:mb-8">
-                <h2 className="text-xl lg:text-2xl font-bold text-white mb-2 lg:mb-3">
+            <div className="bg-gray-800/90 p-8 lg:p-10 rounded-3xl shadow-2xl border border-primary/30 backdrop-blur-lg">
+              <div className="text-center mb-8 lg:mb-10">
+                <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 lg:mb-4">
                   Escolha seu Tipo de Conta
                 </h2>
-                <p className="text-gray-300 mb-4 lg:mb-6 text-sm lg:text-base">
+                <p className="text-gray-300 mb-6 lg:mb-8 text-base lg:text-lg leading-relaxed">
                   Selecione como você quer usar nossa plataforma
                 </p>
               </div>
 
              {/* Lottie Animation */}
-             <div className="mb-6 lg:mb-8 flex justify-center">
-               <LottieAnimation 
-                 userType={formData.user_type}
-                 width={150}
-                 height={150}
-                 className="drop-shadow-lg lg:w-[200px] lg:h-[200px]"
-               />
+             <div className="mb-8 lg:mb-10 flex justify-center">
+               <div className="relative">
+                 <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl"></div>
+                 <LottieAnimation 
+                   userType={formData.user_type}
+                   width={180}
+                   height={180}
+                   className="relative drop-shadow-2xl lg:w-[220px] lg:h-[220px]"
+                 />
+               </div>
              </div>
 
             {/* User Type Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 lg:gap-8 w-full">
               {userTypeOptions.map((option) => {
                 const IconComponent = option.icon;
                 const isSelected = formData.user_type === option.value;
@@ -186,29 +193,41 @@ export default function SignUpPage() {
                     key={option.value}
                     type="button"
                     onClick={() => handleUserTypeSelect(option.value)}
-                    className={`p-3 lg:p-4 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
+                    className={`group relative p-6 lg:p-8 rounded-2xl border-2 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl ${
                       isSelected 
-                        ? 'border-red-500 bg-red-500 shadow-lg' 
-                        : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+                        ? 'border-primary bg-primary/15 shadow-2xl shadow-primary/30' 
+                        : 'border-gray-600/50 bg-gray-700/30 hover:border-primary/60 hover:bg-gray-700/50'
                     }`}
                   >
-                    <div className="flex flex-col items-center space-y-2">
-                      <div className={`p-2 lg:p-3 rounded-full ${
+                    {/* Glow effect for selected */}
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-primary/10 rounded-2xl blur-sm"></div>
+                    )}
+                    
+                    <div className="relative flex flex-col items-center space-y-4">
+                      <div className={`p-4 lg:p-5 rounded-2xl transition-all duration-500 ${
                         isSelected 
-                          ? 'bg-red-600' 
-                          : 'bg-gray-100'
+                          ? 'bg-primary text-background shadow-lg shadow-primary/40' 
+                          : 'bg-gray-600/70 text-gray-300 group-hover:bg-gray-500/70'
                       }`}>
-                        <IconComponent className={`w-5 h-5 lg:w-6 lg:h-6 ${
-                          isSelected ? 'text-white' : 'text-gray-600'
+                        <IconComponent className={`w-8 h-8 lg:w-10 lg:h-10 transition-transform duration-300 ${
+                          isSelected ? 'scale-110' : 'group-hover:scale-105'
                         }`} />
                       </div>
-                      <span className={`font-medium text-sm lg:text-base ${
+                      <span className={`font-bold text-lg lg:text-xl transition-all duration-300 ${
                         isSelected 
-                          ? 'text-white' 
-                          : 'text-gray-700'
+                          ? 'text-primary' 
+                          : 'text-foreground group-hover:text-primary/80'
                       }`}>
                         {option.label}
                       </span>
+                      
+                      {/* Selection indicator */}
+                      {isSelected && (
+                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-background rounded-full"></div>
+                        </div>
+                      )}
                     </div>
                   </button>
                 );
@@ -219,35 +238,42 @@ export default function SignUpPage() {
         </div>
 
         {/* Right Side - Form */}
-        <div className="flex-1 flex flex-col justify-center items-center p-4 lg:p-8 bg-gray-50">
-          <AnimatedContainer className="w-full max-w-md">
-            <div className="bg-white rounded-2xl shadow-xl p-6 lg:p-8">
+        <div className="flex-1 flex flex-col justify-center items-center p-4 lg:p-8">
+          <AnimatedContainer className="w-full max-w-xl">
+            <div className="bg-white/5 backdrop-blur-xl rounded-3xl shadow-2xl shadow-primary/10 border border-white/10 p-8 lg:p-12 transition-all duration-500 hover:shadow-primary/20 hover:border-white/20 relative overflow-hidden">
+              {/* Decorative gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-blue-500/5 pointer-events-none"></div>
+              
               {/* Header */}
-              <div className="text-center mb-6 lg:mb-8">
-                <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+              <div className="text-center mb-6 lg:mb-8 relative z-10">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-blue-500 rounded-2xl mb-4 shadow-lg shadow-primary/30">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3 bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent">
                   Criar Conta
                 </h2>
-                <p className="text-gray-600 text-sm lg:text-base">
+                <p className="text-gray-300 text-base lg:text-lg leading-relaxed font-light">
                   Preencha seus dados para começar
                 </p>
               </div>
 
               {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-5 relative z-10">
                 {/* Name */}
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                <div className="group">
+                  <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
                     Nome Completo
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 lg:w-5 lg:h-5" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-primary z-10" />
                     <input
                        type="text"
                        id="name"
                        name="name"
                        value={formData.name}
                        onChange={handleInputChange}
-                       className="w-full pl-9 lg:pl-10 pr-3 lg:pr-4 py-2 lg:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors text-sm lg:text-base bg-white text-gray-900 placeholder-gray-500"
+                       className="w-full pl-12 pr-4 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
                        placeholder="Seu nome completo"
                        required
                       disabled={loading || isSubmitting}
@@ -256,19 +282,20 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Email */}
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                <div className="group">
+                  <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
                     Email
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 lg:w-5 lg:h-5" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-primary z-10" />
                     <input
                        type="email"
                        id="email"
                        name="email"
                        value={formData.email}
                        onChange={handleInputChange}
-                       className="w-full pl-9 lg:pl-10 pr-3 lg:pr-4 py-2 lg:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors text-sm lg:text-base bg-white text-gray-900 placeholder-gray-500"
+                       className="w-full pl-12 pr-4 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
                        placeholder="seu@email.com"
                        required
                       disabled={loading || isSubmitting}
@@ -277,19 +304,20 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Phone */}
-                <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                <div className="group">
+                  <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
                     Telefone
                   </label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 lg:w-5 lg:h-5" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-primary z-10" />
                     <input
                        type="tel"
                        id="phone"
                        name="phone"
                        value={formData.phone}
                        onChange={handleInputChange}
-                       className="w-full pl-9 lg:pl-10 pr-3 lg:pr-4 py-2 lg:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors text-sm lg:text-base bg-white text-gray-900 placeholder-gray-500"
+                       className="w-full pl-12 pr-4 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
                        placeholder="(11) 99999-9999"
                        required
                       disabled={loading || isSubmitting}
@@ -298,19 +326,20 @@ export default function SignUpPage() {
                 </div>
 
                 {/* Password */}
-                <div>
-                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                <div className="group">
+                  <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
                     Senha
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 lg:w-5 lg:h-5" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-primary z-10" />
                     <input
                        type={showPassword ? "text" : "password"}
                        id="password"
                        name="password"
                        value={formData.password}
                        onChange={handleInputChange}
-                       className="w-full pl-9 lg:pl-10 pr-10 lg:pr-12 py-2 lg:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors text-sm lg:text-base bg-white text-gray-900 placeholder-gray-500"
+                       className="w-full pl-12 pr-14 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
                        placeholder="Mínimo 6 caracteres"
                        required
                       disabled={loading || isSubmitting}
@@ -318,28 +347,29 @@ export default function SignUpPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors duration-200 p-2 rounded-lg hover:bg-white/10 z-10"
                       disabled={loading || isSubmitting}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4 lg:w-5 lg:h-5" /> : <Eye className="w-4 h-4 lg:w-5 lg:h-5" />}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
 
                 {/* Confirm Password */}
-                <div>
-                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                <div className="group">
+                  <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
                     Confirmar Senha
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 lg:w-5 lg:h-5" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 transition-colors group-focus-within:text-primary z-10" />
                     <input
                        type={showConfirmPassword ? "text" : "password"}
                        id="confirmPassword"
                        name="confirmPassword"
                        value={formData.confirmPassword}
                        onChange={handleInputChange}
-                       className="w-full pl-9 lg:pl-10 pr-10 lg:pr-12 py-2 lg:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors text-sm lg:text-base bg-white text-gray-900 placeholder-gray-500"
+                       className="w-full pl-12 pr-14 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
                        placeholder="Confirme sua senha"
                        required
                       disabled={loading || isSubmitting}
@@ -347,10 +377,10 @@ export default function SignUpPage() {
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary transition-colors duration-200 p-2 rounded-lg hover:bg-white/10 z-10"
                       disabled={loading || isSubmitting}
                     >
-                      {showConfirmPassword ? <EyeOff className="w-4 h-4 lg:w-5 lg:h-5" /> : <Eye className="w-4 h-4 lg:w-5 lg:h-5" />}
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -359,44 +389,50 @@ export default function SignUpPage() {
                 <button
                   type="submit"
                   disabled={loading || isSubmitting}
-                  className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 lg:py-3 px-4 lg:px-6 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 focus:ring-4 focus:ring-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 text-sm lg:text-base"
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-3 lg:py-4 px-6 rounded-xl font-bold text-base lg:text-lg focus:ring-4 focus:ring-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl hover:shadow-green-500/40 mt-6 lg:mt-8 relative overflow-hidden group"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   {loading || isSubmitting ? (
-                    <div className="flex items-center justify-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 lg:h-5 lg:w-5 border-b-2 border-white"></div>
+                    <div className="flex items-center justify-center space-x-3 relative z-10">
+                      <div className="animate-spin rounded-full h-5 w-5 lg:h-6 lg:w-6 border-b-2 border-white"></div>
                       <span>Criando conta...</span>
                     </div>
                   ) : (
-                    'Criar Conta'
+                    <div className="flex items-center justify-center space-x-3 relative z-10">
+                      <span>Criar Conta</span>
+                      <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 transition-transform group-hover:translate-x-1" />
+                    </div>
                   )}
                 </button>
               </form>
 
               {/* Orphan Account Cleanup */}
               {showOrphanCleanup && (
-                <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                  <div className="flex items-start space-x-3">
-                    <Trash2 className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <div className="mt-4 p-5 bg-gradient-to-r from-warning/10 to-orange-500/10 border border-warning/20 rounded-2xl backdrop-blur-sm relative z-10">
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-warning to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Trash2 className="w-5 h-5 text-white" />
+                    </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium text-yellow-800 mb-2">
+                      <h4 className="text-base font-bold text-warning mb-3">
                         Conta Órfã Detectada
                       </h4>
-                      <p className="text-sm text-yellow-700 mb-3">
-                        O email <strong>{orphanEmail}</strong> já existe no sistema, mas pode estar incompleto. 
+                      <p className="text-sm text-gray-300 mb-4 leading-relaxed">
+                        O email <strong className="text-white">{orphanEmail}</strong> já existe no sistema, mas pode estar incompleto. 
                         Você pode tentar limpar esta conta para criar uma nova.
                       </p>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-3">
                         <button
                           onClick={handleCleanupOrphan}
                           disabled={isSubmitting}
-                          className="px-3 py-1.5 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700 disabled:opacity-50 transition-colors"
+                          className="px-4 py-2.5 bg-gradient-to-r from-warning to-orange-500 text-white text-sm font-semibold rounded-xl hover:from-warning/80 hover:to-orange-500/80 disabled:opacity-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         >
                           {isSubmitting ? 'Limpando...' : 'Limpar Conta'}
                         </button>
                         <button
                           onClick={() => setShowOrphanCleanup(false)}
                           disabled={isSubmitting}
-                          className="px-3 py-1.5 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400 disabled:opacity-50 transition-colors"
+                          className="px-4 py-2.5 bg-white/10 text-foreground text-sm font-semibold rounded-xl hover:bg-white/20 disabled:opacity-50 transition-all duration-300 backdrop-blur-sm border border-white/10"
                         >
                           Cancelar
                         </button>
@@ -407,16 +443,22 @@ export default function SignUpPage() {
               )}
 
               {/* Sign In Link */}
-              <div className="text-center mt-4 lg:mt-6">
-                <p className="text-gray-600 text-sm lg:text-base">
-                  Já tem uma conta?{' '}
-                  <Link 
-                    href="/auth/sign-in" 
-                    className="text-orange-600 hover:text-orange-700 font-medium hover:underline transition-colors"
-                  >
-                    Fazer login
-                  </Link>
-                </p>
+              <div className="text-center mt-6 lg:mt-8 relative z-10">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent h-px top-1/2"></div>
+                  <div className="relative bg-gray-900 px-4">
+                    <p className="text-gray-300 text-base lg:text-lg font-light">
+                      Já tem uma conta?{' '}
+                      <Link 
+                        href="/auth/sign-in" 
+                        className="text-primary hover:text-blue-400 font-semibold hover:underline transition-all duration-300 inline-flex items-center space-x-1 group"
+                      >
+                        <span>Fazer login</span>
+                        <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                      </Link>
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </AnimatedContainer>

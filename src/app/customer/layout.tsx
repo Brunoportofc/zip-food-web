@@ -17,7 +17,7 @@ export default function CustomerLayout({
 
   return (
     <CustomerProtectedRoute>
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#101828]">
         {/* Top Navigation Bar */}
         <nav className="bg-white border-b border-gray-200 sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,7 +25,7 @@ export default function CustomerLayout({
               {/* Logo */}
               <div className="flex items-center">
                 <div className="flex-shrink-0">
-                  <h1 className="text-2xl font-bold text-red-500">Zip Food</h1>
+                  <h1 className="text-2xl font-bold text-primary-500">Zip Food</h1>
                 </div>
               </div>
 
@@ -34,20 +34,20 @@ export default function CustomerLayout({
                 <div className="ml-10 flex items-baseline space-x-4">
                   <Link
                     href="/customer"
-                    className="text-black hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="text-black hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     Início
                   </Link>
                   <Link
                     href="/customer/orders"
-                    className="text-gray-600 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+                    className="text-gray-600 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
                   >
                     <MdShoppingCart className="mr-1" size={18} />
                     Pedidos
                   </Link>
                   <Link
                     href="/customer/favorites"
-                    className="text-gray-600 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+                    className="text-gray-600 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
                   >
                     <MdFavorite className="mr-1" size={18} />
                     Favoritos
@@ -59,7 +59,7 @@ export default function CustomerLayout({
               <div className="relative">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-red-500 transition-colors"
+                  className="flex items-center space-x-2 text-gray-600 hover:text-primary-500 transition-colors"
                 >
                   <MdPerson size={24} />
                   <span className="hidden md:block text-sm font-medium">Minha Conta</span>

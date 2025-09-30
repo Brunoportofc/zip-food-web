@@ -123,7 +123,7 @@ const GeoapifyMap: React.FC<GeoapifyMapProps> = ({
 
     markers.forEach((markerData, index) => {
       const marker = new window.geoapify.Marker({
-        color: '#ef4444',
+        color: '#dc2626',
         size: 'medium'
       })
         .setLngLat([markerData.position.lng, markerData.position.lat])
@@ -204,7 +204,7 @@ const GeoapifyMap: React.FC<GeoapifyMapProps> = ({
     return (
       <div className={`flex items-center justify-center bg-gray-100 ${className}`} style={style}>
         <div className="text-center p-4">
-          <p className="text-red-600 mb-2">❌ {error}</p>
+          <p className="text-primary-600 mb-2">❌ {error}</p>
           <button 
             onClick={loadGeoapifyMaps}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"

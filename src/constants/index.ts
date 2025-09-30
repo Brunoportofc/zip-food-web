@@ -52,6 +52,11 @@ export const categoryConfig: Record<RestaurantCategory, { icon: string; color: s
   }
 };
 
+// Função para obter o ícone de uma categoria
+export const getCategoryIcon = (category: RestaurantCategory): string => {
+  return categoryConfig[category]?.icon || '🍽️';
+};
+
 // Cores para status de pedidos
 export const orderStatusColors = {
   pending: 'bg-yellow-100 text-yellow-800',

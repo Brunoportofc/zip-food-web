@@ -146,7 +146,7 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#101828] flex items-center justify-center p-4">
       <AnimatedContainer className="w-full max-w-md">
         <div className="bg-gray-900 rounded-2xl shadow-xl p-8 border border-primary">
           {/* Header */}
@@ -215,7 +215,7 @@ export default function SignInPage() {
             <div className="text-right">
               <Link 
                 href="/auth/forgot-password" 
-                className="text-sm text-orange-600 hover:text-orange-700 transition-colors"
+                className="text-sm text-primary hover:text-primary-dark transition-colors"
               >
                 Esqueceu sua senha?
               </Link>
@@ -225,10 +225,10 @@ export default function SignInPage() {
             <button
               type="submit"
               disabled={loading || isSubmitting}
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-3 px-4 rounded-lg font-semibold hover:from-orange-600 hover:to-red-600 focus:ring-4 focus:ring-orange-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+              className="w-full bg-primary text-background py-3 px-4 rounded-lg font-semibold hover:bg-primary-600 focus:ring-4 focus:ring-primary-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
             >
               {loading || isSubmitting ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
                   Entrar
@@ -240,11 +240,11 @@ export default function SignInPage() {
 
           {/* Sign Up Link */}
           <div className="mt-8 text-center">
-            <p className="text-gray-600">
+            <p className="text-white">
               Não tem uma conta?{' '}
               <Link 
                 href="/auth/sign-up" 
-                className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+                className="text-primary hover:text-primary-dark font-medium transition-colors"
               >
                 Cadastre-se aqui
               </Link>

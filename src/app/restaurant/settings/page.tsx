@@ -179,25 +179,25 @@ export default function RestaurantSettingsPage() {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando informações do perfil...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-300">Carregando informações do perfil...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6 bg-[#101828] min-h-screen p-6">
       {/* Header */}
-      <div className="bg-white rounded-xl shadow-sm border p-6">
+      <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
               <FaUser className="text-white text-2xl" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Configurações da Conta</h1>
-              <p className="text-gray-600">Gerencie suas informações pessoais e do restaurante</p>
+              <h1 className="text-2xl font-bold text-white">Configurações da Conta</h1>
+              <p className="text-gray-300">Gerencie suas informações pessoais e do restaurante</p>
             </div>
           </div>
           <button
@@ -205,7 +205,7 @@ export default function RestaurantSettingsPage() {
             className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
               editMode 
                 ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
-                : 'bg-red-600 text-white hover:bg-red-700'
+                : 'bg-green-600 text-white hover:bg-green-700'
             }`}
           >
             <FaEdit className="w-4 h-4" />
@@ -215,11 +215,11 @@ export default function RestaurantSettingsPage() {
       </div>
 
       {/* Informações da Conta */}
-      <div className="bg-white rounded-xl shadow-sm border">
+      <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500">
         <div className="p-6 border-b border-gray-200">
           <div className="flex items-center space-x-2">
             <FaShieldAlt className="text-red-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Informações da Conta</h2>
+            <h2 className="text-xl font-semibold text-white">Informações da Conta</h2>
           </div>
         </div>
         
@@ -236,12 +236,12 @@ export default function RestaurantSettingsPage() {
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400 bg-gray-900"
                 />
               ) : (
                 <div className="flex items-center space-x-2">
                   <FaUser className="text-gray-400" />
-                  <span className="text-gray-900">{userProfile?.displayName || 'Não informado'}</span>
+                  <span className="text-white">{userProfile?.displayName || 'Não informado'}</span>
                 </div>
               )}
             </div>
@@ -253,7 +253,7 @@ export default function RestaurantSettingsPage() {
               </label>
               <div className="flex items-center space-x-2">
                 <FaEnvelope className="text-gray-400" />
-                <span className="text-gray-900">{userProfile?.email || 'Não informado'}</span>
+                <span className="text-white">{userProfile?.email || 'Não informado'}</span>
                 <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verificado</span>
               </div>
             </div>
@@ -270,12 +270,12 @@ export default function RestaurantSettingsPage() {
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="(11) 99999-9999"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400 bg-gray-900"
                 />
               ) : (
                 <div className="flex items-center space-x-2">
                   <FaPhone className="text-gray-400" />
-                  <span className="text-gray-900">{userProfile?.phone || 'Não informado'}</span>
+                  <span className="text-white">{userProfile?.phone || 'Não informado'}</span>
                 </div>
               )}
             </div>
@@ -287,7 +287,7 @@ export default function RestaurantSettingsPage() {
               </label>
               <div className="flex items-center space-x-2">
                 <FaKey className="text-gray-400" />
-                <span className="text-gray-900 capitalize">{userProfile?.role || 'Não definido'}</span>
+                <span className="text-white capitalize">{userProfile?.role || 'Não definido'}</span>
                 <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Restaurante</span>
               </div>
             </div>
@@ -301,7 +301,7 @@ export default function RestaurantSettingsPage() {
               </label>
               <div className="flex items-center space-x-2">
                 <FaCalendarAlt className="text-gray-400" />
-                <span className="text-gray-900">{formatDate(userProfile?.createdAt)}</span>
+                <span className="text-white">{formatDate(userProfile?.createdAt)}</span>
               </div>
             </div>
 
@@ -311,7 +311,7 @@ export default function RestaurantSettingsPage() {
               </label>
               <div className="flex items-center space-x-2">
                 <FaCalendarAlt className="text-gray-400" />
-                <span className="text-gray-900">{formatDate(userProfile?.updatedAt)}</span>
+                <span className="text-white">{formatDate(userProfile?.updatedAt)}</span>
               </div>
             </div>
           </div>
@@ -321,18 +321,18 @@ export default function RestaurantSettingsPage() {
 
       {/* Botões de Ação */}
       {editMode && (
-        <div className="bg-white rounded-xl shadow-sm border p-6">
+        <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-end space-x-4">
             <button
               onClick={() => setEditMode(false)}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              className="px-6 py-2 border border-green-500 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center space-x-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              className="flex items-center space-x-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
             >
               {saving ? (
                 <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>

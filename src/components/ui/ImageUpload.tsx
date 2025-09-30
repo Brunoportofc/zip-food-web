@@ -131,7 +131,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       <div
         className={`
           relative border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-all duration-200
-          ${dragOver ? 'border-red-400 bg-red-50' : 'border-gray-300 hover:border-red-400'}
+          ${dragOver ? 'border-primary-400 bg-primary-50' : 'border-gray-300 hover:border-primary-400'}
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           ${uploading ? 'pointer-events-none' : ''}
         `}
@@ -182,7 +182,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
                     handleRemoveImage();
                   }}
                   disabled={disabled || uploading}
-                  className="p-2 bg-white text-red-600 rounded-full hover:bg-red-50 transition-colors"
+                  className="p-2 bg-white text-primary-600 rounded-full hover:bg-primary-50 transition-colors"
                   title="Remover imagem"
                 >
                   <MdDelete className="text-lg" />
@@ -195,7 +195,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           <div className={`flex flex-col items-center justify-center ${getPlaceholderDimensions()}`}>
             {uploading ? (
               <div className="flex flex-col items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mb-2"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mb-2"></div>
                 <p className="text-sm text-gray-600">Enviando...</p>
               </div>
             ) : (

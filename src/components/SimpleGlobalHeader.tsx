@@ -55,12 +55,12 @@ const SimpleGlobalHeader = () => {
             onClick={handleLogoClick}
             className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
           >
-            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-red-600 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-primary-600 rounded-xl flex items-center justify-center">
               <MdDeliveryDining size={24} className="text-white lg:hidden" />
               <MdDeliveryDining size={28} className="text-white hidden lg:block" />
             </div>
             <div>
-              <h1 className="text-xl lg:text-2xl font-bold text-red-600">
+              <h1 className="text-xl lg:text-2xl font-bold text-primary-600">
                 ZipFood
               </h1>
               <p className="text-xs lg:text-sm text-gray-600 hidden sm:block">
@@ -98,7 +98,7 @@ const SimpleGlobalHeader = () => {
                 onClick={handleLogoutClick}
                 variant="outline"
                 size="sm"
-                className="flex items-center space-x-2 text-red-600 border-red-600 hover:bg-red-50"
+                className="flex items-center space-x-2 text-primary-600 border-primary-600 hover:bg-primary-50"
               >
                 <MdLogout size={18} />
                 <span className="hidden sm:inline">

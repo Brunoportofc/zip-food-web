@@ -185,7 +185,7 @@ export default function CustomerProfilePage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando...</p>
         </div>
       </div>
@@ -193,7 +193,7 @@ export default function CustomerProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-[#101828] p-4">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Sidebar */}
@@ -204,8 +204,8 @@ export default function CustomerProfilePage() {
                 <div 
                   className={`flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer border-2 transition-colors ${
                     activeTab === 'personal' 
-                      ? 'bg-red-50 border-red-100 text-red-600' 
-                      : 'border-transparent hover:border-red-200 hover:bg-gray-50 text-gray-700'
+                      ? 'bg-primary-50 border-primary-100 text-primary-600' 
+                      : 'border-transparent hover:border-primary-200 hover:bg-[#101828] text-gray-700'
                   }`}
                   onClick={() => setActiveTab('personal')}
                 >
@@ -216,8 +216,8 @@ export default function CustomerProfilePage() {
                 <div 
                   className={`flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer border-2 transition-colors ${
                     activeTab === 'addresses' 
-                      ? 'bg-red-50 border-red-100 text-red-600' 
-                      : 'border-transparent hover:border-red-200 hover:bg-gray-50 text-gray-700'
+                      ? 'bg-primary-50 border-primary-100 text-primary-600' 
+                      : 'border-transparent hover:border-primary-200 hover:bg-[#101828] text-gray-700'
                   }`}
                   onClick={() => setActiveTab('addresses')}
                 >
@@ -228,8 +228,8 @@ export default function CustomerProfilePage() {
                 <div 
                   className={`flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer border-2 transition-colors ${
                     activeTab === 'notifications' 
-                      ? 'bg-red-50 border-red-100 text-red-600' 
-                      : 'border-transparent hover:border-red-200 hover:bg-gray-50 text-gray-700'
+                      ? 'bg-primary-50 border-primary-100 text-primary-600' 
+                      : 'border-transparent hover:border-primary-200 hover:bg-[#101828] text-gray-700'
                   }`}
                   onClick={() => setActiveTab('notifications')}
                 >
@@ -238,11 +238,11 @@ export default function CustomerProfilePage() {
                 </div>
                 
                 <div 
-                  className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-red-50 cursor-pointer border-2 border-transparent hover:border-red-200"
+                  className="flex items-center space-x-3 px-4 py-3 rounded-xl hover:bg-primary-50 cursor-pointer border-2 border-transparent hover:border-primary-200"
                   onClick={handleLogout}
                 >
-                  <FaSignOutAlt className="text-red-600" size={18} />
-                  <span className="text-red-600 font-medium">Sair</span>
+                  <FaSignOutAlt className="text-primary-600" size={18} />
+                  <span className="text-primary-600 font-medium">Sair</span>
                 </div>
               </nav>
             </div>
@@ -253,7 +253,7 @@ export default function CustomerProfilePage() {
             <div className="space-y-6">
               {/* Header */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h1 className="text-3xl font-bold text-red-600 mb-2">Meu Perfil</h1>
+                <h1 className="text-3xl font-bold text-primary-600 mb-2">Meu Perfil</h1>
                 <p className="text-gray-600">Gerencie suas informações pessoais e preferências</p>
               </div>
         
@@ -280,7 +280,7 @@ export default function CustomerProfilePage() {
                   {!isEditingPersonal ? (
                     <button 
                       onClick={() => setIsEditingPersonal(true)}
-                      className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
+                      className="px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                     >
                       <FaEdit /> Editar
                     </button>
@@ -288,7 +288,7 @@ export default function CustomerProfilePage() {
                     <div className="flex gap-3">
                       <button 
                         onClick={handleSavePersonalData}
-                        className="px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
+                        className="px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                       >
                         <FaSave /> Salvar
                       </button>
@@ -310,7 +310,7 @@ export default function CustomerProfilePage() {
                         type="text"
                         value={personalData.name}
                         onChange={(e) => setPersonalData({...personalData, name: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                       />
                     </div>
                     <div>
@@ -319,7 +319,7 @@ export default function CustomerProfilePage() {
                         type="email"
                         value={personalData.email}
                         onChange={(e) => setPersonalData({...personalData, email: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                       />
                     </div>
                     <div>
@@ -328,7 +328,7 @@ export default function CustomerProfilePage() {
                         type="tel"
                         value={personalData.phone}
                         onChange={(e) => setPersonalData({...personalData, phone: e.target.value})}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                         placeholder="(11) 99999-9999"
                       />
                     </div>
@@ -358,14 +358,14 @@ export default function CustomerProfilePage() {
               {activeTab === 'addresses' && (
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <FaMapMarkerAlt className="text-red-600" />
+                    <FaMapMarkerAlt className="text-primary-600" />
                     Endereços
                   </h2>
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                     <h3 className="text-xl font-semibold text-gray-900 mb-4">Meus Endereços</h3>
             
             {addresses.map((address) => (
-              <div key={address.id} className="border border-gray-200 rounded-xl p-4 mb-4 bg-gray-50">
+              <div key={address.id} className="border border-gray-200 rounded-xl p-4 mb-4 bg-[#101828]">
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="font-medium text-gray-900">{address.label}</p>
@@ -374,12 +374,12 @@ export default function CustomerProfilePage() {
                     <p className="text-gray-700">CEP: {address.zipCode}</p>
                   </div>
                   <div className="flex gap-3">
-                    <button className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1">
+                    <button className="text-primary-600 hover:text-primary-700 p-2 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1">
                       <FaEdit size={16} /> Editar
                     </button>
                     <button 
                       onClick={() => handleRemoveAddress(address.id)}
-                      className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-1"
+                      className="text-primary-600 hover:text-primary-700 p-2 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1"
                     >
                       <FaTrash size={16} /> Remover
                     </button>
@@ -389,55 +389,55 @@ export default function CustomerProfilePage() {
             ))}
             
             {isAddingAddress ? (
-              <div className="bg-red-50 p-4 rounded-xl mb-4 border border-red-200">
+              <div className="bg-primary-50 p-4 rounded-xl mb-4 border border-primary-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <input
                     type="text"
                     placeholder="Nome do endereço (ex: Casa, Trabalho)"
                     value={newAddress.label}
                     onChange={(e) => setNewAddress({...newAddress, label: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
                     placeholder="Rua, número"
                     value={newAddress.street}
                     onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
                     placeholder="Bairro"
                     value={newAddress.neighborhood}
                     onChange={(e) => setNewAddress({...newAddress, neighborhood: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
                     placeholder="Cidade"
                     value={newAddress.city}
                     onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
                     placeholder="Estado"
                     value={newAddress.state}
                     onChange={(e) => setNewAddress({...newAddress, state: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
                     placeholder="CEP"
                     value={newAddress.zipCode}
                     onChange={(e) => setNewAddress({...newAddress, zipCode: e.target.value})}
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 outline-none transition-colors text-black"
+                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                 </div>
                 <div className="flex gap-3">
                   <button 
                     onClick={handleAddAddress}
-                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                    className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                   >
                     <FaSave /> Salvar
                   </button>
@@ -452,7 +452,7 @@ export default function CustomerProfilePage() {
             ) : (
               <button 
                 onClick={() => setIsAddingAddress(true)}
-                className="bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-xl flex items-center gap-2 mt-4 font-medium focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+                className="bg-primary-600 hover:bg-primary-700 text-white py-3 px-6 rounded-xl flex items-center gap-2 mt-4 font-medium focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
               >
                 <FaPlus /> Adicionar Novo Endereço
               </button>
@@ -465,7 +465,7 @@ export default function CustomerProfilePage() {
               {activeTab === 'notifications' && (
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <FaBell className="text-red-600" />
+                    <FaBell className="text-primary-600" />
                     Notificações
                   </h2>
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">

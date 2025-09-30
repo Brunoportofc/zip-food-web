@@ -212,8 +212,8 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-300">Carregando dashboard...</p>
         </div>
       </div>
     );
@@ -225,8 +225,8 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
       {/* Header com refresh */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Métricas e Pedidos</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-white">Métricas e Pedidos</h2>
+          <p className="text-gray-300 mt-1">
             Acompanhe o desempenho do seu restaurante em tempo real
             {refreshing && (
               <span className="ml-2 text-blue-600 text-sm">
@@ -237,7 +237,7 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
         </div>
         <button 
           onClick={refreshData}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          className="p-2 text-gray-300 hover:text-white hover:bg-gray-100 rounded-lg transition-colors"
           disabled={refreshing}
         >
           <FaArrowUp className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
@@ -282,11 +282,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
 
       {/* Métricas Principais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Pedidos Hoje</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.todayOrders}</p>
+              <p className="text-sm font-medium text-gray-300">Pedidos Hoje</p>
+              <p className="text-3xl font-bold text-white">{metrics?.todayOrders}</p>
               <p className={`text-sm flex items-center mt-1 ${
                 (metrics?.orderVariation || 0) >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
@@ -307,11 +307,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Faturamento Hoje</p>
-              <p className="text-3xl font-bold text-gray-900">
+              <p className="text-sm font-medium text-gray-300">Faturamento Hoje</p>
+              <p className="text-3xl font-bold text-white">
                 R$ {metrics?.todayRevenue.toFixed(2)}
               </p>
               <p className={`text-sm flex items-center mt-1 ${
@@ -334,11 +334,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Tempo Médio Entrega</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.averageDeliveryTime}min</p>
+              <p className="text-sm font-medium text-gray-300">Tempo Médio Entrega</p>
+              <p className="text-3xl font-bold text-white">{metrics?.averageDeliveryTime}min</p>
               <p className="text-sm text-blue-600 flex items-center mt-1">
                 <FaClock className="w-3 h-3 mr-1" />
                 Baseado em dados reais
@@ -350,11 +350,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Entregas Ativas</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.activeDeliveries}</p>
+              <p className="text-sm font-medium text-gray-300">Entregas Ativas</p>
+              <p className="text-3xl font-bold text-white">{metrics?.activeDeliveries}</p>
               <p className="text-sm text-blue-600 flex items-center mt-1">
                 <FaTruck className="w-3 h-3 mr-1" />
                 Em tempo real
@@ -369,28 +369,28 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
 
       {/* Entregas Ativas e Pedidos Recentes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500">
           <div className="p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">Entregas Ativas</h3>
+            <h3 className="text-xl font-semibold text-white">Entregas Ativas</h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
               {recentOrders.filter(order => ['preparing', 'ready', 'delivering'].includes(order.status)).map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div key={order.id} className="flex items-center justify-between p-4 bg-gray-800 rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                       <FaTruck className="text-blue-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">#{order.id.slice(-6)}</p>
-                      <p className="text-sm text-gray-600">{order.customer.name}</p>
+                      <p className="font-medium text-white">#{order.id.slice(-6)}</p>
+                      <p className="text-sm text-gray-300">{order.customer.name}</p>
                     </div>
                   </div>
                   <div className="text-right">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                       {getStatusText(order.status)}
                     </span>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-300 mt-1">
                       {order.estimatedDeliveryTime ? new Date(order.estimatedDeliveryTime).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '-'}
                     </p>
                   </div>
@@ -406,21 +406,21 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500">
           <div className="p-6 border-b border-gray-200">
-            <h3 className="text-xl font-semibold text-gray-900">Pedidos Recentes</h3>
+            <h3 className="text-xl font-semibold text-white">Pedidos Recentes</h3>
           </div>
           <div className="p-6">
             <div className="space-y-4">
               {recentOrders.slice(0, 5).map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <div key={order.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-800 transition-colors">
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                       <FaShoppingBag className="text-green-600" />
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">#{order.id.slice(-6)}</p>
-                      <p className="text-sm text-gray-600">{order.customer.name}</p>
+                      <p className="font-medium text-white">#{order.id.slice(-6)}</p>
+                      <p className="text-sm text-gray-300">{order.customer.name}</p>
                       <p className="text-xs text-gray-500">
                         {order.createdAt.toLocaleTimeString('pt-BR', { 
                           hour: '2-digit', 
@@ -430,7 +430,7 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">R$ {order.total.toFixed(2)}</p>
+                    <p className="font-medium text-white">R$ {order.total.toFixed(2)}</p>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                       {getStatusText(order.status)}
                     </span>
@@ -450,11 +450,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
 
       {/* Métricas Adicionais */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Avaliação dos Clientes</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.customerRating.toFixed(1)}</p>
+              <p className="text-sm font-medium text-gray-300">Avaliação dos Clientes</p>
+              <p className="text-3xl font-bold text-white">{metrics?.customerRating.toFixed(1)}</p>
               <div className="flex items-center mt-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <FaStar 
@@ -470,11 +470,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total de Clientes</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.totalCustomers}</p>
+              <p className="text-sm font-medium text-gray-300">Total de Clientes</p>
+              <p className="text-3xl font-bold text-white">{metrics?.totalCustomers}</p>
               <p className="text-sm text-blue-600 flex items-center mt-1">
                 <FaUsers className="w-3 h-3 mr-1" />
                 Base ativa
@@ -486,11 +486,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Taxa de Conversão</p>
-              <p className="text-3xl font-bold text-gray-900">{metrics?.conversionRate.toFixed(1)}%</p>
+              <p className="text-sm font-medium text-gray-300">Taxa de Conversão</p>
+              <p className="text-3xl font-bold text-white">{metrics?.conversionRate.toFixed(1)}%</p>
               <p className="text-sm text-green-600 flex items-center mt-1">
                 <FaChartLine className="w-3 h-3 mr-1" />
                 +2.1% vs mês anterior
@@ -502,11 +502,11 @@ export default function DashboardTab({ restaurantData }: DashboardTabProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm border border-green-500 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Horário de Pico</p>
-              <p className="text-2xl font-bold text-gray-900">{metrics?.peakHours}</p>
+              <p className="text-sm font-medium text-gray-300">Horário de Pico</p>
+              <p className="text-2xl font-bold text-white">{metrics?.peakHours}</p>
               <p className="text-sm text-orange-600 flex items-center mt-1">
                 <FaCalendarAlt className="w-3 h-3 mr-1" />
                 Maior movimento

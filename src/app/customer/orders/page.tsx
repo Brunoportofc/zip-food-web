@@ -98,13 +98,13 @@ export default function OrdersPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#101828]">
       <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6">Meus Pedidos</h1>
       
       {isLoading ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Carregando seus pedidos...</p>
         </div>
       ) : orders.length === 0 ? (
@@ -114,7 +114,7 @@ export default function OrdersPage() {
           <p className="text-gray-600 mb-6">Explore nossos restaurantes e faça seu primeiro pedido!</p>
           <Link 
             href="/customer" 
-            className="inline-block bg-red-500 text-white px-6 py-2 rounded-md font-medium hover:bg-red-600 transition-colors"
+            className="inline-block bg-primary-500 text-white px-6 py-2 rounded-md font-medium hover:bg-primary-600 transition-colors"
           >
             Explorar Restaurantes
           </Link>
@@ -162,7 +162,7 @@ export default function OrdersPage() {
               
               {/* Detalhes do pedido (expandível) */}
               {expandedOrder === order.id && (
-                <div className="p-4 bg-gray-50 border-t border-gray-100">
+                <div className="p-4 bg-[#101828] border-t border-gray-100">
                   <div className="mb-4">
                     <h4 className="font-medium mb-2">Itens do Pedido</h4>
                     <div className="space-y-2">
@@ -197,7 +197,7 @@ export default function OrdersPage() {
                         Acompanhar Entrega
                       </button>
                     )}
-                    <button className="bg-red-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-600 transition-colors">
+                    <button className="bg-primary-500 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-primary-600 transition-colors">
                       Pedir Novamente
                     </button>
                   </div>

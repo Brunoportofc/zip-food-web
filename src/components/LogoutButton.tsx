@@ -63,7 +63,7 @@ const LogoutButton = ({ className = '' }: LogoutButtonProps) => {
     <button
       onClick={handleLogout}
       disabled={loading}
-      className={`w-full flex items-center justify-center gap-3 p-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200 font-medium border border-red-200 hover:border-red-300 ${
+      className={`w-full flex items-center justify-center gap-3 p-3 text-green-400 hover:bg-green-900 rounded-lg transition-all duration-200 font-medium border border-green-500 hover:border-green-400 ${
         loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
       } ${className}`}
     >

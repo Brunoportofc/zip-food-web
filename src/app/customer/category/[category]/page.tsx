@@ -14,7 +14,7 @@ import {
 } from 'react-icons/md';
 import { Restaurant, RestaurantCategory, categoryDisplayNames } from '@/types';
 import restaurantService from '@/services/restaurant.service';
-import { categoryConfig } from '@/constants';
+import { categoryConfig, getCategoryIcon } from '@/constants';
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -73,14 +73,14 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   if (!categoryDisplayNames[category]) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#101828] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Categoria não encontrada</h1>
           <p className="text-gray-600 mb-4">A categoria solicitada não existe.</p>
           <Link
             href="/customer"
-            className="bg-red-600 text-white px-6 py-2 rounded-full font-medium hover:bg-red-700 transition-colors duration-200"
+            className="bg-primary-600 text-white px-6 py-2 rounded-full font-medium hover:bg-primary-700 transition-colors duration-200"
           >
             Voltar ao Início
           </Link>
@@ -91,7 +91,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
   const RestaurantCard = ({ restaurant }: { restaurant: Restaurant }) => (
     <Link href={`/customer/restaurant/${restaurant.id}`} className="block">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-red-200 transition-all duration-300 group">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-primary-200 transition-all duration-300 group">
         <div className="relative">
           <img
             src={restaurant.image}
@@ -102,7 +102,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             {restaurant.isPromoted && (
-              <span className="bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+              <span className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                 🔥 Promoção
               </span>
             )}
@@ -121,13 +121,13 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
           {/* Favorite Button */}
           <button className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm rounded-full p-2 hover:bg-white transition-colors duration-200 shadow-lg">
-            <MdFavorite className="text-gray-400 hover:text-red-500" size={16} />
+            <MdFavorite className="text-gray-400 hover:text-primary-500" size={16} />
           </button>
         </div>
 
         <div className="p-4">
           <div className="flex items-start justify-between mb-2">
-            <h3 className="font-bold text-lg text-gray-900 group-hover:text-red-600 transition-colors duration-200 line-clamp-1">
+            <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary-600 transition-colors duration-200 line-clamp-1">
               {restaurant.name}
             </h3>
           </div>
@@ -163,7 +163,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#101828]">
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -178,9 +178,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               </Link>
               
               <div className="flex items-center">
-                <div className="bg-red-50 rounded-full p-3 mr-4">
-                  <div className="text-red-600 text-xl">
-                    {categoryConfig[category].icon}
+                <div className="bg-primary-50 rounded-full p-3 mr-4">
+                  <div className="text-primary-600 text-xl">
+                    {getCategoryIcon(category)}
                   </div>
                 </div>
                 <div>
@@ -205,7 +205,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                 placeholder={`Buscar em ${categoryDisplayNames[category]}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-2xl focus:bg-white focus:ring-2 focus:ring-red-500 focus:outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                className="w-full pl-12 pr-4 py-3 bg-gray-100 border-0 rounded-2xl focus:bg-white focus:ring-2 focus:ring-primary-500 focus:outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
               />
             </div>
 
@@ -214,8 +214,8 @@ export default function CategoryPage({ params }: CategoryPageProps) {
               onClick={() => setShowFilters(!showFilters)}
               className={`px-4 py-3 rounded-2xl border-2 transition-all duration-200 flex items-center gap-2 ${
                 showFilters 
-                  ? 'bg-red-600 border-red-600 text-white' 
-                  : 'bg-white border-gray-200 text-gray-700 hover:border-red-300'
+                  ? 'bg-primary-600 border-primary-600 text-white' 
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300'
               }`}
             >
               <MdSort size={20} />
@@ -225,7 +225,7 @@ export default function CategoryPage({ params }: CategoryPageProps) {
 
           {/* Sort Panel */}
           {showFilters && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-2xl border border-gray-200">
+            <div className="mt-4 p-4 bg-[#101828] rounded-2xl border border-gray-200">
               <div className="flex flex-wrap gap-3">
                 <h3 className="w-full text-sm font-medium text-gray-700 mb-2">Ordenar por:</h3>
                 
@@ -240,12 +240,12 @@ export default function CategoryPage({ params }: CategoryPageProps) {
                     onClick={() => setSortBy(key as any)}
                     className={`flex-1 min-w-0 p-3 rounded-xl border-2 transition-all duration-200 text-left ${
                       sortBy === key 
-                        ? 'bg-red-600 border-red-600 text-white' 
-                        : 'bg-white border-gray-200 text-gray-700 hover:border-red-300'
+                        ? 'bg-primary-600 border-primary-600 text-white' 
+                        : 'bg-white border-gray-200 text-gray-700 hover:border-primary-300'
                     }`}
                   >
                     <div className="font-medium text-sm">{label}</div>
-                    <div className={`text-xs mt-1 ${sortBy === key ? 'text-red-100' : 'text-gray-500'}`}>
+                    <div className={`text-xs mt-1 ${sortBy === key ? 'text-primary-100' : 'text-gray-500'}`}>
                       {desc}
                     </div>
                   </button>
@@ -288,11 +288,11 @@ export default function CategoryPage({ params }: CategoryPageProps) {
             </p>
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm('')}
-                className="bg-red-600 text-white px-6 py-2 rounded-full font-medium hover:bg-red-700 transition-colors duration-200"
-              >
-                Limpar Busca
-              </button>
+                    onClick={() => setSearchTerm('')}
+                    className="bg-primary-600 text-white px-6 py-2 rounded-full font-medium hover:bg-primary-700 transition-colors duration-200"
+                  >
+                    Limpar Busca
+                  </button>
             )}
           </div>
         ) : (

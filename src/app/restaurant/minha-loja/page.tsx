@@ -354,7 +354,7 @@ export default function MinhaLojaPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     );
   }
@@ -362,19 +362,19 @@ export default function MinhaLojaPage() {
   if (!restaurantData) {
     return (
       <div className="text-center py-12">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">Restaurante não encontrado</h3>
-        <p className="text-gray-600">Complete seu cadastro primeiro.</p>
+        <h3 className="text-xl font-bold text-white mb-2">Restaurante não encontrado</h3>
+        <p className="text-gray-300">Complete seu cadastro primeiro.</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-6xl mx-auto p-6 bg-[#101828] min-h-screen">
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Minha Loja</h1>
-          <p className="text-gray-600">Veja como sua loja aparece para os clientes</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Minha Loja</h1>
+          <p className="text-gray-300">Veja como sua loja aparece para os clientes</p>
         </div>
         
         {!editMode ? (
@@ -419,7 +419,7 @@ export default function MinhaLojaPage() {
       </div>
 
       {/* Preview da Loja */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+      <div className="bg-[#101828] rounded-2xl shadow-lg border border-green-500 overflow-hidden">
         {/* Badge de Preview */}
         <div className="bg-blue-50 border-b border-blue-200 px-6 py-3">
           <div className="flex items-center gap-2 text-blue-700">
@@ -480,7 +480,7 @@ export default function MinhaLojaPage() {
 
                 {/* Logo */}
                 <div className="ml-6">
-                  <div className="w-24 h-24 bg-white rounded-full p-2 shadow-lg">
+                  <div className="w-24 h-24 bg-gray-900 rounded-full p-2 shadow-lg">
                     <img
                       src={displayData.logo_url || '/images/restaurants/default-logo.svg'}
                       alt="Logo"
@@ -498,18 +498,18 @@ export default function MinhaLojaPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Coluna da Esquerda */}
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Sobre o restaurante</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Sobre o restaurante</h3>
               
               {editMode ? (
                 <textarea
                   value={displayData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   rows={4}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+                      className="w-full p-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 placeholder-gray-400 bg-gray-900"
                   placeholder="Descreva seu restaurante..."
                 />
               ) : (
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-300 mb-6">
                   {displayData.description || 'Bem-vindos ao nosso restaurante! Oferecemos os melhores pratos com ingredientes frescos e muito carinho.'}
                 </p>
               )}
@@ -520,7 +520,7 @@ export default function MinhaLojaPage() {
                   <div className="text-red-600">
                     {categoryConfig[displayData.category as RestaurantCategory]?.icon || '🍴'}
                   </div>
-                  <span className="font-medium text-gray-900">
+                  <span className="font-medium text-white">
                     {categoryDisplayNames[displayData.category as RestaurantCategory] || displayData.category}
                   </span>
                 </div>
@@ -554,15 +554,15 @@ export default function MinhaLojaPage() {
 
               {/* Informações de Contato */}
               <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-3 text-sm text-gray-300">
                   <MdLocationOn className="text-red-600" size={18} />
                   <span>{displayData.address}, {displayData.city}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-3 text-sm text-gray-300">
                   <MdPhone className="text-red-600" size={18} />
                   <span>{displayData.phone}</span>
                 </div>
-                <div className="flex items-center gap-3 text-sm text-gray-600">
+                <div className="flex items-center gap-3 text-sm text-gray-300">
                   <MdEmail className="text-red-600" size={18} />
                   <span>{displayData.email}</span>
                 </div>
@@ -571,7 +571,7 @@ export default function MinhaLojaPage() {
 
             {/* Coluna da Direita */}
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Informações de Entrega</h3>
+              <h3 className="text-xl font-bold text-white mb-4">Informações de Entrega</h3>
               
               <div className="bg-gray-50 rounded-xl p-4 space-y-4">
                 {editMode ? (
@@ -587,7 +587,7 @@ export default function MinhaLojaPage() {
                         min="0"
                         value={displayData.delivery_fee}
                         onChange={(e) => handleInputChange('delivery_fee', parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
+                        className="w-full px-3 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white"
                         placeholder="0.00"
                       />
                     </div>
@@ -603,7 +603,7 @@ export default function MinhaLojaPage() {
                         min="0"
                         value={displayData.minimum_order}
                         onChange={(e) => handleInputChange('minimum_order', parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
+                        className="w-full px-3 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white"
                         placeholder="0.00"
                       />
                     </div>
@@ -617,7 +617,7 @@ export default function MinhaLojaPage() {
                         type="text"
                         value={displayData.estimated_delivery_time}
                         onChange={(e) => handleInputChange('estimated_delivery_time', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900"
+                        className="w-full px-3 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white"
                         placeholder="Ex: 30-45 min"
                       />
                     </div>
@@ -630,7 +630,7 @@ export default function MinhaLojaPage() {
                       <select
                         value={displayData.category}
                         onChange={(e) => handleInputChange('category', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 bg-white"
+                        className="w-full px-3 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white bg-gray-900"
                       >
                         <option value="">Selecione uma categoria</option>
                         {Object.entries(categoryDisplayNames).map(([key, name]) => (
@@ -642,8 +642,8 @@ export default function MinhaLojaPage() {
                 ) : (
                   <>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Taxa de entrega:</span>
-                      <span className="font-bold text-gray-900">
+                      <span className="text-gray-300">Taxa de entrega:</span>
+                      <span className="font-bold text-white">
                         {(displayData.delivery_fee ?? 0) === 0 
                           ? 'Grátis' 
                           : `R$ ${(displayData.delivery_fee ?? 0).toFixed(2)}`
@@ -652,21 +652,21 @@ export default function MinhaLojaPage() {
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Pedido mínimo:</span>
-                      <span className="font-bold text-gray-900">
+                      <span className="text-gray-300">Pedido mínimo:</span>
+                      <span className="font-bold text-white">
                         R$ {(displayData.minimum_order ?? 0).toFixed(2)}
                       </span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Tempo de entrega:</span>
-                      <span className="font-bold text-gray-900">
+                      <span className="text-gray-300">Tempo de entrega:</span>
+                      <span className="font-bold text-white">
                         {displayData.estimated_delivery_time}
                       </span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Status:</span>
+                      <span className="text-gray-300">Status:</span>
                       <span className={`px-2 py-1 rounded-full text-xs font-bold ${
                         displayData.is_active 
                           ? 'bg-green-100 text-green-800' 
@@ -681,7 +681,7 @@ export default function MinhaLojaPage() {
 
               {/* Horário de Funcionamento */}
               <div className="mt-6">
-                <h4 className="font-bold text-gray-900 mb-3">Horário de funcionamento</h4>
+                <h4 className="font-bold text-white mb-3">Horário de funcionamento</h4>
                 {editMode ? (
                   <div className="space-y-3">
                     {[
@@ -693,9 +693,9 @@ export default function MinhaLojaPage() {
                       { key: 'saturday', label: 'Sábado' },
                       { key: 'sunday', label: 'Domingo' }
                     ].map(({ key, label }) => (
-                      <div key={key} className="bg-white p-3 rounded-lg border border-gray-200">
+                      <div key={key} className="bg-gray-900 p-3 rounded-lg border border-gray-200">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-gray-900">{label}</span>
+                          <span className="font-medium text-white">{label}</span>
                           <label className="flex items-center">
                             <input
                               type="checkbox"
@@ -703,27 +703,27 @@ export default function MinhaLojaPage() {
                               onChange={(e) => handleOperatingHourChange(key, 'closed', !e.target.checked)}
                               className="mr-2"
                             />
-                            <span className="text-sm text-gray-600">Aberto</span>
+                            <span className="text-sm text-gray-300">Aberto</span>
                           </label>
                         </div>
                         {displayData.operating_hours[key] && !displayData.operating_hours[key].closed && (
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Abertura</label>
+                              <label className="block text-xs text-gray-300 mb-1">Abertura</label>
                               <input
                                 type="time"
                                 value={displayData.operating_hours[key]?.open || '08:00'}
                                 onChange={(e) => handleOperatingHourChange(key, 'open', e.target.value)}
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                className="w-full px-2 py-1 border border-green-500 rounded text-sm text-white"
                               />
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Fechamento</label>
+                              <label className="block text-xs text-gray-300 mb-1">Fechamento</label>
                               <input
                                 type="time"
                                 value={displayData.operating_hours[key]?.close || '22:00'}
                                 onChange={(e) => handleOperatingHourChange(key, 'close', e.target.value)}
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
+                                className="w-full px-2 py-1 border border-green-500 rounded text-sm text-white"
                               />
                             </div>
                           </div>
@@ -750,8 +750,8 @@ export default function MinhaLojaPage() {
                       
                       return (
                         <div key={key} className="flex justify-between">
-                          <span className="text-gray-600">{label}:</span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-300">{label}:</span>
+                          <span className="text-white">
                             {hours.closed ? 'Fechado' : `${hours.open} - ${hours.close}`}
                           </span>
                         </div>
@@ -763,7 +763,7 @@ export default function MinhaLojaPage() {
 
               {/* Data de Criação */}
               <div className="mt-6 pt-4 border-t border-gray-200">
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-300">
                   <span>Criado em: {formatDate(displayData.created_at)}</span>
                 </div>
               </div>
@@ -775,10 +775,10 @@ export default function MinhaLojaPage() {
       {/* Menu do Restaurante */}
       {!editMode && menuItems.length > 0 && (
         <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-gray-900 rounded-xl shadow-lg overflow-hidden">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">Menu</h2>
-              <p className="text-gray-600 mt-1">Confira nossos pratos disponíveis</p>
+              <h2 className="text-2xl font-bold text-white">Menu</h2>
+              <p className="text-gray-300 mt-1">Confira nossos pratos disponíveis</p>
             </div>
             
             <div className="p-6">
@@ -794,7 +794,7 @@ export default function MinhaLojaPage() {
 
                 return Object.entries(itemsByCategory).map(([category, items]) => (
                   <div key={category} className="mb-8 last:mb-0">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-100">
+                    <h3 className="text-xl font-semibold text-white mb-4 pb-2 border-b border-gray-100">
                       {category.charAt(0).toUpperCase() + category.slice(1)}
                     </h3>
                     
@@ -816,13 +816,13 @@ export default function MinhaLojaPage() {
                           
                           {/* Informações do item */}
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-semibold text-gray-900 truncate">{item.name}</h4>
-                            <p className="text-gray-600 text-sm line-clamp-2 mt-1">{item.description}</p>
+                            <h4 className="font-semibold text-white truncate">{item.name}</h4>
+                            <p className="text-gray-300 text-sm line-clamp-2 mt-1">{item.description}</p>
                             <div className="flex items-center justify-between mt-2">
                               <span className="text-lg font-bold text-red-600">
                                 R$ {item.price.toFixed(2)}
                               </span>
-                              <span className="text-xs text-gray-500">
+                              <span className="text-xs text-gray-300">
                                 ⏱️ {item.preparation_time}min
                               </span>
                             </div>
@@ -836,12 +836,12 @@ export default function MinhaLojaPage() {
               
               {/* Link para gerenciar menu */}
               <div className="mt-6 p-4 bg-gray-50 rounded-lg text-center">
-                <p className="text-gray-600 mb-3">
+                <p className="text-gray-300 mb-3">
                   Quer atualizar seu menu? Adicione, edite ou remova itens facilmente.
                 </p>
                 <a 
                   href="/restaurant/menu"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
                 >
                   <MdEdit />
                   Gerenciar Menu
@@ -855,15 +855,15 @@ export default function MinhaLojaPage() {
       {/* Menu vazio */}
       {!editMode && menuItems.length === 0 && (
         <div className="mt-8">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+          <div className="bg-gray-900 rounded-xl shadow-lg p-8 text-center">
             <div className="text-gray-300 text-6xl mb-4">🍽️</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Menu em construção</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-xl font-semibold text-white mb-2">Menu em construção</h3>
+            <p className="text-gray-300 mb-6">
               Sua loja ainda não tem itens no menu. Adicione seus primeiros pratos para que os clientes possam fazer pedidos.
             </p>
             <a 
               href="/restaurant/menu"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
               <MdEdit />
               Criar Menu

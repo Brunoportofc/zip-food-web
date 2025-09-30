@@ -149,10 +149,11 @@ module.exports = {
         },
         
         // Cores de fundo e texto - Tema Dark
-        background: '#000000', // Fundo preto
+        background: '#101828', // Fundo escuro personalizado
         foreground: '#FFFFFF', // Texto branco
         black: '#000000',
         white: '#FFFFFF',
+        'dark-bg': '#101828', // Cor de fundo principal do sistema
         
         // Cores específicas para elementos
         red: {

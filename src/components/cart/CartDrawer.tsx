@@ -354,7 +354,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
               <button
                 onClick={handleCheckout}
                 disabled={!canCheckout() || isProcessing}
-                className="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary-dark transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 active:scale-95 disabled:hover:scale-100"
+                className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors"
               >
                 {isProcessing ? (
                   <span className="flex items-center justify-center gap-2">

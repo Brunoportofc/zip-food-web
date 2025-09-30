@@ -120,34 +120,34 @@ export default function RestaurantPage() {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#101828] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-300">Carregando...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#101828]">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-[#101828] shadow-sm border-b border-green-500">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                 <FaStore className="text-white text-xl" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-white">
                   {restaurantData?.name || 'Painel do Restaurante'}
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-gray-300">
                   Bem-vindo, {userData?.displayName || user?.displayName || 'Restaurante'}!
                 </p>
                 {restaurantData && (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-gray-400">
                     Status: {restaurantData.is_active ? '🟢 Ativo' : '🔴 Inativo'}
                   </p>
                 )}
@@ -159,7 +159,7 @@ export default function RestaurantPage() {
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
-                <span className="text-sm font-medium text-green-700">Online</span>
+                <span className="text-sm font-medium text-green-400">Online</span>
               </div>
             </div>
           </div>
@@ -168,8 +168,8 @@ export default function RestaurantPage() {
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Navigation Tabs */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="border-b border-gray-200">
+        <div className="bg-[#101828] rounded-lg shadow-sm mb-6 border border-green-500">
+          <div className="border-b border-green-500">
             <nav className="flex space-x-8 px-6">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
@@ -179,8 +179,8 @@ export default function RestaurantPage() {
                     onClick={() => setActiveTab(tab.id)}
                     className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === tab.id
-                        ? 'border-red-500 text-red-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                        ? 'border-green-500 text-green-400'
+                        : 'border-transparent text-gray-300 hover:text-white hover:border-green-300'
                     }`}
                   >
                     <div className="flex items-center space-x-2">
@@ -195,13 +195,13 @@ export default function RestaurantPage() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-[#101828] rounded-lg shadow-sm p-6 border border-green-500">
           {activeTab === 'dashboard' && <DashboardTab restaurantData={restaurantData} />}
           {activeTab === 'payments' && (
             <div>
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">🔗 Conexão Stripe</h2>
-                <p className="text-gray-600">
+                <h2 className="text-2xl font-bold text-white mb-2">🔗 Conexão Stripe</h2>
+                <p className="text-gray-300">
                   Configure sua própria conta Stripe para receber pagamentos diretamente.
                 </p>
               </div>
@@ -211,11 +211,11 @@ export default function RestaurantPage() {
           {activeTab === 'settings' && (
             <div className="text-center py-12">
               <FaCog className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Configurações</h3>
-              <p className="text-gray-600">
+              <h3 className="text-lg font-semibold text-white mb-2">Configurações</h3>
+              <p className="text-gray-300">
                 Esta seção está em desenvolvimento.
               </p>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-gray-400 mt-2">
                 Em breve você poderá configurar horários de funcionamento, formas de pagamento e muito mais.
               </p>
             </div>

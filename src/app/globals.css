@@ -109,7 +109,7 @@
 
 :root {
   /* Tema Dark - Verde Neon */
-  --background: #000000; /* Fundo preto */
+  --background: #101828; /* Fundo escuro personalizado */
   --foreground: #FFFFFF; /* Texto branco */
   --primary: #00FF88; /* Verde neon principal */
   --primary-dark: #00E676;
@@ -299,4 +299,24 @@ body {
     font-size: 1.125rem;
     line-height: 1.75rem;
   }
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar { 
+  display: none;  /* Safari and Chrome */
+}
+
+/* Category cards hover effects */
+.category-card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.category-card-hover:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }

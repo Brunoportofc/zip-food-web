@@ -277,30 +277,30 @@ const MenuManagement = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-[#101828] p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center">
-          <FaUtensils className="mr-3 text-red-500" />
+        <h1 className="text-3xl font-bold text-white mb-2 flex items-center">
+          <FaUtensils className="mr-3 text-green-500" />
           Gestão do Menu
         </h1>
-        <p className="text-gray-600">
+        <p className="text-gray-300">
           Gerencie os itens do seu menu, categorias e disponibilidade
         </p>
       </div>
 
       {/* Filtros e Busca */}
-      <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+      <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-6 mb-6">
         <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
           {/* Busca */}
           <div className="relative flex-1 max-w-md">
-            <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl" />
+            <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300 text-xl" />
             <input
               type="text"
               placeholder="Buscar itens do menu..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-gray-900 placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-white placeholder-gray-400 bg-gray-900"
             />
           </div>
 
@@ -309,7 +309,7 @@ const MenuManagement = () => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900 bg-white"
+              className="px-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 text-white bg-gray-900"
             >
               <option value="all">Todas as categorias</option>
               {categories.map(category => (
@@ -325,7 +325,7 @@ const MenuManagement = () => {
                 if (e.target.value === 'all') setShowOnlyAvailable(null);
                 else setShowOnlyAvailable(e.target.value === 'available');
               }}
-              className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900 bg-white"
+              className="px-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 text-white bg-gray-900"
             >
               <option value="all">Todos os status</option>
               <option value="available">Disponíveis</option>
@@ -334,7 +334,7 @@ const MenuManagement = () => {
 
             <button
               onClick={() => openItemModal()}
-              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
+              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:scale-105 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
             >
               <MdAdd className="text-xl" />
               Novo Item
@@ -345,19 +345,19 @@ const MenuManagement = () => {
 
       {/* Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Total de Itens</h3>
-          <p className="text-2xl font-bold text-gray-900">{menuItems.length}</p>
+          <p className="text-2xl font-bold text-white">{menuItems.length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Disponíveis</h3>
           <p className="text-2xl font-bold text-green-600">{menuItems.filter(item => item.is_available).length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Indisponíveis</h3>
           <p className="text-2xl font-bold text-red-600">{menuItems.filter(item => !item.is_available).length}</p>
         </div>
-        <div className="bg-white rounded-xl shadow-sm p-6">
+        <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-6">
           <h3 className="text-sm font-medium text-gray-500 mb-2">Categorias</h3>
           <p className="text-2xl font-bold text-blue-600">{categories.length}</p>
         </div>
@@ -370,10 +370,10 @@ const MenuManagement = () => {
           const categoryName = category?.name || categoryId;
 
           return (
-            <div key={categoryId} className="bg-white rounded-xl shadow-sm">
+            <div key={categoryId} className="bg-[#101828] rounded-xl shadow-sm border border-green-500">
               <div className="p-6 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900">{categoryName}</h2>
-                <p className="text-gray-600">{items.length} itens</p>
+                <h2 className="text-xl font-semibold text-white">{categoryName}</h2>
+                <p className="text-gray-300">{items.length} itens</p>
               </div>
               
               <div className="p-6">
@@ -390,7 +390,7 @@ const MenuManagement = () => {
                           />
                         ) : (
                           <div className="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                            <FaImage className="text-gray-400 text-2xl" />
+                            <FaImage className="text-gray-300 text-2xl" />
                           </div>
                         )}
                         
@@ -405,8 +405,8 @@ const MenuManagement = () => {
                       </div>
 
                       {/* Informações */}
-                      <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                      <p className="text-gray-600 text-sm mb-2 line-clamp-2">{item.description}</p>
+                      <h3 className="font-semibold text-white mb-1">{item.name}</h3>
+                      <p className="text-gray-300 text-sm mb-2 line-clamp-2">{item.description}</p>
                       <p className="text-lg font-bold text-red-500 mb-3">
                         R$ {item.price.toFixed(2)}
                       </p>
@@ -450,10 +450,10 @@ const MenuManagement = () => {
         })}
 
         {filteredItems.length === 0 && (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+          <div className="bg-[#101828] rounded-xl shadow-sm border border-green-500 p-12 text-center">
             <FaUtensils className="text-gray-300 text-6xl mb-4 mx-auto" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum item encontrado</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-xl font-semibold text-white mb-2">Nenhum item encontrado</h3>
+            <p className="text-gray-300 mb-6">
               {menuItems.length === 0 
                 ? 'Comece adicionando itens ao seu menu' 
                 : 'Tente ajustar os filtros ou criar um novo item'
@@ -461,7 +461,7 @@ const MenuManagement = () => {
             </p>
             <button
               onClick={() => openItemModal()}
-              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Adicionar Primeiro Item
             </button>
@@ -472,7 +472,7 @@ const MenuManagement = () => {
       {/* Modal de Item */}
       {showItemModal && (
         <div 
-          className={`fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-200 ${
+          className={`fixed inset-0 bg-[#101828]/30 backdrop-blur-sm flex items-center justify-center z-50 p-4 transition-all duration-200 ${
             isClosingModal ? 'opacity-0' : 'opacity-100'
           }`}
           onClick={(e) => {
@@ -481,11 +481,11 @@ const MenuManagement = () => {
             }
           }}
         >
-          <div className={`bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transition-all duration-300 ${
+          <div className={`bg-gray-900 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl transition-all duration-300 ${
             isClosingModal ? 'scale-95 opacity-0 translate-y-4' : 'scale-100 opacity-100 translate-y-0'
           }`}>
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-white">
                 {editingItem ? 'Editar Item' : 'Novo Item'}
               </h2>
             </div>
@@ -500,7 +500,7 @@ const MenuManagement = () => {
                   type="text"
                   value={itemForm.name}
                   onChange={(e) => setItemForm({ ...itemForm, name: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400 bg-gray-900"
                   placeholder="Ex: Hambúrguer Artesanal"
                 />
               </div>
@@ -514,7 +514,7 @@ const MenuManagement = () => {
                   value={itemForm.description}
                   onChange={(e) => setItemForm({ ...itemForm, description: e.target.value })}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 text-white placeholder-gray-400 bg-gray-900"
                   placeholder="Descreva o item do menu..."
                 />
               </div>
@@ -530,7 +530,7 @@ const MenuManagement = () => {
                     step="0.01"
                     value={itemForm.price}
                     onChange={(e) => setItemForm({ ...itemForm, price: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 text-white"
                   />
                 </div>
 
@@ -541,7 +541,7 @@ const MenuManagement = () => {
                   <select
                     value={itemForm.category}
                     onChange={(e) => setItemForm({ ...itemForm, category: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900 bg-white"
+                    className="w-full px-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 text-white bg-gray-900"
                   >
                     <option value="">Selecione uma categoria</option>
                     {categories.map(category => (
@@ -574,7 +574,7 @@ const MenuManagement = () => {
                     type="number"
                     value={itemForm.preparation_time}
                     onChange={(e) => setItemForm({ ...itemForm, preparation_time: parseInt(e.target.value) || 15 })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 text-gray-900"
+                    className="w-full px-4 py-3 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 text-white"
                   />
                 </div>
 
@@ -584,7 +584,7 @@ const MenuManagement = () => {
                       type="checkbox"
                       checked={itemForm.is_available}
                       onChange={(e) => setItemForm({ ...itemForm, is_available: e.target.checked })}
-                      className="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                      className="w-4 h-4 text-red-600 border-green-500 rounded focus:ring-green-500"
                     />
                     <span className="ml-2 text-sm font-medium text-gray-700">
                       Item disponível
@@ -598,14 +598,14 @@ const MenuManagement = () => {
             <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
               <button
                 onClick={closeItemModal}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                className="px-6 py-3 border border-green-500 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
               >
                 <MdCancel />
                 Cancelar
               </button>
               <button
                 onClick={handleSaveItem}
-                className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
               >
                 <MdSave />
                 {editingItem ? 'Atualizar' : 'Salvar'}

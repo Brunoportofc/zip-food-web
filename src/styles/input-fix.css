@@ -1,6 +1,6 @@
-/* Fix para garantir que os textos dos inputs sejam sempre pretos */
+/* Fix para inputs - removido força de cor preta para permitir cores customizadas */
 
-/* Global input styling */
+/* Global input styling - removido color forçado */
 input[type="text"],
 input[type="email"], 
 input[type="password"],
@@ -10,7 +10,7 @@ input[type="number"],
 input[type="search"],
 textarea,
 select {
-  color: #111827 !important; /* text-gray-900 */
+  /* color removido para permitir customização via Tailwind */
 }
 
 input[type="text"]:focus,
@@ -22,7 +22,7 @@ input[type="number"]:focus,
 input[type="search"]:focus,
 textarea:focus,
 select:focus {
-  color: #111827 !important; /* text-gray-900 */
+  /* color removido para permitir customização via Tailwind */
 }
 
 /* Placeholder styling */

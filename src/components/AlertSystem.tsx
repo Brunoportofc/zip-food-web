@@ -91,11 +91,11 @@ const AlertSystem: React.FC<AlertSystemProps> = ({ className }) => {
         };
       case 'error':
         return {
-          bg: 'bg-red-50 border-red-200',
-          icon: 'text-red-600',
-          title: 'text-red-800',
-          message: 'text-red-700',
-          button: 'bg-red-600 hover:bg-red-700 text-white'
+          bg: 'bg-primary-50 border-primary-200',
+          icon: 'text-primary-600',
+          title: 'text-primary-800',
+          message: 'text-primary-700',
+          button: 'bg-primary-600 hover:bg-primary-700 text-white'
         };
       case 'warning':
         return {

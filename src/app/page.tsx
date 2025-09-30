@@ -9,7 +9,7 @@ const HomeContent = () => {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[#101828] text-white relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary rounded-full opacity-10 filter blur-xl animate-blob"></div>
