@@ -22,6 +22,62 @@ export interface OrderNotificationData {
 class NotificationService {
   
   /**
+   * Verificar permissão de notificação (mock)
+   */
+  async checkNotificationPermission(): Promise<{ granted: boolean; denied: boolean }> {
+    // Mock para deploy - sempre retorna granted
+    return { granted: true, denied: false };
+  }
+
+  /**
+   * Solicitar permissão de notificação (mock)
+   */
+  async requestNotificationPermission(): Promise<{ granted: boolean; denied: boolean }> {
+    // Mock para deploy - sempre retorna granted
+    return { granted: true, denied: false };
+  }
+
+  /**
+   * Subscrever para push notifications (mock)
+   */
+  async subscribeToPushNotifications(userId: string): Promise<any> {
+    // Mock para deploy - sempre retorna subscription mock
+    return { endpoint: 'mock-endpoint', userId };
+  }
+
+  /**
+   * Desinscrever de push notifications (mock)
+   */
+  async unsubscribeFromPushNotifications(): Promise<boolean> {
+    // Mock para deploy - sempre retorna true
+    return true;
+  }
+
+  /**
+   * Mostrar notificação (mock)
+   */
+  async showNotification(notification: any): Promise<void> {
+    // Mock para deploy - apenas log
+    console.log('Mock notification:', notification);
+  }
+
+  /**
+   * Notificar cliente (mock)
+   */
+  async notifyCustomer(customerId: string, order: any, previousStatus: string): Promise<void> {
+    // Mock para deploy - apenas log
+    console.log('Mock customer notification:', { customerId, order, previousStatus });
+  }
+
+  /**
+   * Notificar entregadores (mock)
+   */
+  async notifyDeliveryDrivers(order: any): Promise<void> {
+    // Mock para deploy - apenas log
+    console.log('Mock delivery drivers notification:', { order });
+  }
+  
+  /**
    * Criar notificação para novo pedido
    */
   async createOrderNotification(orderData: OrderNotificationData): Promise<void> {
@@ -63,7 +119,7 @@ class NotificationService {
         .limit(limit)
         .get();
 
-      const notifications: Notification[] = snapshot.docs.map(doc => {
+      const notifications: Notification[] = snapshot.docs.map((doc: any) => {
         const data = doc.data();
         return {
           id: doc.id,

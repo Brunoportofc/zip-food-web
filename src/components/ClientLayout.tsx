@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import dynamic from 'next/dynamic';
 
-import GlobalHeader from '@/components/GlobalHeader';
+// Removido GlobalHeader - agora cada página tem seu próprio header se necessário
 
 // Lazy loading para ClientComponents
 const ClientComponents = dynamic(
@@ -70,11 +70,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
 
   return (
     <>
-      {/* Cabeçalho global - exibir apenas em páginas gerais (não home, auth, ou rotas específicas de usuário) */}
-      {!isHomePage && !isUserSpecificRoute && !pathname.startsWith('/auth') && <GlobalHeader />}
-      
-      {/* Conteúdo principal com padding-top quando há cabeçalho global */}
-      <div className={!isHomePage && !isUserSpecificRoute && !pathname.startsWith('/auth') ? 'pt-16 lg:pt-20' : ''}>
+      {/* Conteúdo principal - sem header global */}
+      <div>
         {children}
       </div>
       

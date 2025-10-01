@@ -2,8 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import AnimatedContainer from '@/components/AnimatedContainer';
-import GlobalHeader from '@/components/GlobalHeader';
-import { MdDeliveryDining, MdRestaurant, MdPerson } from 'react-icons/md';
+import { MdDeliveryDining, MdRestaurant, MdPerson, MdLogin } from 'react-icons/md';
 
 const HomeContent = () => {
   const router = useRouter();
@@ -17,11 +16,33 @@ const HomeContent = () => {
         <div className="absolute top-40 left-40 w-80 h-80 bg-primary rounded-full opacity-15 filter blur-xl animate-blob animation-delay-4000"></div>
       </div>
 
-      {/* Global Header */}
-      <GlobalHeader />
+      {/* Home Header */}
+      <header className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+              <MdDeliveryDining size={28} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">ZipFood</h1>
+              <p className="text-sm text-gray-300">Delivery rápido e saboroso</p>
+            </div>
+          </div>
+
+          {/* Login Button */}
+          <button
+            onClick={() => router.push('/auth/sign-in')}
+            className="flex items-center space-x-2 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
+          >
+            <MdLogin size={20} />
+            <span>Entrar</span>
+          </button>
+        </div>
+      </header>
 
       {/* Main Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 lg:pt-32 pb-16">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-16">
         {/* Hero Section */}
         <AnimatedContainer animationType="fadeInUp" delay={200}>
           <div className="text-center mb-16">

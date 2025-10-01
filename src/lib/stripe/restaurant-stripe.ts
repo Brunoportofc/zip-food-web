@@ -212,7 +212,7 @@ export class RestaurantStripeService {
 
       const batch = adminDb.batch();
       
-      snapshot.docs.forEach(doc => {
+      snapshot.docs.forEach((doc: any) => {
         batch.update(doc.ref, { 
           isActive: false, 
           updatedAt: new Date() 

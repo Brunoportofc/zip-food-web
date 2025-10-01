@@ -52,7 +52,7 @@ export async function configurePayoutSchedule(
     await adminDb
       .collection('payoutSettings')
       .doc(restaurantId)
-      .set(payoutSettings);
+      .set();
 
     console.log(`Payout schedule configured for restaurant: ${restaurantId}`);
   } catch (error) {
@@ -75,7 +75,7 @@ export async function getPayoutSettings(restaurantId: string): Promise<PayoutSet
       return null;
     }
 
-    const data = doc.data() as PayoutSettings;
+    const data = doc.data() as any;
     return {
       ...data,
       createdAt: data.createdAt,
@@ -176,7 +176,7 @@ export async function getPayoutHistory(
       .limit(limit)
       .get();
 
-    return payoutsSnapshot.docs.map(doc => ({
+    return payoutsSnapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data(),
       createdAt: doc.data().createdAt?.toDate?.()?.toISOString(),

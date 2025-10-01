@@ -115,7 +115,7 @@ class SyncService {
     switch (order.status) {
       case 'confirmed':
         // Notificar restaurante sobre novo pedido
-        notificationService.notifyCustomer(order.customer.id, order);
+        notificationService.notifyCustomer(order.customer.id, order, 'pending');
         break;
 
       case 'preparing':
@@ -213,7 +213,7 @@ class SyncService {
 
         // Notificar cliente sobre atualizações de entrega
         if (updates.location || updates.estimatedArrival) {
-          notificationService.notifyCustomer(order.customer.id, order);
+          notificationService.notifyCustomer(order.customer.id, order, 'preparing');
         }
       }
 

@@ -72,6 +72,14 @@ class UserTypeService {
       default_status: 'pending_approval',
       requires_approval: true,
       collection_name: 'restaurants'
+    },
+    delivery: {
+      type: 'delivery',
+      display_name: 'Entregador',
+      permissions: ['view_deliveries', 'update_delivery_status', 'manage_profile'],
+      default_status: 'pending_approval',
+      requires_approval: true,
+      collection_name: 'delivery_drivers'
     }
   };
 

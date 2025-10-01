@@ -161,6 +161,7 @@ class AuthService {
           email: user.email || '',
           displayName: user.displayName || user.email?.split('@')[0] || 'Usuário',
           role: 'customer', // Padrão para contas órfãs
+          user_type: 'customer',
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         };

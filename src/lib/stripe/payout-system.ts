@@ -120,7 +120,7 @@ export class PayoutSystemService {
       // Group payouts by restaurant for batch processing
       const payoutsByRestaurant = new Map<string, any[]>();
       
-      payoutsSnapshot.docs.forEach(doc => {
+      payoutsSnapshot.docs.forEach((doc: any) => {
         const data = doc.data();
         const restaurantId = data.restaurantId;
         
@@ -267,7 +267,7 @@ export class PayoutSystemService {
 
       const batch = adminDb.batch();
       
-      existingSnapshot.docs.forEach(doc => {
+      existingSnapshot.docs.forEach((doc: any) => {
         batch.update(doc.ref, { isActive: false, updatedAt: new Date() });
       });
 
@@ -373,7 +373,7 @@ export class PayoutSystemService {
         .limit(limit)
         .get();
 
-      return snapshot.docs.map(doc => ({
+      return snapshot.docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data(),
       })) as RestaurantPayout[];
@@ -395,7 +395,7 @@ export class PayoutSystemService {
         .where('status', '==', 'pending')
         .get();
 
-      const amount = snapshot.docs.reduce((sum, doc) => sum + doc.data().amount, 0);
+      const amount = snapshot.docs.reduce((sum: number, doc: any) => sum + doc.data().amount, 0);
       const count = snapshot.docs.length;
 
       return { amount, count };

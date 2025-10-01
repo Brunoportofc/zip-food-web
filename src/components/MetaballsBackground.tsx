@@ -8,7 +8,7 @@ interface MetaballsBackgroundProps {
 
 export default function MetaballsBackground({ className = '' }: MetaballsBackgroundProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -114,6 +114,7 @@ export default function MetaballsBackground({ className = '' }: MetaballsBackgro
 
     // Compile shader function
     function compileShader(shaderSource: string, shaderType: number) {
+      if (!gl) throw new Error('WebGL context is null');
       const shader = gl.createShader(shaderType);
       if (!shader) throw new Error('Could not create shader');
       
@@ -131,6 +132,7 @@ export default function MetaballsBackground({ className = '' }: MetaballsBackgro
 
     // Get uniform location function
     function getUniformLocation(program: WebGLProgram, name: string) {
+      if (!gl) throw new Error('WebGL context is null');
       const uniformLocation = gl.getUniformLocation(program, name);
       if (uniformLocation === -1) {
         throw new Error('Cannot find uniform ' + name);
@@ -140,6 +142,7 @@ export default function MetaballsBackground({ className = '' }: MetaballsBackgro
 
     // Get attribute location function
     function getAttribLocation(program: WebGLProgram, name: string) {
+      if (!gl) throw new Error('WebGL context is null');
       const attributeLocation = gl.getAttribLocation(program, name);
       if (attributeLocation === -1) {
         throw new Error('Cannot find attribute ' + name);
@@ -148,6 +151,8 @@ export default function MetaballsBackground({ className = '' }: MetaballsBackgro
     }
 
     try {
+      if (!gl) throw new Error('WebGL context is null');
+      
       // Create and link program
       const vertexShader = compileShader(vertexShaderSrc, gl.VERTEX_SHADER);
       const fragmentShader = compileShader(fragmentShaderSrc, gl.FRAGMENT_SHADER);
@@ -189,6 +194,8 @@ export default function MetaballsBackground({ className = '' }: MetaballsBackgro
 
       // Animation loop
       function loop() {
+        if (!gl) return;
+        
         // Update metaballs
         for (let i = 0; i < numMetaballs; i++) {
           const metaball = metaballs[i];

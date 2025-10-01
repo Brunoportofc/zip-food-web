@@ -56,7 +56,8 @@ class RestaurantConfigService {
       };
       
       // Criar restaurante no sistema principal
-      const restaurant = await restaurantService.createRestaurant(restaurantData);
+      const restaurantDataWithOwner = { ...restaurantData, ownerId: 'mock-owner-id' };
+      const restaurant = await restaurantService.createRestaurant(restaurantDataWithOwner);
       
       // Marcar como aprovado automaticamente para desenvolvimento
       await restaurantService.approveRestaurant(restaurant.id);

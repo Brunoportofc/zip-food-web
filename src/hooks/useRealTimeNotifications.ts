@@ -119,7 +119,7 @@ export const useRealTimeNotifications = () => {
           });
 
           // Verificar consistência dos dados
-          const actualUnreadCount = processedNotifications.filter(n => !n.read).length;
+          const actualUnreadCount = processedNotifications.filter((n: any) => !n.read).length;
           const finalUnreadCount = Math.max(0, Math.min(newUnreadCount, actualUnreadCount));
 
           console.log('🔄 [Notifications] Dados recebidos:', {

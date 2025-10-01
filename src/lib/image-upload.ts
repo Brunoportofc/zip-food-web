@@ -158,7 +158,7 @@ export async function uploadToStorage(blob: Blob, path: string): Promise<string>
   try {
     // Importar Firebase Storage dinamicamente para evitar problemas de SSR
     const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
-    const app = (await import('@/lib/firebase/config')).default;
+    const app: any = (await import('@/lib/firebase/config')).default;
     
     const storage = getStorage(app);
     const storageRef = ref(storage, `restaurant-images/${path}`);

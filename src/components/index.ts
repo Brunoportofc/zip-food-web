@@ -3,8 +3,7 @@ export {
   ProtectedRoute, 
   RestaurantProtectedRoute, 
   DeliveryProtectedRoute, 
-  CustomerProtectedRoute,
-  RestaurantStatusGuard 
+  CustomerProtectedRoute
 } from './auth/ProtectedRoute';
 
 // Other components
