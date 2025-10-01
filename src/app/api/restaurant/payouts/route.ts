@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { payoutSystemService } from '@/lib/stripe/payout-system';
-import { adminDb } from '@/lib/firebase/admin';
-import { verifySessionCookie } from '@/lib/firebase/admin';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 // GET - Get restaurant payout history and pending earnings
 export async function GET(request: NextRequest) {
@@ -16,7 +15,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID
@@ -96,7 +95,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     // Check if user is admin (you can implement this check based on your user roles)

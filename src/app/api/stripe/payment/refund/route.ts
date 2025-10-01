@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/config';
-import { adminDb } from '@/lib/firebase/admin';
-import { verifySessionCookie } from '@/lib/firebase/admin';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 interface RefundPaymentRequest {
   orderId: string;
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     const body: RefundPaymentRequest = await request.json();

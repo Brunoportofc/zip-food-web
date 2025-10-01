@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedClaims.uid;
     console.log('🔄 [Notifications API] UserId:', userId);
 
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedClaims.uid;
 
     // Buscar restaurante do usuário
@@ -249,7 +249,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedClaims.uid;
 
     const { notificationId, read, action } = await request.json();
@@ -346,7 +346,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedClaims.uid;
 
     const { searchParams } = new URL(request.url);

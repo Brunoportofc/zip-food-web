@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { payoutSystemService } from '@/lib/stripe/payout-system';
-import { adminDb } from '@/lib/firebase/admin';
-import { verifySessionCookie } from '@/lib/firebase/admin';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 interface BankInfoRequest {
   bankName: string;
@@ -23,7 +22,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID
@@ -94,7 +93,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID

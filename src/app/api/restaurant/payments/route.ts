@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+import { adminDb } from '@/lib/firebase/admin';
 import { getBalance, listTransactions } from '@/lib/stripe';
 
 export async function GET(request: NextRequest) {
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get restaurant data to check Stripe account
-    const restaurantDoc = await db.collection('restaurants').doc(restaurantId).get();
+    const restaurantDoc = await adminDb.collection('restaurants').doc(restaurantId).get();
     if (!restaurantDoc.exists) {
       return NextResponse.json(
         { success: false, message: 'Restaurante não encontrado' },
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Get payment logs from Firebase for additional data
-    const paymentLogsQuery = await db
+    const paymentLogsQuery = await adminDb
       .collection('paymentLogs')
       .where('restaurantId', '==', restaurantId)
       .where('createdAt', '>=', startDate.toISOString())

@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     let userType: string;
     
     try {
-      const decodedClaims = await adminAuth.verifySessionCookie();
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
       userId = decodedClaims.uid;
       
       // Buscar tipo de usuário no Firestore
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     let userType: string;
     
     try {
-      const decodedClaims = await adminAuth.verifySessionCookie();
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
       userId = decodedClaims.uid;
       
       // Buscar tipo de usuário no Firestore
@@ -238,7 +238,7 @@ export async function PUT(request: NextRequest) {
     let userType: string;
     
     try {
-      const decodedClaims = await adminAuth.verifySessionCookie();
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
       userId = decodedClaims.uid;
       
       // Buscar tipo de usuário no Firestore
@@ -337,7 +337,7 @@ export async function DELETE(request: NextRequest) {
     let userType: string;
     
     try {
-      const decodedClaims = await adminAuth.verifySessionCookie();
+      const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
       userId = decodedClaims.uid;
       
       // Buscar tipo de usuário no Firestore

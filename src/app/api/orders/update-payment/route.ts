@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase/admin';
+import { adminDb } from '@/lib/firebase/admin';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if order exists
-    const orderDoc = await db.collection('orders').doc(orderId).get();
+    const orderDoc = await adminDb.collection('orders').doc(orderId).get();
     if (!orderDoc.exists) {
       return NextResponse.json(
         { success: false, message: 'Pedido não encontrado' },
@@ -38,10 +38,10 @@ export async function POST(request: NextRequest) {
       updateData.confirmedAt = new Date().toISOString();
     }
 
-    await db.collection('orders').doc(orderId).update(updateData);
+    await adminDb.collection('orders').doc(orderId).update(updateData);
 
     // Update payment log
-    const paymentLogsQuery = await db
+    const paymentLogsQuery = await adminDb
       .collection('paymentLogs')
       .where('paymentIntentId', '==', paymentIntentId)
       .limit(1)
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Create notification for restaurant
     if (status === 'paid') {
-      await db.collection('notifications').add({
+      await adminDb.collection('notifications').add({
         type: 'new_order',
         title: 'Novo Pedido Confirmado',
         message: `Pedido #${orderId.slice(-6)} foi confirmado e pago`,
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       });
 
       // Create notification for customer
-      await db.collection('notifications').add({
+      await adminDb.collection('notifications').add({
         type: 'order_confirmed',
         title: 'Pedido Confirmado',
         message: `Seu pedido foi confirmado e está sendo preparado`,

@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedClaims.uid;
 
     // Buscar restaurante do usuário

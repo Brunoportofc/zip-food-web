@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie();
+    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedClaims.uid;
 
     const { is_active } = await request.json();

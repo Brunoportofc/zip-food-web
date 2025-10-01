@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { restaurantStripeService } from '@/lib/stripe/restaurant-stripe';
-import { adminDb } from '@/lib/firebase/admin';
-import { verifySessionCookie } from '@/lib/firebase/admin';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 interface StripeKeysRequest {
   publishableKey: string;
@@ -21,7 +20,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID
@@ -81,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID
@@ -157,7 +156,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID

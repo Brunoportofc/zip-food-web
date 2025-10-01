@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripeConfig, calculatePlatformFee, calculateRestaurantAmount } from '@/lib/stripe/config';
 import { restaurantStripeService } from '@/lib/stripe/restaurant-stripe';
-import { adminDb } from '@/lib/firebase/admin';
-import { verifySessionCookie } from '@/lib/firebase/admin';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 interface CreatePaymentIntentRequest {
   orderId?: string;
@@ -25,7 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const customerId = decodedToken.uid;
 
     const body: CreatePaymentIntentRequest = await request.json();

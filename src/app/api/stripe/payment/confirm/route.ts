@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, stripeConfig } from '@/lib/stripe/config';
 import { payoutSystemService } from '@/lib/stripe/payout-system';
-import { adminDb } from '@/lib/firebase/admin';
-import { verifySessionCookie } from '@/lib/firebase/admin';
+import { adminDb, adminAuth } from '@/lib/firebase/admin';
 
 interface ConfirmPaymentRequest {
   paymentIntentId: string;
@@ -21,7 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie();
+    const decodedToken = await adminAuth.verifySessionCookie(sessionCookie);
     const customerId = decodedToken.uid;
 
     const body: ConfirmPaymentRequest = await request.json();
