@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar o ID token
-    const decodedToken = await adminAuth.verifyIdToken();
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
     console.log('✅ [Session API] Token verificado para usuário:', decodedToken.uid);
     
     // Criar cookie de sessão (válido por 5 dias)
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     // Tentar criar o cookie de sessão
     let sessionCookie;
     try {
-      sessionCookie = await adminAuth.createSessionCookie();
+      sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn });
       console.log('✅ [Session API] Cookie de sessão criado com sucesso');
     } catch (cookieError: any) {
       console.error('❌ [Session API] Erro ao criar cookie de sessão:', cookieError);
