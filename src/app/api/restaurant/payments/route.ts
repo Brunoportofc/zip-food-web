@@ -71,15 +71,15 @@ export async function GET(request: NextRequest) {
       .limit(50)
       .get();
 
-    const paymentLogs = paymentLogsQuery.docs.map(doc => ({
+    const paymentLogs = paymentLogsQuery.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data()
     }));
 
     // Calculate totals
     const totalEarnings = paymentLogs
-      .filter(log => log.status === 'succeeded')
-      .reduce((sum, log) => sum + (log.amount || 0), 0) / 100; // Convert from cents
+      .filter((log: any) => log.status === 'succeeded')
+      .reduce((sum: number, log: any) => sum + (log.amount || 0), 0) / 100; // Convert from cents
 
     const pendingPayouts = balance.pending.reduce((sum: number, pending: any) => 
       sum + pending.amount, 0) / 100;
@@ -107,8 +107,8 @@ export async function GET(request: NextRequest) {
     const monthlyData = new Map();
 
     paymentLogs
-      .filter(log => log.status === 'succeeded')
-      .forEach(log => {
+      .filter((log: any) => log.status === 'succeeded')
+      .forEach((log: any) => {
         const date = new Date(log.createdAt);
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         

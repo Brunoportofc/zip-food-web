@@ -21,7 +21,7 @@ const createMockQuery = (): any => ({
   orderBy: (...args: any[]) => createMockQuery(),
 });
 
-const mockDb = {
+export const adminDb = {
   // Configurações do Firebase Admin serão implementadas posteriormente
   collection: (name: string) => ({
     doc: (id?: string) => ({
@@ -100,8 +100,6 @@ const mockDb = {
   }),
 };
 
-export const db = mockDb;
-export const adminDb = mockDb;
 export const adminAuth = {
   verifyIdToken: () => Promise.resolve({ uid: 'placeholder' }),
   createCustomToken: () => Promise.resolve('placeholder-token'),
@@ -118,7 +116,3 @@ export const adminAuth = {
     email: 'mock@example.com'
   }),
 };
-
-export const verifySessionCookie = () => Promise.resolve({ uid: 'placeholder' });
-
-export default mockDb;

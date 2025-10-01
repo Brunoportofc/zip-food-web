@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie(sessionCookie);
+    const decodedToken = await verifySessionCookie();
     const customerId = decodedToken.uid;
 
     const body: ConfirmPaymentRequest = await request.json();
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     const orderData = orderDoc.data();
     
-    if (orderData?.customer_id !== customerId) {
+    if (orderData?.customerId !== customerId) {
       return NextResponse.json(
         { error: 'Unauthorized access to order' },
         { status: 403 }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify payment intent belongs to this order
-    if (orderData?.payment_intent_id !== paymentIntentId) {
+    if (orderData?.paymentIntentId !== paymentIntentId) {
       return NextResponse.json(
         { error: 'Payment intent does not match order' },
         { status: 400 }
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       const payoutResult = await payoutSystemService.processPaymentAndSchedulePayout(
         orderId,
         orderData.restaurant_id,
-        orderData.payment_amount,
+        orderData.total,
         paymentIntentId
       );
 
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
         restaurant_id: orderData.restaurant_id,
         order_id: orderId,
         title: 'Novo Pedido Recebido',
-        message: `Pedido #${orderId} foi confirmado e pago. Valor: ₪${(orderData.payment_amount / 100).toFixed(2)}`,
+        message: `Pedido #${orderId} foi confirmado e pago. Valor: R$${(orderData.total).toFixed(2)}`,
         read: false,
         created_at: new Date(),
       });

@@ -28,7 +28,25 @@ const nextConfig: NextConfig = {
         tls: false,
         child_process: false,
         http2: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
       };
+    }
+
+    // Ignorar módulos problemáticos do Firebase Admin
+    config.externals = config.externals || [];
+    if (isServer) {
+      config.externals.push({
+        'firebase-admin': 'commonjs firebase-admin',
+        'next-auth': 'commonjs next-auth',
+      });
     }
 
     // Otimizações para produção

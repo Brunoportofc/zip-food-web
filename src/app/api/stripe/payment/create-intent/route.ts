@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie(sessionCookie);
+    const decodedToken = await verifySessionCookie();
     const customerId = decodedToken.uid;
 
     const body: CreatePaymentIntentRequest = await request.json();
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
       const existingOrderData = orderDoc.data();
       
-      if (existingOrderData?.customer_id !== customerId) {
+      if (existingOrderData?.customerId !== customerId) {
         return NextResponse.json(
           { error: 'Unauthorized access to order' },
           { status: 403 }
@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if order already has a payment intent
-      if (existingOrderData?.payment_intent_id) {
+      if (existingOrderData?.paymentIntentId) {
         return NextResponse.json(
           { error: 'Payment intent already exists for this order' },
           { status: 400 }
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
             notes: item.notes || ''
           }));
 
-          const itemPromises = orderItems.map(item => 
+          const itemPromises = orderItems.map((item: any) => 
             adminDb.collection('order_items').add(item)
           );
 
@@ -180,7 +180,7 @@ export async function POST(request: NextRequest) {
       currency: stripeConfig.currency,
       payment_method_types: paymentMethodTypes,
       metadata: {
-        orderId: finalOrderId,
+        orderId: finalOrderId || 'unknown',
         customerId,
         restaurantId,
         platformFee: platformFee.toString(),
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
         platformId: process.env.NEXT_PUBLIC_APP_URL || 'zipfood',
       },
       description: description || `Pedido #${finalOrderId} - ZipFood`,
-      receipt_email: decodedToken.email || undefined,
+      receipt_email: (decodedToken as any).email || undefined,
     });
 
     // Update order with payment intent information

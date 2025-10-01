@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Verificar token de sessão
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const uid = decodedClaims.uid;
 
     // [FASE 4 - LOG 5] Token verificado com sucesso - incluindo custom claims

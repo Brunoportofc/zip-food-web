@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
 
     // Buscar restaurante do usuário
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     const createdNotifications = [];
 
     for (const notification of testNotifications) {
-      const docRef = adminDb.collection('notifications').doc();
+      const docRef = adminDb.collection('notifications').doc('test-notification-' + Math.random());
       const notificationData = {
         ...notification,
         timestamp: new Date(),

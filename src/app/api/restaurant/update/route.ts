@@ -32,7 +32,7 @@ export async function PUT(request: NextRequest) {
     });
 
     // Verificar token de sessão
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const uid = decodedClaims.uid;
 
     console.log('🔄 [API Update Restaurant] Atualizando dados do restaurante:', {

@@ -123,9 +123,9 @@ export default function RestaurantLayout({
                           />
                           <span className="font-medium text-sm lg:text-base">{item.label}</span>
                         </div>
-                        {item.badge && (
+                        {(item as any).badge && (
                           <span className="bg-green-500 text-white text-xs px-1.5 lg:px-2 py-0.5 lg:py-1 rounded-full min-w-[16px] lg:min-w-[20px] text-center text-[10px] lg:text-xs">
-                            {item.badge}
+                            {(item as any).badge}
                           </span>
                         )}
                       </Link>

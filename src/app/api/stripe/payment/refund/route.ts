@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie(sessionCookie);
+    const decodedToken = await verifySessionCookie();
     const userId = decodedToken.uid;
 
     const body: RefundPaymentRequest = await request.json();
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const orderData = orderDoc.data();
 
     // Check authorization - customer can refund their own orders, restaurant owners can refund orders from their restaurant
-    const isCustomer = orderData?.customer_id === userId;
+    const isCustomer = orderData?.customerId === userId;
     let isRestaurantOwner = false;
 
     if (!isCustomer) {
@@ -73,22 +73,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if order can be refunded
-    if (orderData?.payment_status !== 'paid') {
+    if (orderData?.paymentStatus !== 'paid' && orderData?.paymentStatus !== 'completed') {
       return NextResponse.json(
         { error: 'Order payment is not in a refundable state' },
         { status: 400 }
       );
     }
 
-    if (!orderData?.payment_intent_id) {
+    if (!orderData?.paymentIntentId) {
       return NextResponse.json(
         { error: 'No payment intent found for this order' },
         { status: 400 }
       );
     }
 
-    // Check if order is already refunded
-    if (orderData?.payment_status === 'refunded') {
+    // Check if order is already refunded (check status field instead)
+    if (orderData?.status === 'refunded') {
       return NextResponse.json(
         { error: 'Order is already refunded' },
         { status: 400 }
@@ -96,9 +96,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine refund amount
-    const refundAmount = amount || orderData.payment_amount;
+    const refundAmount = amount || orderData.total;
     
-    if (refundAmount > orderData.payment_amount) {
+    if (refundAmount > orderData.total) {
       return NextResponse.json(
         { error: 'Refund amount cannot exceed original payment amount' },
         { status: 400 }
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     // Create refund in Stripe
     const refund = await stripe.refunds.create({
-      payment_intent: orderData.payment_intent_id,
+      payment_intent: orderData.paymentIntentId,
       amount: refundAmount,
       reason: reason as any,
       metadata: {
@@ -118,12 +118,12 @@ export async function POST(request: NextRequest) {
     });
 
     // Update order status
-    const isPartialRefund = refundAmount < orderData.payment_amount;
+    const isPartialRefund = refundAmount < orderData.total;
     const newPaymentStatus = isPartialRefund ? 'partially_refunded' : 'refunded';
     const newOrderStatus = isPartialRefund ? orderData.status : 'cancelled';
 
     await adminDb.collection('orders').doc(orderId).update({
-      payment_status: newPaymentStatus,
+      paymentStatus: newPaymentStatus,
       status: newOrderStatus,
       refund_id: refund.id,
       refund_amount: refundAmount,
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     if (isRestaurantOwner) {
       await adminDb.collection('notifications').add({
         type: 'refund_processed',
-        user_id: orderData.customer_id,
+        user_id: orderData.customerId,
         order_id: orderId,
         title: 'Reembolso Processado',
         message: `Seu pedido #${orderId} foi reembolsado. Valor: R$ ${refundAmountBRL}`,

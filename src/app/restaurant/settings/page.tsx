@@ -137,6 +137,10 @@ export default function RestaurantSettingsPage() {
           console.log('🔄 [Settings] Atualizando userProfile local:', userResult.userData);
           setUserProfile(prev => ({
             ...prev,
+            uid: prev?.uid || '',
+            email: prev?.email || '',
+            role: prev?.role || 'restaurant',
+            createdAt: prev?.createdAt || new Date(),
             displayName: userResult.userData.displayName,
             phone: userResult.userData.phone,
             updatedAt: userResult.userData.updatedAt

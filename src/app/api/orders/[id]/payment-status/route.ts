@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession } from '@/lib/next-auth';
 import { authOptions } from '@/lib/auth';
 import { adminDb } from '@/lib/firebase-admin';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id: orderId } = params;
+    const { id: orderId } = await params;
 
     if (!orderId) {
       return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
@@ -77,7 +77,7 @@ async function checkRestaurantOwnership(userId: string, restaurantId: string): P
     if (!restaurantDoc.exists) return false;
 
     const restaurantData = restaurantDoc.data();
-    return restaurantData?.ownerId === userId;
+    return restaurantData?.owner_id === userId;
   } catch (error) {
     console.error('Error checking restaurant ownership:', error);
     return false;

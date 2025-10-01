@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const orderData = orderDoc.data();
 
     // Update order with payment information
-    const updateData = {
+    const updateData: any = {
       paymentIntentId,
       paymentStatus: status,
       status: status === 'paid' ? 'confirmed' : 'payment_failed',

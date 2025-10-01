@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     console.error('❌ [API] Erro ao verificar restaurante:', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
-      userId
+      userId: 'unknown'
     });
     return NextResponse.json(
       { error: 'Erro interno do servidor', hasRestaurant: false },

@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar o ID token
-    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    const decodedToken = await adminAuth.verifyIdToken();
     console.log('✅ [Session API] Token verificado para usuário:', decodedToken.uid);
     
     // Criar cookie de sessão (válido por 5 dias)
@@ -40,9 +40,7 @@ export async function POST(request: NextRequest) {
     // Tentar criar o cookie de sessão
     let sessionCookie;
     try {
-      sessionCookie = await adminAuth.createSessionCookie(idToken, { 
-        expiresIn: expiresIn / 1000 // Firebase espera em segundos, não milissegundos
-      });
+      sessionCookie = await adminAuth.createSessionCookie();
       console.log('✅ [Session API] Cookie de sessão criado com sucesso');
     } catch (cookieError: any) {
       console.error('❌ [Session API] Erro ao criar cookie de sessão:', cookieError);
@@ -93,7 +91,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   try {
     // Remover cookie de sessão
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     cookieStore.delete('session');
 
     console.log('✅ [Session API] Cookie de sessão removido');

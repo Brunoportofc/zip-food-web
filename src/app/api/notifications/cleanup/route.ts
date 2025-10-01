@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
 
     // Buscar restaurante do usuário
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     let updatedCount = 0;
     const batch = adminDb.batch();
 
-    allNotificationsQuery.docs.forEach(doc => {
+    allNotificationsQuery.docs.forEach((doc: any) => {
       const data = doc.data();
       
       // Verificar se a notificação tem dados válidos

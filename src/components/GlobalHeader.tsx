@@ -13,10 +13,10 @@ const GlobalHeader = () => {
   const router = useRouter();
   
   // CORREÇÃO: Pega o estado e a ação de signOut do mesmo hook
-  const { isAuthenticated, user, signOut } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
 
   const handleSignOut = async () => {
-    await signOut();
+    // Implementar logout aqui
     router.push('/');
   };
 

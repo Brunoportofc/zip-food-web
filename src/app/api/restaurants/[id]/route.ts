@@ -61,7 +61,7 @@ export async function GET(
         .where('restaurant_id', '==', restaurantId)
         .get();
 
-      const menuItems = menuSnapshot.docs.map(doc => ({
+      const menuItems = menuSnapshot.docs.map((doc: any) => ({
         id: doc.id,
         ...doc.data()
       }));

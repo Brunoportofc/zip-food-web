@@ -44,7 +44,7 @@ export default function CustomerProfilePage() {
     holderName: '',
     expiryDate: ''
   });
-  const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'personal' | 'addresses' | 'notifications'>('personal');
 
   
@@ -52,7 +52,7 @@ export default function CustomerProfilePage() {
     if (!user?.uid) return;
     
     try {
-      setLoading(true);
+      setProfileLoading(true);
       const [userAddresses, userPaymentMethods] = await Promise.all([
         profileService.getUserAddresses(user.uid),
         profileService.getUserPaymentMethods(user.uid)
@@ -64,7 +64,7 @@ export default function CustomerProfilePage() {
       console.error('Erro ao carregar dados do perfil:', error);
       toast.error('Erro ao carregar dados do perfil');
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
@@ -261,13 +261,13 @@ export default function CustomerProfilePage() {
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                 <div className="flex flex-col items-center">
                   <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center mb-4">
-                    {user.avatar ? (
-                      <img src={user.avatar} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                    {user.photoURL ? (
+                      <img src={user.photoURL} alt="Profile" className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <span className="text-3xl text-gray-800">👤</span>
                     )}
                   </div>
-                  <h2 className="text-xl font-semibold">{user.name}</h2>
+                  <h2 className="text-xl font-semibold">{user.displayName}</h2>
                   <p className="text-gray-700">{user.email}</p>
                 </div>
               </div>

@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
     console.log('🔄 [Notifications API] UserId:', userId);
 
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
       snapshot = await query.get();
     }
     
-    notifications = snapshot.docs.map(doc => {
+    notifications = snapshot.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -105,7 +105,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Ordenar no cliente se não foi possível no servidor
-    notifications.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+    notifications.sort((a: any, b: any) => b.timestamp.getTime() - a.timestamp.getTime());
 
     // Contar não lidas
     let unreadCount = 0;
@@ -117,13 +117,13 @@ export async function GET(request: NextRequest) {
       unreadCount = unreadSnapshot.size;
     } catch (unreadError) {
       console.log('⚠️ [Notifications API] Erro ao contar não lidas, usando fallback');
-      unreadCount = notifications.filter(n => !n.read).length;
+      unreadCount = notifications.filter((n: any) => !n.read).length;
     }
 
     console.log('✅ [Notifications API] Retornando dados:', {
       totalNotifications: notifications.length,
       unreadCount,
-      unreadFromArray: notifications.filter(n => !n.read).length
+      unreadFromArray: notifications.filter((n: any) => !n.read).length
     });
 
     return NextResponse.json({
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
 
     // Buscar restaurante do usuário
@@ -249,7 +249,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
 
     const { notificationId, read, action } = await request.json();
@@ -274,7 +274,7 @@ export async function PUT(request: NextRequest) {
       const notificationData = notificationDoc.data();
     
     // Verificar se o restaurante pertence ao usuário
-    const restaurantDoc = await adminDb.collection('restaurants').doc(notificationData!.restaurantId).get();
+    const restaurantDoc = await adminDb.collection('restaurants').doc(notificationData!.restaurant_id).get();
     
     if (!restaurantDoc.exists || restaurantDoc.data()!.owner_id !== userId) {
       return NextResponse.json(
@@ -296,11 +296,11 @@ export async function PUT(request: NextRequest) {
       // Marcar todas as notificações do restaurante como lidas
       const batch = adminDb.batch();
       const unreadQuery = await adminDb.collection('notifications')
-        .where('restaurantId', '==', notificationData!.restaurantId)
+        .where('restaurantId', '==', notificationData!.restaurant_id)
         .where('read', '==', false)
         .get();
 
-      unreadQuery.docs.forEach(doc => {
+      unreadQuery.docs.forEach((doc: any) => {
         batch.update(doc.ref, { read: true, readAt: new Date() });
       });
 
@@ -346,7 +346,7 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
 
     const { searchParams } = new URL(request.url);
@@ -376,7 +376,7 @@ export async function DELETE(request: NextRequest) {
         .where('restaurantId', '==', restaurantId)
         .get();
         
-      allNotificationsQuery.docs.forEach(doc => {
+      allNotificationsQuery.docs.forEach((doc: any) => {
           batch.delete(doc.ref);
         });
         
@@ -409,7 +409,7 @@ export async function DELETE(request: NextRequest) {
       const notificationData = notificationDoc.data();
     
     // Verificar se o restaurante pertence ao usuário
-    const restaurantDoc = await adminDb.collection('restaurants').doc(notificationData!.restaurantId).get();
+    const restaurantDoc = await adminDb.collection('restaurants').doc(notificationData!.restaurant_id).get();
     
     if (!restaurantDoc.exists || restaurantDoc.data()!.owner_id !== userId) {
       return NextResponse.json(

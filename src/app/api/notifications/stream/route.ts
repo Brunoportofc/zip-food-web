@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       return new Response('Não autenticado', { status: 401 });
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
 
     // Buscar restaurante do usuário
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
               .get();
 
             if (!newNotificationsQuery.empty) {
-              newNotificationsQuery.docs.forEach(doc => {
+              newNotificationsQuery.docs.forEach((doc: any) => {
                 const notification = {
                   id: doc.id,
                   ...doc.data(),

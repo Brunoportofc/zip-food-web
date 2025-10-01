@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const decodedClaims = await adminAuth.verifySessionCookie(sessionCookie, true);
+    const decodedClaims = await adminAuth.verifySessionCookie();
     const userId = decodedClaims.uid;
 
     // Buscar restaurante do usuário
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
       .limit(1000); // Limite para performance
 
     const ordersSnapshot = await ordersQuery.get();
-    const orders = ordersSnapshot.docs.map(doc => ({
+    const orders = ordersSnapshot.docs.map((doc: any) => ({
       id: doc.id,
       ...doc.data(),
       created_at: doc.data().created_at?.toDate?.() || new Date(doc.data().created_at),

@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
           .where('order_id', '==', doc.id)
           .get();
         
-        orderData.order_items = itemsSnapshot.docs.map(itemDoc => ({
+        orderData.order_items = itemsSnapshot.docs.map((itemDoc: any) => ({
           id: itemDoc.id,
           ...itemDoc.data()
         }));
@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
         .where('order_id', '==', order.id)
         .get();
       
-      completeOrder.order_items = itemsSnapshot.docs.map(itemDoc => ({
+      completeOrder.order_items = itemsSnapshot.docs.map((itemDoc: any) => ({
         id: itemDoc.id,
         ...itemDoc.data()
       }));

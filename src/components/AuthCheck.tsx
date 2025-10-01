@@ -10,7 +10,7 @@ interface AuthCheckProps {
 }
 
 export default function AuthCheck({ children }: AuthCheckProps) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const router = useRouter();
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);

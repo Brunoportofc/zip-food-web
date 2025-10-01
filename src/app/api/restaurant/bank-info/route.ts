@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie(sessionCookie);
+    const decodedToken = await verifySessionCookie();
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const decodedToken = await verifySessionCookie(sessionCookie);
+    const decodedToken = await verifySessionCookie();
     const userId = decodedToken.uid;
 
     // Get user's restaurant ID

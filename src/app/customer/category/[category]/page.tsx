@@ -152,9 +152,9 @@ export default function CategoryPage({ params }: CategoryPageProps) {
           </div>
 
           {/* Minimum Order Value */}
-          {restaurant.minimumOrderValue && (
+          {restaurant.minimumOrder && (
             <div className="mt-2 text-xs text-gray-500">
-              Pedido mínimo: R$ {restaurant.minimumOrderValue.toFixed(2)}
+              Pedido mínimo: R$ {restaurant.minimumOrder.toFixed(2)}
             </div>
           )}
         </div>

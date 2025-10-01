@@ -29,14 +29,14 @@ export default function OrdersPage() {
   // Carregar pedidos do usuário
   useEffect(() => {
     const loadOrders = async () => {
-      if (!user?.id) {
+      if (!user?.uid) {
         setIsLoading(false);
         return;
       }
 
       try {
         setIsLoading(true);
-        const userOrders = await orderService.getOrdersByCustomer(user.id);
+        const userOrders = await orderService.getOrdersByCustomer(user.uid);
         
         // Mapear dados dos pedidos para o formato da interface
         const mappedOrders: DisplayOrder[] = userOrders.map(order => ({
