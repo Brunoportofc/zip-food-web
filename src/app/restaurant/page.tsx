@@ -9,10 +9,12 @@ import {
   FaStore, FaCreditCard
 } from 'react-icons/fa';
 import DashboardTab from '@/components/restaurant/DashboardTab';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type TabType = 'dashboard' | 'settings' | 'payments';
 
 export default function RestaurantPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { user, userData, userRole, loading: authLoading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
@@ -100,21 +102,21 @@ export default function RestaurantPage() {
   const tabs = [
     {
       id: 'dashboard' as TabType,
-      label: 'Dashboard',
+      label: t('dashboard.dashboard'),
       icon: FaTachometerAlt,
-      description: 'Visão geral do restaurante'
+      description: t('dashboard.overview')
     },
     {
       id: 'payments' as TabType,
-      label: 'Pagamentos',
+      label: t('payment.payments'),
       icon: FaCreditCard,
-      description: 'Conectar sua conta Stripe'
+      description: t('payment.connectStripe')
     },
     {
       id: 'settings' as TabType,
-      label: 'Configurações',
+      label: t('common.settings'),
       icon: FaCog,
-      description: 'Configurações do restaurante'
+      description: t('restaurant.restaurantSettings')
     }
   ];
 
@@ -123,7 +125,7 @@ export default function RestaurantPage() {
       <div className="min-h-screen bg-[#101828] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-300">Carregando...</p>
+          <p className="text-gray-300">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -141,14 +143,14 @@ export default function RestaurantPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">
-                  {restaurantData?.name || 'Painel do Restaurante'}
+                  {restaurantData?.name || t('dashboard.restaurantPanel')}
                 </h1>
                 <p className="text-gray-300">
-                  Bem-vindo, {userData?.displayName || user?.displayName || 'Restaurante'}!
+                  {t('dashboard.welcomeBack')}, {userData?.displayName || user?.displayName || t('restaurant.restaurant')}!
                 </p>
                 {restaurantData && (
                   <p className="text-sm text-gray-400">
-                    Status: {restaurantData.is_active ? '🟢 Ativo' : '🔴 Inativo'}
+                    {t('dashboard.status')}: {restaurantData.is_active ? `🟢 ${t('common.active')}` : `🔴 ${t('common.inactive')}`}
                   </p>
                 )}
               </div>
@@ -159,7 +161,7 @@ export default function RestaurantPage() {
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 </div>
-                <span className="text-sm font-medium text-green-400">Online</span>
+                <span className="text-sm font-medium text-green-400">{t('dashboard.online')}</span>
               </div>
             </div>
           </div>
@@ -200,9 +202,9 @@ export default function RestaurantPage() {
           {activeTab === 'payments' && (
             <div>
               <div className="mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">🔗 Conexão Stripe</h2>
+                <h2 className="text-2xl font-bold text-white mb-2">🔗 {t('payment.stripeConnection')}</h2>
                 <p className="text-gray-300">
-                  Configure sua própria conta Stripe para receber pagamentos diretamente.
+                  {t('payment.stripeConnectionDesc')}
                 </p>
               </div>
               <StripeConnectionDashboard />
@@ -211,12 +213,12 @@ export default function RestaurantPage() {
           {activeTab === 'settings' && (
             <div className="text-center py-12">
               <FaCog className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">Configurações</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">{t('common.settings')}</h3>
               <p className="text-gray-300">
-                Esta seção está em desenvolvimento.
+                {t('dashboard.sectionInDevelopment')}
               </p>
               <p className="text-sm text-gray-400 mt-2">
-                Em breve você poderá configurar horários de funcionamento, formas de pagamento e muito mais.
+                {t('dashboard.comingSoonFeatures')}
               </p>
             </div>
           )}

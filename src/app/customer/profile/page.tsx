@@ -7,8 +7,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'react-hot-toast';
 import { profileService, Address, PaymentMethod, PersonalData } from '@/services/profile.service';
 import NotificationManager from '@/components/NotificationManager';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function CustomerProfilePage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { user, userData, userRole, loading, signOut } = useAuth();
   const isAuthenticated = !!(user && userData);
@@ -62,7 +64,7 @@ export default function CustomerProfilePage() {
       setPaymentMethods(userPaymentMethods);
     } catch (error) {
       console.error('Erro ao carregar dados do perfil:', error);
-      toast.error('Erro ao carregar dados do perfil');
+      toast.error(t('profile.errorLoading'));
     } finally {
       setProfileLoading(false);
     }
@@ -95,11 +97,11 @@ export default function CustomerProfilePage() {
     
     try {
       await profileService.updatePersonalData(user.uid, personalData);
-      toast.success('Dados pessoais atualizados com sucesso');
+      toast.success(t('profile.dataUpdated'));
       setIsEditingPersonal(false);
     } catch (error) {
       console.error('Erro ao atualizar dados:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar dados');
+      toast.error(error instanceof Error ? error.message : t('profile.errorUpdating'));
     }
   };
   
@@ -118,10 +120,10 @@ export default function CustomerProfilePage() {
         zipCode: ''
       });
       setIsAddingAddress(false);
-      toast.success('Endereço adicionado com sucesso');
+      toast.success(t('address.addressAdded'));
     } catch (error) {
       console.error('Erro ao adicionar endereço:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao adicionar endereço');
+      toast.error(error instanceof Error ? error.message : t('address.errorAdding'));
     }
   };
   
@@ -131,10 +133,10 @@ export default function CustomerProfilePage() {
     try {
       await profileService.removeAddress(user.uid, id);
       await loadProfileData(); // Recarregar dados
-      toast.success('Endereço removido com sucesso');
+      toast.success(t('address.addressRemoved'));
     } catch (error) {
       console.error('Erro ao remover endereço:', error);
-      toast.error(error instanceof Error ? error.message : 'Erro ao remover endereço');
+      toast.error(error instanceof Error ? error.message : t('address.errorRemoving'));
     }
   };
   
@@ -151,10 +153,10 @@ export default function CustomerProfilePage() {
          holderName: ''
        });
        setIsAddingPayment(false);
-       toast.success('Método de pagamento adicionado com sucesso');
+       toast.success(t('payment.methodAdded'));
      } catch (error) {
        console.error('Erro ao adicionar método de pagamento:', error);
-       toast.error(error instanceof Error ? error.message : 'Erro ao adicionar método de pagamento');
+       toast.error(error instanceof Error ? error.message : t('payment.errorAdding'));
      }
    };
 
@@ -164,20 +166,20 @@ export default function CustomerProfilePage() {
     try {
       await profileService.removePaymentMethod(user.uid, id);
        await loadProfileData(); // Recarregar dados
-       toast.success('Método de pagamento removido com sucesso');
+       toast.success(t('payment.methodRemoved'));
      } catch (error) {
        console.error('Erro ao remover método de pagamento:', error);
-       toast.error(error instanceof Error ? error.message : 'Erro ao remover método de pagamento');
+       toast.error(error instanceof Error ? error.message : t('payment.errorRemoving'));
      }
    };
   
   const handleLogout = async () => {
     try {
       await signOut();
-      toast.success('Logout realizado com sucesso');
+      toast.success(t('auth.logoutSuccess'));
       router.push('/auth/sign-in');
     } catch (error) {
-      toast.error('Erro ao fazer logout');
+      toast.error(t('auth.logoutError'));
     }
   };
   
@@ -186,7 +188,7 @@ export default function CustomerProfilePage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -199,7 +201,7 @@ export default function CustomerProfilePage() {
           {/* Sidebar */}
           <div className="lg:w-1/4">
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-bold mb-6 text-gray-900">Menu</h2>
+              <h2 className="text-xl font-bold mb-6 text-gray-900">{t('common.menu')}</h2>
               <nav className="space-y-2">
                 <div 
                   className={`flex items-center space-x-3 px-4 py-3 rounded-xl cursor-pointer border-2 transition-colors ${
@@ -210,7 +212,7 @@ export default function CustomerProfilePage() {
                   onClick={() => setActiveTab('personal')}
                 >
                   <FaUserAlt size={18} />
-                  <span className="font-medium">Meus Dados</span>
+                  <span className="font-medium">{t('profile.myData')}</span>
                 </div>
                 
                 <div 
@@ -222,7 +224,7 @@ export default function CustomerProfilePage() {
                   onClick={() => setActiveTab('addresses')}
                 >
                   <FaMapMarkerAlt size={18} />
-                  <span className="font-medium">Endereços</span>
+                  <span className="font-medium">{t('address.addresses')}</span>
                 </div>
                 
                 <div 
@@ -234,7 +236,7 @@ export default function CustomerProfilePage() {
                   onClick={() => setActiveTab('notifications')}
                 >
                   <FaBell size={18} />
-                  <span className="font-medium">Notificações</span>
+                  <span className="font-medium">{t('notifications.notifications')}</span>
                 </div>
                 
                 <div 
@@ -242,7 +244,7 @@ export default function CustomerProfilePage() {
                   onClick={handleLogout}
                 >
                   <FaSignOutAlt className="text-primary-600" size={18} />
-                  <span className="text-primary-600 font-medium">Sair</span>
+                  <span className="text-primary-600 font-medium">{t('common.logout')}</span>
                 </div>
               </nav>
             </div>
@@ -253,8 +255,8 @@ export default function CustomerProfilePage() {
             <div className="space-y-6">
               {/* Header */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                <h1 className="text-3xl font-bold text-primary-600 mb-2">Meu Perfil</h1>
-                <p className="text-gray-600">Gerencie suas informações pessoais e preferências</p>
+                <h1 className="text-3xl font-bold text-primary-600 mb-2">{t('profile.myProfile')}</h1>
+                <p className="text-gray-600">{t('profile.manageInfo')}</p>
               </div>
         
               {/* Profile Header */}
@@ -276,13 +278,13 @@ export default function CustomerProfilePage() {
               {activeTab === 'personal' && (
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">Dados Pessoais</h2>
+                  <h2 className="text-xl font-semibold text-gray-900">{t('profile.personalData')}</h2>
                   {!isEditingPersonal ? (
                     <button 
                       onClick={() => setIsEditingPersonal(true)}
                       className="px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                     >
-                      <FaEdit /> Editar
+                      <FaEdit /> {t('common.edit')}
                     </button>
                   ) : (
                     <div className="flex gap-3">
@@ -290,13 +292,13 @@ export default function CustomerProfilePage() {
                         onClick={handleSavePersonalData}
                         className="px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                       >
-                        <FaSave /> Salvar
+                        <FaSave /> {t('common.save')}
                       </button>
                       <button 
                         onClick={() => setIsEditingPersonal(false)}
                         className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors font-medium flex items-center gap-2"
                       >
-                        <FaTimes /> Cancelar
+                        <FaTimes /> {t('common.cancel')}
                       </button>
                     </div>
                   )}
@@ -305,7 +307,7 @@ export default function CustomerProfilePage() {
                 {isEditingPersonal ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('profile.fullName')}</label>
                       <input
                         type="text"
                         value={personalData.name}
@@ -314,7 +316,7 @@ export default function CustomerProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.email')}</label>
                       <input
                         type="email"
                         value={personalData.email}
@@ -323,7 +325,7 @@ export default function CustomerProfilePage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.phone')}</label>
                       <input
                         type="tel"
                         value={personalData.phone}
@@ -337,16 +339,16 @@ export default function CustomerProfilePage() {
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('profile.fullName')}</label>
                       <p className="text-gray-900 py-3">{personalData.name}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">E-mail</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.email')}</label>
                       <p className="text-gray-900 py-3">{personalData.email}</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
-                      <p className="text-gray-900 py-3">{personalData.phone || 'Não informado'}</p>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('common.phone')}</label>
+                      <p className="text-gray-900 py-3">{personalData.phone || t('profile.notProvided')}</p>
                     </div>
 
                   </div>
@@ -359,10 +361,10 @@ export default function CustomerProfilePage() {
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                     <FaMapMarkerAlt className="text-primary-600" />
-                    Endereços
+                    {t('address.addresses')}
                   </h2>
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-                    <h3 className="text-xl font-semibold text-gray-900 mb-4">Meus Endereços</h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-4">{t('address.myAddresses')}</h3>
             
             {addresses.map((address) => (
               <div key={address.id} className="border border-gray-200 rounded-xl p-4 mb-4 bg-[#101828]">
@@ -375,13 +377,13 @@ export default function CustomerProfilePage() {
                   </div>
                   <div className="flex gap-3">
                     <button className="text-primary-600 hover:text-primary-700 p-2 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1">
-                      <FaEdit size={16} /> Editar
+                      <FaEdit size={16} /> {t('common.edit')}
                     </button>
                     <button 
                       onClick={() => handleRemoveAddress(address.id)}
                       className="text-primary-600 hover:text-primary-700 p-2 rounded-lg hover:bg-primary-50 transition-colors flex items-center gap-1"
                     >
-                      <FaTrash size={16} /> Remover
+                      <FaTrash size={16} /> {t('common.remove')}
                     </button>
                   </div>
                 </div>
@@ -393,42 +395,42 @@ export default function CustomerProfilePage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                   <input
                     type="text"
-                    placeholder="Nome do endereço (ex: Casa, Trabalho)"
+                    placeholder={t('address.addressNamePlaceholder')}
                     value={newAddress.label}
                     onChange={(e) => setNewAddress({...newAddress, label: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder="Rua, número"
+                    placeholder={t('address.streetPlaceholder')}
                     value={newAddress.street}
                     onChange={(e) => setNewAddress({...newAddress, street: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder="Bairro"
+                    placeholder={t('address.neighborhood')}
                     value={newAddress.neighborhood}
                     onChange={(e) => setNewAddress({...newAddress, neighborhood: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder="Cidade"
+                    placeholder={t('address.city')}
                     value={newAddress.city}
                     onChange={(e) => setNewAddress({...newAddress, city: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder="Estado"
+                    placeholder={t('address.state')}
                     value={newAddress.state}
                     onChange={(e) => setNewAddress({...newAddress, state: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
                   />
                   <input
                     type="text"
-                    placeholder="CEP"
+                    placeholder={t('address.zipCode')}
                     value={newAddress.zipCode}
                     onChange={(e) => setNewAddress({...newAddress, zipCode: e.target.value})}
                     className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-black"
@@ -439,13 +441,13 @@ export default function CustomerProfilePage() {
                     onClick={handleAddAddress}
                     className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
                   >
-                    <FaSave /> Salvar
+                    <FaSave /> {t('common.save')}
                   </button>
                   <button 
                     onClick={() => setIsAddingAddress(false)}
                     className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-medium focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
                   >
-                    <FaTimes /> Cancelar
+                    <FaTimes /> {t('common.cancel')}
                   </button>
                 </div>
               </div>
@@ -454,7 +456,7 @@ export default function CustomerProfilePage() {
                 onClick={() => setIsAddingAddress(true)}
                 className="bg-primary-600 hover:bg-primary-700 text-white py-3 px-6 rounded-xl flex items-center gap-2 mt-4 font-medium focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
               >
-                <FaPlus /> Adicionar Novo Endereço
+                <FaPlus /> {t('address.addNewAddress')}
               </button>
             )}
                   </div>
@@ -466,7 +468,7 @@ export default function CustomerProfilePage() {
                 <div className="mb-8">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                     <FaBell className="text-primary-600" />
-                    Notificações
+                    {t('notifications.notifications')}
                   </h2>
                   <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
                     <NotificationManager userId={user.uid} />

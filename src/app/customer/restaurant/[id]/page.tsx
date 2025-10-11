@@ -22,6 +22,8 @@ import { useCartStore, PaymentMethod } from '@/store/cart.store';
 import CartDrawer from '@/components/cart/CartDrawer';
 import CartIcon from '@/components/cart/CartIcon';
 import { toast, Toaster } from 'react-hot-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getCategoryName } from '@/utils/translation-helper';
 
 interface RestaurantPageProps {
   params: Promise<{ id: string }>;
@@ -38,6 +40,7 @@ interface MenuItem {
 }
 
 export default function RestaurantPage({ params }: RestaurantPageProps) {
+  const { t } = useLanguage();
   const resolvedParams = use(params);
   const restaurantId = resolvedParams.id;
   
@@ -66,7 +69,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
         });
         
         if (!restaurantResponse.ok) {
-          throw new Error('Restaurante não encontrado');
+          throw new Error(t('restaurant.notFound'));
         }
         
         const restaurantData = await restaurantResponse.json();
@@ -142,13 +145,13 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
       category: item.category
     });
     
-    toast.success(`${item.name} adicionado ao carrinho!`);
+    toast.success(t('cart.itemAdded', { item: item.name }));
   };
 
   // Função de checkout integrada com Stripe
   const handleCheckout = async (paymentMethod: PaymentMethod) => {
     if (!restaurant) {
-      toast.error('Informações do restaurante não encontradas');
+      toast.error(t('restaurant.infoNotFound'));
       return;
     }
 
@@ -161,7 +164,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
     } = useCartStore.getState();
 
     if (!deliveryAddress) {
-      toast.error('Endereço de entrega é obrigatório');
+      toast.error(t('address.required'));
       return;
     }
 
@@ -192,11 +195,11 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
 
       if (response.ok) {
         const result = await response.json();
-          toast.success(`Pedido realizado com sucesso! Número: ${result.data.id}`);
+          toast.success(t('order.successWithNumber', { number: result.data.id }));
           clearCart();
         } else {
           const error = await response.json();
-          toast.error(error.message || 'Erro ao realizar pedido');
+          toast.error(error.message || t('order.errorPlacing'));
         }
       } else {
         // Pagamento com cartão - redirecionar para Stripe Checkout
@@ -221,18 +224,18 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
           
           // Aqui você integraria com o Stripe Elements ou redirecionaria para checkout
           // Por enquanto, vamos simular sucesso
-          toast.success('Redirecionando para pagamento...');
+          toast.success(t('payment.redirecting'));
           
           // TODO: Implementar integração completa com Stripe Elements
           console.log('Client Secret:', clientSecret);
         } else {
           const error = await checkoutResponse.json();
-          toast.error(error.message || 'Erro ao processar pagamento');
+          toast.error(error.message || t('payment.errorProcessing'));
         }
       }
     } catch (error) {
       console.error('Erro ao realizar pedido:', error);
-      toast.error('Erro ao processar pedido');
+      toast.error(t('order.errorProcessing'));
     }
   };
 
@@ -270,13 +273,13 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
       <div className="min-h-screen bg-[#101828] flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🏪</div>
-          <h1 className="text-2xl font-bold text-white mb-2">Restaurante não encontrado</h1>
-          <p className="text-gray-400 mb-4">O restaurante solicitado não existe ou foi removido.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('restaurant.notFound')}</h1>
+          <p className="text-gray-400 mb-4">{t('restaurant.notFoundMessage')}</p>
           <Link
             href="/customer"
             className="bg-green-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors duration-200"
           >
-            Voltar ao Início
+            {t('common.backToHome')}
           </Link>
         </div>
       </div>
@@ -301,7 +304,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                 <h1 className="text-xl font-bold text-white">{restaurant.name}</h1>
                 <p className="text-gray-400 text-sm flex items-center">
                   <span className="mr-2">{categoryConfig[restaurant.category].icon}</span>
-                  {categoryDisplayNames[restaurant.category]}
+                  {getCategoryName(restaurant.category, t)}
                 </p>
               </div>
             </div>
@@ -350,7 +353,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                 </div>
                 <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
                   <MdDeliveryDining className="mr-1" size={16} />
-                  <span>{restaurant.deliveryFee === 0 ? 'Grátis' : `R$ ${restaurant.deliveryFee.toFixed(2)}`}</span>
+                  <span>{restaurant.deliveryFee === 0 ? t('common.free') : `₪ ${restaurant.deliveryFee.toFixed(2)}`}</span>
                 </div>
               </div>
             </div>
@@ -359,37 +362,37 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="md:col-span-2">
-                <h3 className="font-bold text-lg text-white mb-2">Sobre o restaurante</h3>
+                <h3 className="font-bold text-lg text-white mb-2">{t('restaurant.aboutRestaurant')}</h3>
                 <p className="text-gray-300 mb-4">
-                  {restaurant.description || `Bem-vindos ao ${restaurant.name}! Oferecemos os melhores pratos de ${categoryDisplayNames[restaurant.category].toLowerCase()} da região.`}
+                  {restaurant.description || t('restaurant.defaultDescription', { name: restaurant.name, category: getCategoryName(restaurant.category, t).toLowerCase() })}
                 </p>
                 
                 <div className="flex flex-wrap gap-4 text-sm text-gray-300">
                   <div className="flex items-center">
                     <MdLocationOn className="mr-2 text-green-500" size={16} />
-                    <span>{restaurant.address || 'Entrega na região'}</span>
+                    <span>{restaurant.address || t('restaurant.deliveryInRegion')}</span>
                   </div>
                   <div className="flex items-center">
                     <MdPhone className="mr-2 text-green-500" size={16} />
-                    <span>{restaurant.phone || 'Telefone não informado'}</span>
+                    <span>{restaurant.phone || t('restaurant.phoneNotProvided')}</span>
                   </div>
                   <div className="flex items-center">
                     <MdInfo className="mr-2 text-green-500" size={16} />
-                    <span>Pedido mínimo: R$ {restaurant.minimumOrder?.toFixed(2) || '0,00'}</span>
+                    <span>{t('restaurant.minimumOrder')}: ₪ {restaurant.minimumOrder?.toFixed(2) || '0.00'}</span>
                   </div>
                 </div>
               </div>
               
               <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h4 className="font-bold text-white mb-3">Horário de funcionamento</h4>
+                <h4 className="font-bold text-white mb-3">{t('restaurant.openingHours')}</h4>
                 <div className="space-y-2 text-sm text-gray-300">
                   <div className="flex justify-between">
-                    <span>Segunda - Domingo</span>
+                    <span>{t('restaurant.mondayToSunday')}</span>
                     <span>08:00 - 22:00</span>
                   </div>
                   <div className="flex items-center mt-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                    <span className="text-green-400 font-medium">Aberto agora</span>
+                    <span className="text-green-400 font-medium">{t('restaurant.openNow')}</span>
                   </div>
                 </div>
               </div>
@@ -400,7 +403,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
         {/* Menu */}
         <div className="bg-gray-900 rounded-xl shadow-lg border border-gray-800 overflow-hidden">
           <div className="p-6 border-b border-gray-800">
-            <h2 className="text-2xl font-bold text-white mb-4">Cardápio</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">{t('menu.menu')}</h2>
             
             {/* Category Filter */}
             <div className="flex overflow-x-auto gap-2 pb-2">
@@ -414,7 +417,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
                       : 'bg-gray-800 text-gray-300 hover:bg-green-700 hover:text-white'
                   }`}
                 >
-                  {category === 'all' ? 'Todos' : category}
+                  {category === 'all' ? t('common.all') : category}
                 </button>
               ))}
             </div>
@@ -424,7 +427,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
             {filteredMenuItems.length === 0 ? (
               <div className="text-center py-8">
                 <div className="text-4xl mb-2">🍽️</div>
-                <p className="text-gray-400">Nenhum item encontrado nesta categoria.</p>
+                <p className="text-gray-400">{t('menu.noItemsInCategory')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -478,7 +481,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
           {!item.available && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
               <span className="bg-gray-900 text-white px-3 py-1 rounded-lg text-sm font-bold border border-gray-700">
-                Indisponível
+                {t('menu.unavailable')}
               </span>
             </div>
           )}
@@ -490,7 +493,7 @@ export default function RestaurantPage({ params }: RestaurantPageProps) {
           
           <div className="flex items-center justify-between">
             <span className="text-xl font-bold text-green-400">
-              R$ {item.price.toFixed(2)}
+              ₪ {item.price.toFixed(2)}
             </span>
             
             {item.available && (

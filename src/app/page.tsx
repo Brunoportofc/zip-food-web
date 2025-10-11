@@ -3,9 +3,11 @@
 import { useRouter } from 'next/navigation';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { MdDeliveryDining, MdRestaurant, MdPerson, MdLogin } from 'react-icons/md';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const HomeContent = () => {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-[#101828] text-white relative overflow-hidden">
@@ -25,8 +27,8 @@ const HomeContent = () => {
               <MdDeliveryDining size={28} className="text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">ZipFood</h1>
-              <p className="text-sm text-gray-300">Delivery rápido e saboroso</p>
+              <h1 className="text-2xl font-bold text-white">{t('home.title')}</h1>
+              <p className="text-sm text-gray-300">{t('home.subtitle')}</p>
             </div>
           </div>
 
@@ -36,7 +38,7 @@ const HomeContent = () => {
             className="flex items-center space-x-2 px-6 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white rounded-xl hover:bg-white/20 transition-all duration-300"
           >
             <MdLogin size={20} />
-            <span>Entrar</span>
+            <span>{t('home.login')}</span>
           </button>
         </div>
       </header>
@@ -47,17 +49,17 @@ const HomeContent = () => {
         <AnimatedContainer animationType="fadeInUp" delay={200}>
           <div className="text-center mb-16">
             <h1 className="text-4xl lg:text-6xl font-bold text-white mb-6">
-              Peça sua comida <span className="text-primary">favorita</span>
-              <br />de forma <span className="text-primary">rápida e fácil</span>
+              {t('home.heroTitle')} <span className="text-primary">{t('home.heroTitleFavorite')}</span>
+              <br />{t('home.heroTitleFast')}
             </h1>
             <p className="text-xl lg:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
-              Conectamos você aos melhores restaurantes da sua região com entrega rápida e segura.
+              {t('home.heroSubtitle')}
             </p>
             <button
               onClick={() => router.push('/auth/sign-in')}
               className="inline-flex items-center space-x-3 px-8 py-4 bg-primary text-white text-lg font-semibold rounded-2xl shadow-xl hover:bg-primary-dark hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              <span>Começar Agora</span>
+              <span>{t('home.startNow')}</span>
             </button>
           </div>
         </AnimatedContainer>
@@ -69,9 +71,9 @@ const HomeContent = () => {
               <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6">
                 <MdPerson size={32} className="text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Para Clientes</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('home.forCustomers')}</h3>
               <p className="text-gray-600 leading-relaxed">
-                Descubra os melhores restaurantes da sua região e peça sua comida favorita com apenas alguns cliques.
+                {t('home.forCustomersDesc')}
               </p>
             </div>
           </AnimatedContainer>
@@ -81,9 +83,9 @@ const HomeContent = () => {
               <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6">
                 <MdRestaurant size={32} className="text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Para Restaurantes</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('home.forRestaurants')}</h3>
               <p className="text-gray-600 leading-relaxed">
-                Expanda seu negócio e alcance mais clientes com nossa plataforma de delivery completa.
+                {t('home.forRestaurantsDesc')}
               </p>
             </div>
           </AnimatedContainer>
@@ -93,9 +95,9 @@ const HomeContent = () => {
               <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6">
                 <MdDeliveryDining size={32} className="text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Para Entregadores</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('home.forDelivery')}</h3>
               <p className="text-gray-600 leading-relaxed">
-                Ganhe dinheiro extra com flexibilidade de horários fazendo entregas na sua região.
+                {t('home.forDeliveryDesc')}
               </p>
             </div>
           </AnimatedContainer>

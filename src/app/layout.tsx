@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import AuthCheck from '@/components/AuthCheck';
 import ClientLayout from '@/components/ClientLayout';
 import { AuthProvider } from '@/hooks/useAuth';
+import { LanguageProvider } from '@/contexts/LanguageContext';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" dir="ltr">
+    <html lang="he" dir="rtl">
       <head>
         {/* Preload de recursos críticos */}
         <link rel="dns-prefetch" href="//fonts.googleapis.com" />
@@ -38,13 +39,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black text-white`}
       >
-        <AuthProvider>
-          <AuthCheck>
-            <ClientLayout>
-              {children}
-            </ClientLayout>
-          </AuthCheck>
-        </AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>
+            <AuthCheck>
+              <ClientLayout>
+                {children}
+              </ClientLayout>
+            </AuthCheck>
+          </AuthProvider>
+        </LanguageProvider>
         <Toaster
           position="top-right"
           toastOptions={{

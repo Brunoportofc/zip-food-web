@@ -17,13 +17,15 @@ import {
 } from 'react-icons/md';
 import { Restaurant, RestaurantCategory, categoryDisplayNames } from '@/types';
 import restaurantService from '@/services/restaurant.service';
-import { categoryConfig, deliveryConfig, uiConfig, getCategoryIcon } from '@/constants';
+import { categoryConfig, deliveryConfig, uiConfig, getCategoryIcon, categoryTranslationKeys } from '@/constants';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface FilterState {
   searchTerm: string;
 }
 
 export default function CustomerDashboard() {
+  const { t } = useLanguage();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentAddress] = useState(uiConfig.defaultAddress);

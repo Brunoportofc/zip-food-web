@@ -11,8 +11,10 @@ import MetaballsBackground from '@/components/MetaballsBackground';
 import { useAuth } from '@/hooks/useAuth';
 import { UserRole } from '@/services/auth.service';
 import { cleanupOrphanAccount } from '@/utils/cleanup-orphan-accounts';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function SignUpPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { signUp, loading } = useAuth();
   const [formData, setFormData] = useState({
@@ -80,13 +82,13 @@ export default function SignUpPage() {
 
     // Validações básicas
     if (formData.password !== formData.confirmPassword) {
-      toast.error('As senhas não coincidem');
+      toast.error(t('auth.passwordsDontMatchError'));
       setIsSubmitting(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres');
+      toast.error(t('auth.passwordTooShortError'));
       setIsSubmitting(false);
       return;
     }
@@ -101,7 +103,7 @@ export default function SignUpPage() {
       );
       
       if (result.success) {
-        toast.success('Conta criada com sucesso!');
+        toast.success(t('auth.accountCreatedSuccess'));
         
         // Redirecionar baseado no tipo de usuário
         switch (formData.user_type) {
@@ -119,13 +121,13 @@ export default function SignUpPage() {
         if (result.error?.includes('já está sendo usado')) {
           setOrphanEmail(formData.email);
           setShowOrphanCleanup(true);
-          toast.error('Este email já está registrado. Você pode tentar limpar a conta órfã.');
+          toast.error(t('auth.emailAlreadyInUseOrphan'));
         } else {
-          toast.error(result.error || 'Erro ao criar conta');
+          toast.error(result.error || t('common.error'));
         }
       }
     } catch (error) {
-      toast.error('Erro inesperado ao criar conta');
+      toast.error(t('common.error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -134,16 +136,16 @@ export default function SignUpPage() {
   const userTypeOptions = [
     { 
       value: 'customer' as UserRole, 
-      label: 'Cliente', 
-      description: 'Quero pedir comida',
+      label: t('auth.customer'), 
+      description: t('auth.wantToOrderFood'),
       icon: Users,
       color: 'from-primary to-primary-dark',
       hoverColor: 'hover:from-primary-dark hover:to-primary-800'
     },
     { 
       value: 'restaurant' as UserRole, 
-      label: 'Restaurante', 
-      description: 'Quero vender comida',
+      label: t('restaurant.restaurant'), 
+      description: t('auth.wantToSellFood'),
       icon: Store,
       color: 'from-primary to-primary-dark',
       hoverColor: 'hover:from-primary-dark hover:to-primary-800'
@@ -162,10 +164,10 @@ export default function SignUpPage() {
             <div className="bg-gray-800/90 p-8 lg:p-10 rounded-3xl shadow-2xl border border-primary/30 backdrop-blur-lg">
               <div className="text-center mb-8 lg:mb-10">
                 <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-3 lg:mb-4">
-                  Escolha seu Tipo de Conta
+                  {t('auth.chooseAccountType')}
                 </h2>
                 <p className="text-gray-300 mb-6 lg:mb-8 text-base lg:text-lg leading-relaxed">
-                  Selecione como você quer usar nossa plataforma
+                  {t('auth.selectPlatformUsage')}
                 </p>
               </div>
 
@@ -250,10 +252,10 @@ export default function SignUpPage() {
                   <User className="w-8 h-8 text-white" />
                 </div>
                 <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-3 bg-gradient-to-r from-primary via-blue-400 to-primary bg-clip-text text-transparent">
-                  Criar Conta
+                  {t('auth.createAccount')}
                 </h2>
                 <p className="text-gray-300 text-base lg:text-lg leading-relaxed font-light">
-                  Preencha seus dados para começar
+                  {t('auth.fillDataToStart')}
                 </p>
               </div>
 
@@ -262,7 +264,7 @@ export default function SignUpPage() {
                 {/* Name */}
                 <div className="group">
                   <label htmlFor="name" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
-                    Nome Completo
+                    {t('auth.fullNameLabel')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
@@ -274,7 +276,7 @@ export default function SignUpPage() {
                        value={formData.name}
                        onChange={handleInputChange}
                        className="w-full pl-12 pr-4 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
-                       placeholder="Seu nome completo"
+                       placeholder={t('auth.fullNamePlaceholder')}
                        required
                       disabled={loading || isSubmitting}
                     />
@@ -284,7 +286,7 @@ export default function SignUpPage() {
                 {/* Email */}
                 <div className="group">
                   <label htmlFor="email" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
-                    Email
+                    {t('auth.email')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
@@ -296,7 +298,7 @@ export default function SignUpPage() {
                        value={formData.email}
                        onChange={handleInputChange}
                        className="w-full pl-12 pr-4 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
-                       placeholder="seu@email.com"
+                       placeholder={t('auth.emailPlaceholder')}
                        required
                       disabled={loading || isSubmitting}
                     />
@@ -306,7 +308,7 @@ export default function SignUpPage() {
                 {/* Phone */}
                 <div className="group">
                   <label htmlFor="phone" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
-                    Telefone
+                    {t('auth.phoneLabel')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
@@ -318,7 +320,7 @@ export default function SignUpPage() {
                        value={formData.phone}
                        onChange={handleInputChange}
                        className="w-full pl-12 pr-4 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
-                       placeholder="(11) 99999-9999"
+                       placeholder={t('auth.phonePlaceholder')}
                        required
                       disabled={loading || isSubmitting}
                     />
@@ -328,7 +330,7 @@ export default function SignUpPage() {
                 {/* Password */}
                 <div className="group">
                   <label htmlFor="password" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
-                    Senha
+                    {t('auth.password')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
@@ -340,7 +342,7 @@ export default function SignUpPage() {
                        value={formData.password}
                        onChange={handleInputChange}
                        className="w-full pl-12 pr-14 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
-                       placeholder="Mínimo 6 caracteres"
+                       placeholder={t('auth.passwordMinChars')}
                        required
                       disabled={loading || isSubmitting}
                     />
@@ -358,7 +360,7 @@ export default function SignUpPage() {
                 {/* Confirm Password */}
                 <div className="group">
                   <label htmlFor="confirmPassword" className="block text-sm font-semibold text-foreground mb-3 transition-colors group-focus-within:text-primary">
-                    Confirmar Senha
+                    {t('auth.confirmPasswordLabel')}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-blue-500/10 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300"></div>
@@ -370,7 +372,7 @@ export default function SignUpPage() {
                        value={formData.confirmPassword}
                        onChange={handleInputChange}
                        className="w-full pl-12 pr-14 py-3 lg:py-4 border border-white/10 bg-white/5 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all duration-300 text-base lg:text-lg text-foreground placeholder-gray-400 hover:border-white/20 hover:bg-white/10 relative z-10"
-                       placeholder="Confirme sua senha"
+                       placeholder={t('auth.confirmPasswordPlaceholder')}
                        required
                       disabled={loading || isSubmitting}
                     />
@@ -395,11 +397,11 @@ export default function SignUpPage() {
                   {loading || isSubmitting ? (
                     <div className="flex items-center justify-center space-x-3 relative z-10">
                       <div className="animate-spin rounded-full h-5 w-5 lg:h-6 lg:w-6 border-b-2 border-white"></div>
-                      <span>Criando conta...</span>
+                      <span>{t('auth.creatingAccount')}</span>
                     </div>
                   ) : (
                     <div className="flex items-center justify-center space-x-3 relative z-10">
-                      <span>Criar Conta</span>
+                      <span>{t('auth.createAccount')}</span>
                       <ArrowRight className="w-5 h-5 lg:w-6 lg:h-6 transition-transform group-hover:translate-x-1" />
                     </div>
                   )}
@@ -415,11 +417,10 @@ export default function SignUpPage() {
                     </div>
                     <div className="flex-1">
                       <h4 className="text-base font-bold text-warning mb-3">
-                        Conta Órfã Detectada
+                        {t('auth.orphanAccountDetected')}
                       </h4>
                       <p className="text-sm text-gray-300 mb-4 leading-relaxed">
-                        O email <strong className="text-white">{orphanEmail}</strong> já existe no sistema, mas pode estar incompleto. 
-                        Você pode tentar limpar esta conta para criar uma nova.
+                        {t('auth.emailAlreadyExistsOrphan').replace('{{email}}', orphanEmail)}
                       </p>
                       <div className="flex space-x-3">
                         <button
@@ -427,14 +428,14 @@ export default function SignUpPage() {
                           disabled={isSubmitting}
                           className="px-4 py-2.5 bg-gradient-to-r from-warning to-orange-500 text-white text-sm font-semibold rounded-xl hover:from-warning/80 hover:to-orange-500/80 disabled:opacity-50 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         >
-                          {isSubmitting ? 'Limpando...' : 'Limpar Conta'}
+                          {isSubmitting ? t('auth.cleaning') : t('auth.cleanAccount')}
                         </button>
                         <button
                           onClick={() => setShowOrphanCleanup(false)}
                           disabled={isSubmitting}
                           className="px-4 py-2.5 bg-white/10 text-foreground text-sm font-semibold rounded-xl hover:bg-white/20 disabled:opacity-50 transition-all duration-300 backdrop-blur-sm border border-white/10"
                         >
-                          Cancelar
+                          {t('common.cancel')}
                         </button>
                       </div>
                     </div>
@@ -448,12 +449,12 @@ export default function SignUpPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent h-px top-1/2"></div>
                   <div className="relative bg-gray-900 px-4">
                     <p className="text-gray-300 text-base lg:text-lg font-light">
-                      Já tem uma conta?{' '}
+                      {t('auth.alreadyHaveAccountLogin')}?{' '}
                       <Link 
                         href="/auth/sign-in" 
                         className="text-primary hover:text-blue-400 font-semibold hover:underline transition-all duration-300 inline-flex items-center space-x-1 group"
                       >
-                        <span>Fazer login</span>
+                        <span>{t('auth.loginHere')}</span>
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                       </Link>
                     </p>

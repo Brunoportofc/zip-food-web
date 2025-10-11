@@ -15,6 +15,7 @@ import {
 } from 'react-icons/md';
 import { FaUtensils, FaImage } from 'react-icons/fa';
 import ImageUpload from '@/components/ui/ImageUpload';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Tipos
 interface MenuItem {
@@ -47,6 +48,7 @@ interface MenuCategory {
 }
 
 const MenuManagement = () => {
+  const { t } = useLanguage();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [loading, setLoading] = useState(true);

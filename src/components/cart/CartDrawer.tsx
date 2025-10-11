@@ -16,12 +16,15 @@ import {
 import { useCartStore, CartItem, DeliveryAddress, PaymentMethod } from '@/store/cart.store';
 import { toast } from 'react-hot-toast';
 import { useGeoapifyAddress } from '@/hooks/useGeoapifyAddress';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { formatCurrency } from '@/utils/translation-helper';
 
 interface CartDrawerProps {
   onCheckout?: (paymentMethod: PaymentMethod) => void;
 }
 
 export default function CartDrawer({ onCheckout }: CartDrawerProps) {
+  const { t } = useLanguage();
   const {
     items,
     restaurantName,

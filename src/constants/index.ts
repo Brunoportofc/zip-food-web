@@ -57,6 +57,22 @@ export const getCategoryIcon = (category: RestaurantCategory): string => {
   return categoryConfig[category]?.icon || '🍽️';
 };
 
+// Chaves de tradução para nomes de categorias
+export const categoryTranslationKeys: Record<RestaurantCategory, string> = {
+  'fast_food': 'categories.fast_food',
+  'italian': 'categories.italian',
+  'chinese': 'categories.chinese',
+  'japanese': 'categories.japanese',
+  'indian': 'categories.indian',
+  'mexican': 'categories.mexican',
+  'american': 'categories.american',
+  'mediterranean': 'categories.mediterranean',
+  'thai': 'categories.thai',
+  'french': 'categories.french',
+  'middle_eastern': 'categories.middle_eastern',
+  'other': 'categories.other'
+};
+
 // Cores para status de pedidos
 export const orderStatusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -68,33 +84,50 @@ export const orderStatusColors = {
   cancelled: 'bg-red-100 text-red-800'
 };
 
-// Labels para status de pedidos
-export const orderStatusLabels = {
-  pending: 'Aguardando',
-  confirmed: 'Confirmado',
-  preparing: 'Preparando',
-  ready: 'Pronto',
-  out_for_delivery: 'Saiu para entrega',
-  delivered: 'Entregue',
-  cancelled: 'Cancelado'
+// Chaves de tradução para status de pedidos
+export const orderStatusTranslationKeys = {
+  pending: 'order.status.pending',
+  confirmed: 'order.status.confirmed',
+  preparing: 'order.status.preparing',
+  ready: 'order.status.ready',
+  out_for_delivery: 'order.status.out_for_delivery',
+  delivered: 'order.status.delivered',
+  cancelled: 'order.status.cancelled'
 };
 
 // Configurações de delivery
 export const deliveryConfig = {
-  defaultDeliveryTime: '30-45 min',
+  defaultDeliveryTime: '30-45 דקות', // minutes in Hebrew
   freeDeliveryMinOrder: 30.00,
-  promotionalMessage: 'Descubra sabores únicos e peça com facilidade',
   supportPhone: '(11) 99999-9999'
 };
 
 // Configurações de UI
 export const uiConfig = {
   defaultAddress: {
-    street: 'Rua das Flores, 123',
-    neighborhood: 'Centro',
-    city: 'São Paulo'
+    street: 'רחוב הפרחים 123',
+    neighborhood: 'מרכז העיר',
+    city: 'תל אביב'
   },
   maxRecentSearches: 5,
-  defaultCurrency: 'BRL',
-  currencySymbol: 'R$'
+  defaultCurrency: 'ILS',
+  currencySymbol: '₪'
+};
+
+// Helper para formatar moeda israelense
+export const formatCurrency = (amount: number): string => {
+  return `₪${amount.toFixed(2)}`;
+};
+
+// Helper para formatar tempo
+export const formatDeliveryTime = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${minutes} דקות`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (remainingMinutes === 0) {
+    return `${hours} ${hours === 1 ? 'שעה' : 'שעות'}`;
+  }
+  return `${hours} ${hours === 1 ? 'שעה' : 'שעות'} ו-${remainingMinutes} דקות`;
 };

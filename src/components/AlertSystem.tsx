@@ -310,11 +310,11 @@ export const showConfirmAlert = (
       duration: 0,
       actions: {
         primary: {
-          label: 'Confirmar',
+          label: t ? t('common.confirm') : 'אשר',
           onClick: onConfirm
         },
         secondary: {
-          label: 'Cancelar',
+          label: t ? t('common.cancel') : 'ביטול',
           onClick: onCancel || (() => {})
         }
       }

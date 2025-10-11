@@ -7,8 +7,10 @@ import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import AnimatedContainer from '@/components/AnimatedContainer';
 import { useAuth } from '@/hooks/useAuth';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function SignInPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { signIn, loading } = useAuth();
   const [formData, setFormData] = useState({
@@ -63,7 +65,7 @@ export default function SignInPage() {
           timestamp: new Date().toISOString()
         });
 
-        toast.success('Login realizado com sucesso!');
+        toast.success(t('auth.loginSuccess'));
         
         // [FASE 2 - LOG 5] Login bem-sucedido, redirecionamento direto baseado no papel
         console.log('[SIGN_IN_PAGE] 🎯 Redirecionando diretamente baseado no papel do usuário...', {
@@ -125,7 +127,7 @@ export default function SignInPage() {
           email: formData.email,
           timestamp: new Date().toISOString()
         });
-        toast.error(result.error || 'Erro ao fazer login');
+        toast.error(result.error || t('auth.invalidCredentials'));
       }
     } catch (error) {
       // [FASE 2 - LOG 7] Erro durante o processo de login
@@ -135,7 +137,7 @@ export default function SignInPage() {
         email: formData.email,
         timestamp: new Date().toISOString()
       });
-      toast.error('Erro inesperado durante o login');
+      toast.error(t('common.error'));
     } finally {
       // [FASE 2 - LOG 8] Finalizando processo
       console.log('[SIGN_IN_PAGE] 🏁 Processo de login finalizado', {
@@ -152,10 +154,10 @@ export default function SignInPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">
-              Bem-vindo de volta!
+              {t('auth.welcomeBack')}
             </h1>
             <p className="text-gray-300">
-              Entre na sua conta para continuar
+              {t('auth.signInToContinue')}
             </p>
           </div>
 
@@ -164,7 +166,7 @@ export default function SignInPage() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                Email
+                {t('auth.email')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary w-5 h-5" />
@@ -175,7 +177,7 @@ export default function SignInPage() {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 border border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-gray-800 text-white placeholder-gray-400"
-                  placeholder="seu@email.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   required
                   disabled={loading || isSubmitting}
                 />
@@ -185,7 +187,7 @@ export default function SignInPage() {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Senha
+                {t('auth.password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-primary w-5 h-5" />
@@ -196,7 +198,7 @@ export default function SignInPage() {
                   value={formData.password}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-12 py-3 border border-primary rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors bg-gray-800 text-white placeholder-gray-400"
-                  placeholder="Sua senha"
+                  placeholder={t('auth.passwordPlaceholder')}
                   required
                   disabled={loading || isSubmitting}
                 />
@@ -217,7 +219,7 @@ export default function SignInPage() {
                 href="/auth/forgot-password" 
                 className="text-sm text-primary hover:text-primary-dark transition-colors"
               >
-                Esqueceu sua senha?
+                {t('auth.forgotPassword')}
               </Link>
             </div>
 
@@ -231,7 +233,7 @@ export default function SignInPage() {
                 <div className="w-5 h-5 border-2 border-background border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  Entrar
+                  {t('auth.signIn')}
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
@@ -241,12 +243,12 @@ export default function SignInPage() {
           {/* Sign Up Link */}
           <div className="mt-8 text-center">
             <p className="text-white">
-              Não tem uma conta?{' '}
+              {t('auth.dontHaveAccount')}{' '}
               <Link 
                 href="/auth/sign-up" 
                 className="text-primary hover:text-primary-dark font-medium transition-colors"
               >
-                Cadastre-se aqui
+                {t('auth.signUpHere')}
               </Link>
             </p>
           </div>
