@@ -4,25 +4,6 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["gru1"],
-  "env": {
-    "FIREBASE_PROJECT_ID": "@firebase-project-id",
-    "FIREBASE_CLIENT_EMAIL": "@firebase-client-email",
-    "FIREBASE_PRIVATE_KEY": "@firebase-private-key",
-    "NEXT_PUBLIC_FIREBASE_API_KEY": "@next-public-firebase-api-key",
-    "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "@next-public-firebase-auth-domain",
-    "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "@next-public-firebase-project-id",
-    "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "@next-public-firebase-storage-bucket",
-    "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "@next-public-firebase-messaging-sender-id",
-    "NEXT_PUBLIC_FIREBASE_APP_ID": "@next-public-firebase-app-id",
-    "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID": "@next-public-firebase-measurement-id",
-    "STRIPE_SECRET_KEY": "@stripe-secret-key",
-    "STRIPE_WEBHOOK_SECRET": "@stripe-webhook-secret",
-    "NEXT_PUBLIC_GEOAPIFY_API_KEY": "@next-public-geoapify-api-key",
-    "NEXT_PUBLIC_APP_URL": "@next-public-app-url",
-    "VAPID_PRIVATE_KEY": "@vapid-private-key",
-    "NEXT_PUBLIC_VAPID_PUBLIC_KEY": "@next-public-vapid-public-key",
-    "VAPID_SUBJECT": "@vapid-subject"
-  },
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
