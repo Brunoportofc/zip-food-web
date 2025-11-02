@@ -296,5 +296,3 @@ function getDeliveryActions(type: string): Array<{ action: string; title: string
   }
 }
 
-// Exportar funções para uso em outros módulos
-export { sendOrderNotification, sendDeliveryNotification };
