@@ -24,7 +24,8 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ onCheckout }: CartDrawerProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const isRTL = language === 'he';
   const {
     items,
     restaurantName,
@@ -102,18 +103,18 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
     
     // Validação básica
     if (!addressForm.street || !addressForm.number || !addressForm.neighborhood || !addressForm.city || !addressForm.zipCode) {
-      toast.error('Por favor, preencha todos os campos obrigatórios.');
+      toast.error(t('validation.requiredField'));
       return;
     }
 
     setDeliveryAddress(addressForm);
     setShowAddressForm(false);
-    toast.success('Endereço atualizado com sucesso!');
+    toast.success(t('address.addressSaved'));
   };
 
   const handleCheckout = async () => {
     if (!canCheckout()) {
-      toast.error('Complete as informações antes de finalizar o pedido.');
+      toast.error(t('messages.somethingWentWrong'));
       return;
     }
 
@@ -125,7 +126,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
       }
     } catch (error) {
       console.error('Erro no checkout:', error);
-      toast.error('Erro ao processar pedido. Tente novamente.');
+      toast.error(t('order.errorProcessing'));
     } finally {
       setIsProcessing(false);
     }
@@ -158,7 +159,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
   const CartItemComponent = ({ item, index }: { item: CartItem; index: number }) => (
     <div 
-      className="flex items-center gap-3 py-4 border-b border-gray-700 animate-in slide-in-from-right-2 fade-in"
+      className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-3 py-4 border-b border-gray-700 animate-in fade-in ${isRTL ? 'slide-in-from-left-2' : 'slide-in-from-right-2'}`}
       style={{ animationDelay: `${index * 50}ms` }}
     >
       <img
@@ -172,10 +173,10 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
         {item.description && (
           <p className="text-sm text-gray-400 truncate">{item.description}</p>
         )}
-        <p className="text-green-400 font-semibold">R$ {item.price.toFixed(2)}</p>
+        <p className="text-green-400 font-semibold" dir="ltr">₪ {item.price.toFixed(2)}</p>
       </div>
       
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-2 flex-shrink-0`}>
         <button
           onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
           className="w-8 h-8 rounded-full border border-gray-600 bg-gray-800 flex items-center justify-center hover:bg-gray-700 hover:border-green-500 transition-all duration-200 hover:scale-110 active:scale-95"
@@ -196,7 +197,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
         
         <button
           onClick={() => removeItem(item.id)}
-          className="w-8 h-8 rounded-full bg-red-900/30 border border-red-700 text-red-400 hover:bg-red-800 hover:text-red-300 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ml-2"
+          className={`w-8 h-8 rounded-full bg-red-900/30 border border-red-700 text-red-400 hover:bg-red-800 hover:text-red-300 flex items-center justify-center transition-all duration-200 hover:scale-110 active:scale-95 ${isRTL ? 'mr-2' : 'ml-2'}`}
         >
           <MdDelete size={16} />
         </button>
@@ -214,24 +215,33 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
         onClick={closeCart}
       />
       
-      {/* Drawer com animação suave */}
-      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-[#101828] z-50 shadow-2xl transform transition-all duration-500 ${
-        isOpen 
-          ? 'translate-x-0 scale-100 opacity-100 ease-out' 
-          : 'translate-x-full scale-95 opacity-0 ease-in'
-      }`}>
+      {/* Drawer com animação suave - RTL aware */}
+      <div 
+        style={{
+          [isRTL ? 'left' : 'right']: 0,
+          transform: isOpen 
+            ? 'translateX(0) scale(1)' 
+            : isRTL 
+              ? 'translateX(-100%) scale(0.95)' 
+              : 'translateX(100%) scale(0.95)',
+          opacity: isOpen ? 1 : 0
+        }}
+        className={`fixed top-0 h-full w-full max-w-md bg-[#101828] z-50 shadow-2xl transition-all duration-500 ${
+          isOpen ? 'ease-out' : 'ease-in'
+        }`}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900">
-            <div className="animate-in slide-in-from-left-2 fade-in duration-300">
-              <h2 className="text-xl font-semibold text-white">Seu Pedido</h2>
+          <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center justify-between p-4 border-b border-gray-800 bg-gray-900`}>
+            <div className={`animate-in fade-in duration-300 ${isRTL ? 'slide-in-from-right-2' : 'slide-in-from-left-2'}`}>
+              <h2 className="text-xl font-semibold text-white">{t('cart.myCart')}</h2>
               {restaurantName && (
                 <p className="text-sm text-gray-400">{restaurantName}</p>
               )}
             </div>
             <button
               onClick={closeCart}
-              className="p-2 rounded-full hover:bg-gray-800 transition-all duration-200 hover:scale-110 active:scale-95 animate-in slide-in-from-right-2 fade-in duration-300"
+              className={`p-2 rounded-full hover:bg-gray-800 transition-all duration-200 hover:scale-110 active:scale-95 animate-in fade-in duration-300 ${isRTL ? 'slide-in-from-left-2' : 'slide-in-from-right-2'}`}
             >
               <MdClose size={24} className="text-gray-400" />
             </button>
@@ -244,10 +254,10 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
               <div className="flex flex-col items-center justify-center h-full p-8 text-center">
                 <div className="text-6xl mb-4">🛒</div>
                 <h3 className="text-lg font-medium text-white mb-2">
-                  Seu carrinho está vazio
+                  {t('cart.cartIsEmpty')}
                 </h3>
                 <p className="text-gray-400">
-                  Adicione itens do cardápio para começar seu pedido
+                  {t('cart.startShopping')}
                 </p>
               </div>
             ) : (
@@ -261,36 +271,36 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
                 {/* Resumo do pedido */}
                 <div className="bg-gray-800 rounded-lg p-4 mb-6 border border-gray-700">
-                  <h3 className="font-medium text-white mb-3">Resumo do Pedido</h3>
+                  <h3 className="font-medium text-white mb-3">{t('order.orderDetails')}</h3>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-gray-300">
-                      <span>Subtotal ({getTotalItems()} itens)</span>
-                      <span>R$ {getSubtotal().toFixed(2)}</span>
+                    <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between text-gray-300`}>
+                      <span>{t('cart.subtotal')} ({getTotalItems()} {t('cart.itemsInCart')})</span>
+                      <span dir="ltr">₪ {getSubtotal().toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-gray-300">
-                      <span>Taxa de entrega</span>
-                      <span>R$ {deliveryFee.toFixed(2)}</span>
+                    <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between text-gray-300`}>
+                      <span>{t('cart.deliveryFee')}</span>
+                      <span dir="ltr">₪ {deliveryFee.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between font-semibold text-lg text-green-400 border-t border-gray-700 pt-2">
-                      <span>Total</span>
-                      <span>R$ {getTotal().toFixed(2)}</span>
+                    <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} justify-between font-semibold text-lg text-green-400 border-t border-gray-700 pt-2`}>
+                      <span>{t('cart.total')}</span>
+                      <span dir="ltr">₪ {getTotal().toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Endereço de entrega */}
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-white flex items-center gap-2">
+                  <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center justify-between mb-3`}>
+                    <h3 className={`font-medium text-white flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-2`}>
                       <MdLocationOn className="text-green-500" />
-                      Endereço de Entrega
+                      {t('order.deliveryAddress')}
                     </h3>
                     <button
                       onClick={() => setShowAddressForm(true)}
-                      className="text-green-400 hover:text-green-300 text-sm font-medium flex items-center gap-1"
+                      className={`text-green-400 hover:text-green-300 text-sm font-medium flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-1`}
                     >
                       <MdEdit size={16} />
-                      {deliveryAddress ? 'Alterar' : 'Adicionar'}
+                      {deliveryAddress ? t('common.edit') : t('common.add')}
                     </button>
                   </div>
                   
@@ -303,20 +313,20 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                     </div>
                   ) : (
                     <p className="text-sm text-gray-400">
-                      Adicione um endereço de entrega
+                      {t('address.addAddress')}
                     </p>
                   )}
                 </div>
 
                 {/* Forma de pagamento */}
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 mb-6">
-                  <h3 className="font-medium text-white mb-3 flex items-center gap-2">
+                  <h3 className={`font-medium text-white mb-3 flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-2`}>
                     <MdPayment className="text-green-500" />
-                    Forma de Pagamento
+                    {t('payment.paymentMethod')}
                   </h3>
                   
                   <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-3 cursor-pointer`}>
                       <input
                         type="radio"
                         name="paymentMethod"
@@ -325,13 +335,13 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                         onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
                         className="text-green-500 focus:ring-green-500"
                       />
-                      <div className="flex items-center gap-2">
+                      <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-2`}>
                         <MdPayment className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-300">Cartão de Crédito ou Débito</span>
+                        <span className="text-sm font-medium text-gray-300">{t('payment.creditCard')}</span>
                       </div>
                     </label>
                     
-                    <label className="flex items-center gap-3 cursor-pointer">
+                    <label className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-3 cursor-pointer`}>
                       <input
                         type="radio"
                         name="paymentMethod"
@@ -340,9 +350,9 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                         onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
                         className="text-green-500 focus:ring-green-500"
                       />
-                      <div className="flex items-center gap-2">
+                      <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center gap-2`}>
                         <MdMoney className="text-gray-400" />
-                        <span className="text-sm font-medium text-gray-300">Dinheiro</span>
+                        <span className="text-sm font-medium text-gray-300">{t('payment.cash')}</span>
                       </div>
                     </label>
                   </div>
@@ -357,17 +367,20 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
               <button
                 onClick={handleCheckout}
                 disabled={!canCheckout() || isProcessing}
-                className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isProcessing ? (
-                  <span className="flex items-center justify-center gap-2">
+                  <span className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center justify-center gap-2`}>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Processando...
+                    {t('common.loading')}
                   </span>
                 ) : !deliveryAddress ? (
-                  'Adicione um endereço para continuar'
+                  t('address.required')
                 ) : (
-                  `Finalizar Pedido • R$ ${getTotal().toFixed(2)}`
+                  <span className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center justify-center gap-2`}>
+                    <span>{t('cart.checkout')}</span>
+                    <span dir="ltr">• ₪ {getTotal().toFixed(2)}</span>
+                  </span>
                 )}
               </button>
               
@@ -375,7 +388,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 onClick={clearCart}
                 className="w-full mt-2 text-gray-400 py-2 text-sm hover:text-gray-300 transition-all duration-200 hover:scale-105 active:scale-95"
               >
-                Limpar carrinho
+                {t('cart.clearCart')}
               </button>
             </div>
           )}
@@ -387,54 +400,54 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
         <div className="fixed inset-0 backdrop-blur-sm bg-black/50 z-60 flex items-center justify-center p-4 transition-all duration-300 ease-out">
           <div className="bg-gray-900 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto animate-in zoom-in-95 fade-in duration-300 ease-out border border-gray-800">
             <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white animate-in slide-in-from-left-2 fade-in duration-300">
-                  Endereço de Entrega
+              <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center justify-between mb-4`}>
+                <h3 className={`text-lg font-semibold text-white animate-in fade-in duration-300 ${isRTL ? 'slide-in-from-right-2' : 'slide-in-from-left-2'}`}>
+                  {t('order.deliveryAddress')}
                 </h3>
                 <button
                   onClick={() => setShowAddressForm(false)}
-                  className="text-gray-400 hover:text-gray-300 transition-all duration-200 hover:scale-110 active:scale-95 animate-in slide-in-from-right-2 fade-in duration-300"
+                  className={`text-gray-400 hover:text-gray-300 transition-all duration-200 hover:scale-110 active:scale-95 animate-in fade-in duration-300 ${isRTL ? 'slide-in-from-left-2' : 'slide-in-from-right-2'}`}
                 >
                   <MdClose size={24} />
                 </button>
               </div>
 
               {/* Botões de ação rápida */}
-              <div className="flex gap-2 mb-4 animate-in slide-in-from-bottom-2 fade-in duration-300 delay-100">
+              <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-2 mb-4 animate-in slide-in-from-bottom-2 fade-in duration-300 delay-100`}>
                 <button
                   type="button"
                   onClick={handleUseCurrentLocation}
                   disabled={isLoadingLocation}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50"
+                  className={`flex-1 flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50`}
                 >
                   {isLoadingLocation ? (
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                   ) : (
                     <MdMyLocation size={16} />
                   )}
-                  {isLoadingLocation ? 'Localizando...' : 'Usar minha localização'}
+                  {isLoadingLocation ? t('common.loading') : t('address.useCurrentLocation')}
                 </button>
               </div>
 
               {/* Campo de busca */}
               <div className="relative mb-4 animate-in slide-in-from-bottom-2 fade-in duration-300 delay-150">
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Buscar endereço
+                  {t('address.searchAddress')}
                 </label>
                 <div className="relative">
-                  <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <MdSearch className={`absolute top-1/2 transform -translate-y-1/2 text-gray-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
                   <input
                     type="text"
                     value={addressSearchQuery}
                     onChange={(e) => setAddressSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
-                    placeholder="Digite o endereço para buscar..."
+                    className={`w-full py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105 ${isRTL ? 'pr-10 pl-10' : 'pl-10 pr-10'}`}
+                    placeholder={t('address.searchAddress')}
                   />
                   {addressSearchQuery && (
                     <button
                       type="button"
                       onClick={handleClearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                      className={`absolute top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 ${isRTL ? 'left-3' : 'right-3'}`}
                     >
                       <MdClose size={16} />
                     </button>
@@ -447,7 +460,7 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                     {isLoadingSuggestions && (
                       <div className="p-3 text-center text-gray-400">
                         <div className="inline-block w-4 h-4 border-2 border-gray-600 border-t-green-500 rounded-full animate-spin mr-2"></div>
-                        Buscando...
+                        {t('common.loading')}
                       </div>
                     )}
                     {addressSuggestions.map((suggestion, index) => (
@@ -470,20 +483,20 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Rua / Avenida *
+                      {t('address.street')} *
                     </label>
                     <input
                       type="text"
                       value={addressForm.street}
                       onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
-                      placeholder="Nome da rua"
+                      placeholder={t('address.streetAddress')}
                       required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Número *
+                      {t('address.number')} *
                     </label>
                     <input
                       type="text"
@@ -498,27 +511,27 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Complemento
+                    {t('address.complement')}
                   </label>
                   <input
                     type="text"
                     value={addressForm.complement}
                     onChange={(e) => setAddressForm({ ...addressForm, complement: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500"
-                    placeholder="Apartamento, bloco, etc. (opcional)"
+                    placeholder={t('common.optional')}
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Bairro *
+                    {t('address.neighborhood')} *
                   </label>
                   <input
                     type="text"
                     value={addressForm.neighborhood}
                     onChange={(e) => setAddressForm({ ...addressForm, neighborhood: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500"
-                    placeholder="Nome do bairro"
+                    placeholder={t('address.neighborhood')}
                     required
                   />
                 </div>
@@ -526,20 +539,20 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">
-                      Cidade *
+                      {t('address.city')} *
                     </label>
                     <input
                       type="text"
                       value={addressForm.city}
                       onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
                       className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:ring-green-500 focus:border-green-500 transition-all duration-200 focus:scale-105"
-                      placeholder="Cidade"
+                      placeholder={t('address.city')}
                       required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">
-                      CEP *
+                      {t('address.zipCode')} *
                     </label>
                     <input
                       type="text"
@@ -552,19 +565,19 @@ export default function CartDrawer({ onCheckout }: CartDrawerProps) {
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 animate-in slide-in-from-bottom-2 fade-in duration-300 delay-500">
+                <div className={`flex ${isRTL ? 'flex-row-reverse' : 'flex-row'} gap-3 pt-4 animate-in slide-in-from-bottom-2 fade-in duration-300 delay-500`}>
                   <button
                     type="button"
                     onClick={() => setShowAddressForm(false)}
                     className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 bg-gray-800 rounded-md hover:bg-gray-700 transition-all duration-200 hover:scale-105 active:scale-95"
                   >
-                    Cancelar
+                    {t('common.cancel')}
                   </button>
                   <button
                     type="submit"
                     className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all duration-200 hover:scale-105 active:scale-95"
                   >
-                    Salvar Endereço
+                    {t('address.saveAddress')}
                   </button>
                 </div>
               </form>
